@@ -16,10 +16,4 @@
 * **CSS Moderno:** Estilización personalizada y diseño limpio.
 * **Vite:** Herramienta de construcción para un desarrollo ágil.
 
-## 📦 Instalación y Uso
 
-Si quieres probar el proyecto localmente, sigue estos pasos:
-
-1. Clona el repositorio:
-   
-   git clone [https://github.com/Kendalumana/PuertoInforma.git](https://github.com/Kendalumana/PuertoInforma.git)
