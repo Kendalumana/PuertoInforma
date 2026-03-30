@@ -1,20 +1,16 @@
 /* ============================================================
-   
-   Estrategia: Mobile-First
-
-   Primero definimos cómo se ve en móvil,
-   luego los @media amplían el diseño para pantallas grandes.
-   
+   App.css — PuertoInforma
+   Estrategia Mobile-First: primero móvil, luego @media desktop
    ============================================================ */
 
-/* --- Variables de color del proyecto --- */
+/* --- Paleta de colores --- */
 :root {
-  --mar-profundo: #0a3d62;
+  --mar-profundo:   #0a3d62;
   --turquesa-claro: #17a2b8;
-  --arena-suave: #f4e6d1;
-  --sol-coral: #ff7f50;
-  --gris-pardo: #575757;
-  --blanco: #ffffff;
+  --arena-suave:    #f4e6d1;
+  --sol-coral:      #ff7f50;
+  --gris-pardo:     #575757;
+  --blanco:         #ffffff;
 }
 
 /* --- Reset básico --- */
@@ -31,10 +27,7 @@ body {
   line-height: 1.6;
 }
 
-/* 
-  CAMBIO: app-wrapper ahora ocupa el 100% del ancho
-  y evita scroll horizontal accidental en móvil 
-*/
+/* Contenedor raíz: ocupa todo el ancho, sin scroll horizontal */
 .app-wrapper {
   width: 100%;
   max-width: 100vw;
@@ -43,8 +36,8 @@ body {
 
 /* ============================================================
    HEADER
-   En móvil: se apila en columna (logo + buscador + botón)
-   En desktop: todo en una sola fila
+   Móvil:   columna (logo → buscador → botón filtros)
+   Desktop: fila (logo | buscador | botón)
    ============================================================ */
 header {
   background-color: var(--mar-profundo);
@@ -55,21 +48,33 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 @media (min-width: 768px) {
   header {
-    flex-direction: row; /* desktop: en línea */
+    flex-direction: row; /* desktop: en una sola fila */
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    gap: 1rem;
+  }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center; /* centrado en móvil */
+}
+
+@media (min-width: 768px) {
+  .header-left {
+    justify-content: flex-start;
   }
 }
 
 .logo-navbar {
-  height: 40px; /* más pequeño en móvil */
+  height: 40px;
   width: auto;
   border-radius: 8px;
 }
@@ -93,27 +98,13 @@ header {
   }
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  justify-content: center; /* centrado en móvil */
-}
-
-@media (min-width: 768px) {
-  .header-left {
-    justify-content: flex-start;
-  }
-}
-
 .search-container {
-  width: 100%; /* ocupa todo el ancho en móvil */
-  position: relative;
+  width: 100%; /* full-width en móvil */
 }
 
 @media (min-width: 768px) {
   .search-container {
-    flex: 1; /* en desktop se expande */
+    flex: 1; /* se expande en desktop */
   }
 }
 
@@ -123,14 +114,7 @@ header {
   border: none;
   border-radius: 20px;
   font-size: 0.95rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-@media (min-width: 768px) {
-  .search-input {
-    font-size: 1rem;
-    padding: 0.75rem 1rem;
-  }
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .filters-btn {
@@ -141,32 +125,31 @@ header {
   padding: 0.6rem 1rem;
   cursor: pointer;
   font-weight: 600;
-  width: 100%; /* botón full-width en móvil */
+  width: 100%; /* full-width en móvil para fácil toque */
 }
 
 @media (min-width: 768px) {
   .filters-btn {
-    width: auto; /* tamaño natural en desktop */
+    width: auto;
   }
 }
 
 /* ============================================================
    CHIPS DE CATEGORÍAS
-   Scroll horizontal en móvil (ya funcionaba, solo se limpia)
+   Scroll horizontal sin barra visible
    ============================================================ */
 .categories-container {
   padding: 0.75rem 1rem;
   overflow-x: auto;
   white-space: nowrap;
   background-color: var(--blanco);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  /* Oculta la barra de scroll en móvil (cosmético) */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;     /* Firefox */
 }
 
 .categories-container::-webkit-scrollbar {
-  display: none;
+  display: none; /* Chrome/Safari */
 }
 
 .category-chip {
@@ -180,47 +163,34 @@ header {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-@media (min-width: 768px) {
-  .category-chip {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-
-.category-chip:hover {
-  background-color: var(--turquesa-claro);
-  color: var(--blanco);
-}
-
-.category-chip.active {
-  background-color: var(--mar-profundo);
-  color: var(--blanco);
-}
+.category-chip:hover  { background-color: var(--turquesa-claro); color: var(--blanco); }
+.category-chip.active { background-color: var(--mar-profundo);   color: var(--blanco); }
 
 /* ============================================================
-   LAYOUT PRINCIPAL — el cambio más importante
-   Móvil: mapa arriba (50vh), lista abajo (scroll)
-   Desktop: mapa 70% izquierda, lista 30% derecha
+   LAYOUT PRINCIPAL ← el cambio más importante
+   Móvil:   columna  → mapa arriba  / lista abajo con scroll
+   Desktop: fila     → mapa 70%     / lista 30%
    ============================================================ */
 .main-container {
   display: flex;
-  flex-direction: column; /* móvil: apilado verticalmente */
+  flex-direction: column; /* móvil: apilado */
   height: auto;
 }
 
 @media (min-width: 768px) {
   .main-container {
-    flex-direction: row; /* desktop: lado a lado */
+    flex-direction: row;              /* desktop: lado a lado */
     height: calc(100vh - 160px);
   }
 }
 
+/* Mapa */
 .map-container {
   width: 100%;
-  height: 50vh; /* en móvil, el mapa ocupa media pantalla */
+  height: 50vh; /* media pantalla en móvil */
   position: relative;
   overflow: hidden;
   background: #ddd;
@@ -238,18 +208,15 @@ header {
   height: 100%;
 }
 
+/* Lista de resultados
+   En móvil SÍ se muestra (antes era display:none)
+   El usuario hace scroll hacia abajo para verla */
 .results-container {
   width: 100%;
   background: var(--blanco);
   overflow-y: auto;
-  border-left: none; /* sin borde en móvil */
   padding: 1rem;
-  /* 
-    CAMBIO: en móvil la lista SÍ se muestra (antes estaba display:none)
-    El usuario puede hacer scroll hacia abajo para verla
-  */
-  display: block;
-  max-height: 60vh;
+  max-height: 60vh; /* scroll interno en móvil */
 }
 
 @media (min-width: 768px) {
@@ -293,7 +260,7 @@ header {
   border-radius: 16px;
   padding: 1rem;
   margin-bottom: 1rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
   transition: transform 0.2s ease;
   cursor: pointer;
 }
@@ -323,7 +290,7 @@ header {
   border-radius: 8px;
   font-size: 0.75rem;
   margin-left: 0.5rem;
-  white-space: nowrap; /* evita que el badge se parta en dos líneas */
+  white-space: nowrap; /* el badge no se parte en dos líneas */
 }
 
 .result-info {
@@ -334,17 +301,9 @@ header {
   font-size: 0.9rem;
 }
 
-.rating {
-  display: flex;
-  align-items: center;
-  color: var(--sol-coral);
-}
+.rating   { color: var(--sol-coral); }
+.distance { color: var(--gris-pardo); }
 
-.distance {
-  color: var(--gris-pardo);
-}
-
-/* Mini tags dentro de la tarjeta */
 .card-tags {
   display: flex;
   flex-wrap: wrap;
@@ -371,12 +330,9 @@ header {
   font-weight: 500;
   margin-top: 0.75rem;
   width: 100%;
-  text-align: center;
 }
 
-.get-directions:hover {
-  background: #ff6b3d;
-}
+.get-directions:hover { background: #ff6b3d; }
 
 /* ============================================================
    BOTÓN CENTRAR MAPA
@@ -392,7 +348,7 @@ header {
   border-radius: 20px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -400,40 +356,38 @@ header {
 }
 
 /* ============================================================
-   
-   Móvil: ocupa casi toda la pantalla (95%)
-   Desktop: ventana centrada con "max-width"
-
+   MODAL DE DETALLE
+   Móvil:   sube desde abajo, ocupa 90vh, esquinas solo arriba
+   Desktop: ventana centrada flotante con max-width
    ============================================================ */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0,0,0,0.5);
   display: none;
   justify-content: center;
-  align-items: flex-end; /* en móvil sube desde abajo */
+  align-items: flex-end; /* móvil: emerge desde abajo */
   z-index: 2000;
 }
 
 @media (min-width: 768px) {
   .modal-overlay {
-    align-items: center; /* en desktop queda centrado */
+    align-items: center; /* desktop: centrado vertical */
   }
 }
 
 .modal-content {
   background: var(--blanco);
-  border-radius: 16px 16px 0 0; /* en móvil, esquinas solo arriba */
+  border-radius: 16px 16px 0 0; /* móvil: solo esquinas superiores */
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
-  position: relative;
+  box-shadow: 0 5px 30px rgba(0,0,0,0.2);
 }
 
 @media (min-width: 768px) {
   .modal-content {
-    border-radius: 16px; /* en desktop, todas las esquinas redondeadas */
+    border-radius: 16px; /* desktop: todas las esquinas */
     width: 90%;
     max-width: 520px;
     max-height: 80vh;
@@ -449,8 +403,9 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky; /* el header del modal no se va al hacer scroll */
+  position: sticky; /* el encabezado queda fijo al hacer scroll */
   top: 0;
+  z-index: 1;
 }
 
 .modal-title {
@@ -478,10 +433,10 @@ header {
   padding: 1.25rem;
 }
 
-/* Galería: 1 columna en móvil, múltiples en desktop */
+/* Galería: 1 columna en móvil, grid automático en pantallas mayores */
 .modal-images {
   display: grid;
-  grid-template-columns: 1fr; /* 1 imagen por fila en móvil */
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-bottom: 1rem;
 }
@@ -494,21 +449,17 @@ header {
 
 .modal-image {
   width: 100%;
-  height: 180px; /* más alta en móvil para verse bien */
+  height: 180px;
   object-fit: cover;
   border-radius: 8px;
   background: #f2f2f2;
 }
 
 @media (min-width: 480px) {
-  .modal-image {
-    height: 140px;
-  }
+  .modal-image { height: 140px; }
 }
 
-.modal-details {
-  margin-bottom: 1rem;
-}
+.modal-details { margin-bottom: 1rem; }
 
 .modal-details p {
   margin-bottom: 0.5rem;
@@ -542,27 +493,23 @@ header {
   color: var(--mar-profundo);
 }
 
-/* 
-  Botones de acción del modal
-  Móvil: apilados en columna para que sean fáciles de tocar
-  Desktop: en fila
-*/
+/* Botones de acción
+   Móvil:   apilados en columna (fáciles de tocar con el pulgar)
+   Desktop: en fila */
 .modal-actions {
   display: flex;
-  flex-direction: column; /* móvil: apilados */
+  flex-direction: column;
   gap: 0.6rem;
   margin-top: 1rem;
 }
 
 @media (min-width: 480px) {
-  .modal-actions {
-    flex-direction: row; /* desktop: en fila */
-  }
+  .modal-actions { flex-direction: row; }
 }
 
 .action-btn {
   flex: 1;
-  padding: 0.85rem; /* más grande para ser fácil de tocar en móvil */
+  padding: 0.85rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -574,34 +521,24 @@ header {
   gap: 0.5rem;
 }
 
-.phone-btn {
-  background: var(--mar-profundo);
-  color: var(--blanco);
-}
-
-.whatsapp-btn {
-  background: var(--turquesa-claro);
-  color: var(--blanco);
-}
-
-.maps-btn {
-  background: var(--sol-coral);
-  color: var(--blanco);
-}
+.phone-btn    { background: var(--mar-profundo);   color: var(--blanco); }
+.whatsapp-btn { background: var(--turquesa-claro); color: var(--blanco); }
+.maps-btn     { background: var(--sol-coral);      color: var(--blanco); }
 
 /* ============================================================
    PANEL DE FILTROS
+   Móvil:   hoja que sube desde abajo (full-width)
+   Desktop: panel flotante arriba a la derecha
    ============================================================ */
 .filters-panel {
   position: fixed;
-  top: auto;
-  bottom: 0; /* en móvil sube desde abajo */
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 1200;
   background: var(--blanco);
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
   padding: 1.25rem;
   width: 100%;
   display: none;
@@ -618,9 +555,7 @@ header {
   }
 }
 
-.filters-panel.visible {
-  display: block;
-}
+.filters-panel.visible { display: block; }
 
 .filters-title {
   font-family: "Montserrat", sans-serif;
@@ -631,7 +566,7 @@ header {
 
 .filters-row {
   display: flex;
-  flex-direction: column; /* en móvil el label va arriba del control */
+  flex-direction: column; /* móvil: label encima del control */
   gap: 0.3rem;
   margin: 0.75rem 0;
 }
@@ -671,25 +606,17 @@ header {
   font-weight: 600;
 }
 
-.btn-apply {
-  background: var(--mar-profundo);
-  color: #fff;
-  flex: 1;
-}
-
-.btn-clear {
-  background: #eaeaea;
-  color: #333;
-}
+.btn-apply { background: var(--mar-profundo); color: #fff; flex: 1; }
+.btn-clear { background: #eaeaea; color: #333; }
 
 /* ============================================================
-   SECCIÓN FOOTER / FORMULARIO
+   FOOTER / FORMULARIO DE SUGERENCIAS
    ============================================================ */
 .about-section {
   padding: 1.5rem 1rem;
   background: var(--blanco);
   margin-top: 1rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }
 
 @media (min-width: 768px) {
@@ -715,17 +642,16 @@ header {
   margin-top: 1rem;
 }
 
+/* Móvil: inputs apilados / Desktop: inputs en fila */
 .form-group {
   display: flex;
-  flex-direction: column; /* en móvil los inputs van uno abajo del otro */
+  flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
 @media (min-width: 600px) {
-  .form-group {
-    flex-direction: row; /* en desktop van lado a lado */
-  }
+  .form-group { flex-direction: row; }
 }
 
 .form-input {
@@ -749,6 +675,4 @@ header {
   font-size: 1rem;
 }
 
-.submit-btn:hover {
-  background: #ff6b3d;
-}
+.submit-btn:hover { background: #ff6b3d; }
