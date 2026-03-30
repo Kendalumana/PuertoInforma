@@ -676,3 +676,65 @@ header {
 }
 
 .submit-btn:hover { background: #ff6b3d; }
+
+/* ============================================================
+   ESTRELLAS DE RATING
+   ============================================================ */
+.star-rating {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.star {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* Estrella llena — color coral del proyecto */
+.star-full {
+    color: var(--sol-coral);
+}
+
+/* Media estrella — mismo color pero 50% opacidad */
+.star-half {
+    color: var(--sol-coral);
+    opacity: 0.5;
+}
+
+/* Estrella vacía — gris claro */
+.star-empty {
+    color: #ddd;
+}
+
+.star-number {
+    font-size: 0.8rem;
+    color: var(--gris-pardo);
+    margin-left: 4px;
+    font-weight: 600;
+}
+
+/* ============================================================
+   BADGE ABIERTO / CERRADO
+   ============================================================ */
+.result-name-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.open-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Verde cuando está abierto */
+.open-badge.open {
+    color: #2e7d32;
+}
+
+/* Rojo cuando está cerrado */
+.open-badge.closed {
+    color: #c62828;
+}

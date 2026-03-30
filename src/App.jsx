@@ -19,6 +19,7 @@ import { PLACES, CATEGORIES } from './data/places';
 import Navbar      from './components/Navbar';
 import FilterPanel from './components/FilterPanel';
 import PlaceModal  from './components/PlaceModal';
+import StarRating from './components/StarRating';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
@@ -189,12 +190,17 @@ function App() {
                                     className="result-card"
                                     onClick={() => handlePlaceClick(p)}
                                 >
-                                    <div className="result-header">
+                                  <div className="result-header">
+                                    <div className="result-name-group">
                                         <h3 className="result-name">{p.name}</h3>
-                                        <span className="result-category">{p.category}</span>
+                                        <span className={`open-badge ${p.openNow ? 'open' : 'closed'}`}>
+                                        {p.openNow ? '● Abierto' : '● Cerrado'}
+                                        </span>
                                     </div>
+                                    <span className="result-category">{p.category}</span>
+                                </div>
                                     <div className="result-info">
-                                        <div className="rating">⭐ {p.rating}</div>
+                                        <StarRating rating={p.rating} />
                                         <div className="distance">📍 {p.distance} km</div>
                                     </div>
                                     <div className="card-tags">
