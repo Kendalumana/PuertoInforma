@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 // Ruta corregida: App.jsx está dentro de assets
-import App from "./assets/App.jsx"; 
+import App from "./App.jsx"; 
 // Ruta corregida: App.css está dentro de styles
 import "./styles/App.css"; 
 
