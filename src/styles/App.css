@@ -5,13 +5,12 @@
 
 /* --- Paleta de colores --- */
 :root {
-  --naranja:      #E8621A;  /* color dominante, acción */
-  --negro:        #1A1A1A;  /* fondo principal, navbar */
-  --gris-oscuro:  #2D2D2D;  /* cards, superficies */
-  --blanco:       #FFFFFF;  /* textos, iconos */
+  --naranja:      #E8621A;
+  --negro:        #1A1A1A;
+  --gris-oscuro:  #2D2D2D;
+  --blanco:       #FFFFFF;
 
-  /* Variables antiguas redirigidas a la nueva paleta
-     para que nada se rompa en el resto del CSS */
+  /* Variables antiguas redirigidas a la nueva paleta */
   --mar-profundo:   #1A1A1A;
   --turquesa-claro: #E8621A;
   --arena-suave:    #2D2D2D;
@@ -33,7 +32,6 @@ body {
   line-height: 1.6;
 }
 
-/* Contenedor raíz: ocupa todo el ancho, sin scroll horizontal */
 .app-wrapper {
   width: 100%;
   max-width: 100vw;
@@ -42,14 +40,12 @@ body {
 
 /* ============================================================
    HEADER
-   Móvil:   columna (logo → buscador → botón filtros)
-   Desktop: fila (logo | buscador | botón)
    ============================================================ */
 header {
   background-color: var(--negro);
   padding: 0.75rem 1rem;
   display: flex;
-  flex-direction: column; /* móvil: apilado */
+  flex-direction: column;
   gap: 0.75rem;
   position: sticky;
   top: 0;
@@ -60,7 +56,7 @@ header {
 
 @media (min-width: 768px) {
   header {
-    flex-direction: row; /* desktop: en una sola fila */
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
@@ -71,7 +67,7 @@ header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  justify-content: center; /* centrado en móvil */
+  justify-content: center;
 }
 
 @media (min-width: 768px) {
@@ -81,37 +77,28 @@ header {
 }
 
 .logo-navbar {
-  height: 40px;
+  height: 44px;
   width: auto;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 @media (min-width: 768px) {
   .logo-navbar {
-    height: 56px;
+    height: 52px;
   }
 }
 
 .brand-title {
-  color: var(--blanco);
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-@media (min-width: 768px) {
-  .brand-title {
-    font-size: 1.25rem;
-  }
+  display: none; /* el texto ya va dentro de la imagen del logo */
 }
 
 .search-container {
-  width: 100%; /* full-width en móvil */
+  width: 100%;
 }
 
 @media (min-width: 768px) {
   .search-container {
-    flex: 1; /* se expande en desktop */
+    flex: 1;
   }
 }
 
@@ -143,7 +130,7 @@ header {
   padding: 0.6rem 1rem;
   cursor: pointer;
   font-weight: 600;
-  width: 100%; /* full-width en móvil para fácil toque */
+  width: 100%;
 }
 
 .filters-btn:hover {
@@ -158,7 +145,6 @@ header {
 
 /* ============================================================
    CHIPS DE CATEGORÍAS
-   Scroll horizontal sin barra visible
    ============================================================ */
 .categories-container {
   padding: 0.75rem 1rem;
@@ -166,12 +152,12 @@ header {
   white-space: nowrap;
   background-color: var(--gris-oscuro);
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  -ms-overflow-style: none;  /* IE/Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .categories-container::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .category-chip {
@@ -194,27 +180,62 @@ header {
 .category-chip.active { background-color: var(--naranja); color: var(--blanco); border-color: var(--naranja); }
 
 /* ============================================================
-   LAYOUT PRINCIPAL ← el cambio más importante
-   Móvil:   columna  → mapa arriba  / lista abajo con scroll
-   Desktop: fila     → mapa 70%     / lista 30%
+   TABS DE NAVEGACIÓN MÓVIL
+   Solo visibles en móvil, ocultos en desktop
+   ============================================================ */
+.mobile-tabs {
+  display: flex;
+  background: var(--gris-oscuro);
+  border-bottom: 2px solid var(--naranja);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.85rem;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.tab-btn.active {
+  color: var(--naranja);
+  border-bottom: 3px solid var(--naranja);
+  background: var(--negro);
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   Móvil:   columna → tabs controlan qué se ve
+   Desktop: fila    → mapa 70% / lista 30%
    ============================================================ */
 .main-container {
   display: flex;
-  flex-direction: column; /* móvil: apilado */
+  flex-direction: column;
   height: auto;
 }
 
 @media (min-width: 768px) {
   .main-container {
-    flex-direction: row;              /* desktop: lado a lado */
+    flex-direction: row;
     height: calc(100vh - 160px);
   }
+}
+
+/* Ocultar según tab activo — SOLO en móvil */
+.hidden-mobile {
+  display: none;
 }
 
 /* Mapa */
 .map-container {
   width: 100%;
-  height: 50vh; /* media pantalla en móvil */
+  height: calc(100vh - 180px); /* pantalla completa menos header y tabs */
   position: relative;
   overflow: hidden;
   background: #ddd;
@@ -232,18 +253,30 @@ header {
   height: 100%;
 }
 
-/* Lista de resultados
-   En móvil SÍ se muestra (antes era display:none)
-   El usuario hace scroll hacia abajo para verla */
+/* Lista */
 .results-container {
   width: 100%;
   background: var(--negro);
   overflow-y: auto;
   padding: 1rem;
-  max-height: 60vh; /* scroll interno en móvil */
+  height: calc(100vh - 180px); /* misma altura que el mapa en móvil */
 }
 
 @media (min-width: 768px) {
+  /* En desktop: ignorar hidden-mobile y mostrar todo */
+  .hidden-mobile {
+    display: block !important;
+  }
+
+  .mobile-tabs {
+    display: none;
+  }
+
+  .map-container {
+    flex: 0 0 70%;
+    height: 100%;
+  }
+
   .results-container {
     flex: 0 0 30%;
     height: 100%;
@@ -316,7 +349,7 @@ header {
   border-radius: 8px;
   font-size: 0.75rem;
   margin-left: 0.5rem;
-  white-space: nowrap; /* el badge no se parte en dos líneas */
+  white-space: nowrap;
 }
 
 .result-info {
@@ -381,14 +414,10 @@ header {
   font-size: 0.9rem;
 }
 
-.nearby-btn:hover {
-  background: #cf5516;
-}
+.nearby-btn:hover { background: #cf5516; }
 
 /* ============================================================
    MODAL DE DETALLE
-   Móvil:   sube desde abajo, ocupa 90vh, esquinas solo arriba
-   Desktop: ventana centrada flotante con max-width
    ============================================================ */
 .modal-overlay {
   position: fixed;
@@ -396,19 +425,19 @@ header {
   background: rgba(0,0,0,0.7);
   display: none;
   justify-content: center;
-  align-items: flex-end; /* móvil: emerge desde abajo */
+  align-items: flex-end;
   z-index: 2000;
 }
 
 @media (min-width: 768px) {
   .modal-overlay {
-    align-items: center; /* desktop: centrado vertical */
+    align-items: center;
   }
 }
 
 .modal-content {
   background: var(--gris-oscuro);
-  border-radius: 16px 16px 0 0; /* móvil: solo esquinas superiores */
+  border-radius: 16px 16px 0 0;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -417,7 +446,7 @@ header {
 
 @media (min-width: 768px) {
   .modal-content {
-    border-radius: 16px; /* desktop: todas las esquinas */
+    border-radius: 16px;
     width: 90%;
     max-width: 520px;
     max-height: 80vh;
@@ -433,7 +462,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky; /* el encabezado queda fijo al hacer scroll */
+  position: sticky;
   top: 0;
   z-index: 1;
   border-bottom: 2px solid var(--naranja);
@@ -465,7 +494,6 @@ header {
   padding: 1.25rem;
 }
 
-/* Galería: 1 columna en móvil, grid automático en pantallas mayores */
 .modal-images {
   display: grid;
   grid-template-columns: 1fr;
@@ -489,9 +517,7 @@ header {
   transition: transform 0.2s ease;
 }
 
-.modal-image:hover {
-  transform: scale(1.02);
-}
+.modal-image:hover { transform: scale(1.02); }
 
 @media (min-width: 480px) {
   .modal-image { height: 140px; }
@@ -534,9 +560,6 @@ header {
   border: 1px solid var(--naranja);
 }
 
-/* Botones de acción
-   Móvil:   apilados en columna (fáciles de tocar con el pulgar)
-   Desktop: en fila */
 .modal-actions {
   display: flex;
   flex-direction: column;
@@ -568,8 +591,6 @@ header {
 
 /* ============================================================
    PANEL DE FILTROS
-   Móvil:   hoja que sube desde abajo (full-width)
-   Desktop: panel flotante arriba a la derecha
    ============================================================ */
 .filters-panel {
   position: fixed;
@@ -609,7 +630,7 @@ header {
 
 .filters-row {
   display: flex;
-  flex-direction: column; /* móvil: label encima del control */
+  flex-direction: column;
   gap: 0.3rem;
   margin: 0.75rem 0;
 }
@@ -688,7 +709,6 @@ header {
   border: 1px solid var(--gris-oscuro);
 }
 
-/* Móvil: inputs apilados / Desktop: inputs en fila */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -738,116 +758,38 @@ header {
    ESTRELLAS DE RATING
    ============================================================ */
 .star-rating {
-    display: flex;
-    align-items: center;
-    gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.star {
-    font-size: 1rem;
-    line-height: 1;
-}
+.star { font-size: 1rem; line-height: 1; }
 
-/* Estrella llena — color naranja del proyecto */
-.star-full {
-    color: var(--naranja);
-}
-
-/* Media estrella — mismo color pero 50% opacidad */
-.star-half {
-    color: var(--naranja);
-    opacity: 0.5;
-}
-
-/* Estrella vacía — gris claro */
-.star-empty {
-    color: #444;
-}
+.star-full  { color: var(--naranja); }
+.star-half  { color: var(--naranja); opacity: 0.5; }
+.star-empty { color: #444; }
 
 .star-number {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.6);
-    margin-left: 4px;
-    font-weight: 600;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+  margin-left: 4px;
+  font-weight: 600;
 }
 
 /* ============================================================
    BADGE ABIERTO / CERRADO
    ============================================================ */
 .result-name-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .open-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
-/* Verde cuando está abierto */
-.open-badge.open {
-    color: #66bb6a;
-}
-
-/* Rojo cuando está cerrado */
-.open-badge.closed {
-    color: #ef5350;
-}
-
-/* ============================================================
-   TABS DE NAVEGACIÓN MÓVIL
-   Solo visibles en móvil, ocultos en desktop
-   ============================================================ */
-.mobile-tabs {
-    display: flex;
-    background: var(--gris-oscuro);
-    border-bottom: 2px solid var(--naranja);
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 0.85rem;
-    border: none;
-    background: transparent;
-    color: rgba(255,255,255,0.5);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px; /* se solapa con el border del contenedor */
-}
-
-.tab-btn.active {
-    color: var(--naranja);
-    border-bottom: 3px solid var(--naranja);
-    background: var(--negro);
-}
-
-/* Ocultar en móvil según tab activo */
-.hidden-mobile {
-    display: none;
-}
-
-/* En móvil la lista ocupa toda la pantalla cuando está activa */
-.results-container:not(.hidden-mobile) {
-    max-height: calc(100vh - 180px); /* pantalla completa menos header y tabs */
-    overflow-y: auto;
-}
-
-/* En desktop: ocultar tabs, mostrar todo lado a lado */
-@media (min-width: 768px) {
-    .mobile-tabs {
-        display: none; /* tabs invisibles en desktop */
-    }
-
-    .hidden-mobile {
-        display: flex !important; /* en desktop siempre se muestra todo */
-    }
-
-    .results-container:not(.hidden-mobile) {
-        max-height: none;
-    }
-}
+.open-badge.open   { color: #66bb6a; }
+.open-badge.closed { color: #ef5350; }
