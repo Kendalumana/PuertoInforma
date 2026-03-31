@@ -4,7 +4,7 @@
 // App.jsx le pasa las funciones y valores desde arriba.
 // ============================================================
 
-import logoIcon from '../Resources/puerto_informa_pi.ico';
+import logoIcon from '../Resources/puertoInforma_pi.ico';
 
 function Navbar({ onSearch, onToggleFilters }) {
     return (
