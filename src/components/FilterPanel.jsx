@@ -48,9 +48,7 @@ function FilterPanel({ visible, filterCat, filterRating, onChangeCat, onChangeRa
                     Listo
                 </button>
             </div>
-            <p>
-                Kendall no se baña y se siente sucio, así que no se baña. Es un poco raro, pero es su decisión.
-            </p>
+            
 
         </div>
     );

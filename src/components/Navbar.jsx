@@ -4,7 +4,7 @@
 // App.jsx le pasa las funciones y valores desde arriba.
 // ============================================================
 
-import logoIcon from '../Resources/logoPuertoInforma.ico';
+import logoIcon from '../Resources/logoFinal.ico';
 
 function Navbar({ onSearch, onToggleFilters }) {
     return (
@@ -12,7 +12,7 @@ function Navbar({ onSearch, onToggleFilters }) {
             {/* Logo y nombre de la app */}
             <div className="header-left">
                 <img src={logoIcon} alt="Logo" className="logo-navbar" />
-                <div className="brand-title">Puerto Informa</div>
+                
             </div>
 
             {/* Buscador — llama a onSearch cada vez que el usuario escribe */}
