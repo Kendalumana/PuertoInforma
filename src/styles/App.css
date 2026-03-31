@@ -5,12 +5,18 @@
 
 /* --- Paleta de colores --- */
 :root {
-  --mar-profundo:   #0a3d62;
-  --turquesa-claro: #17a2b8;
-  --arena-suave:    #f4e6d1;
-  --sol-coral:      #ff7f50;
-  --gris-pardo:     #575757;
-  --blanco:         #ffffff;
+  --naranja:      #E8621A;  /* color dominante, acción */
+  --negro:        #1A1A1A;  /* fondo principal, navbar */
+  --gris-oscuro:  #2D2D2D;  /* cards, superficies */
+  --blanco:       #FFFFFF;  /* textos, iconos */
+
+  /* Variables antiguas redirigidas a la nueva paleta
+     para que nada se rompa en el resto del CSS */
+  --mar-profundo:   #1A1A1A;
+  --turquesa-claro: #E8621A;
+  --arena-suave:    #2D2D2D;
+  --sol-coral:      #E8621A;
+  --gris-pardo:     #FFFFFF;
 }
 
 /* --- Reset básico --- */
@@ -22,8 +28,8 @@
 }
 
 body {
-  background-color: var(--arena-suave);
-  color: var(--gris-pardo);
+  background-color: var(--negro);
+  color: var(--blanco);
   line-height: 1.6;
 }
 
@@ -40,7 +46,7 @@ body {
    Desktop: fila (logo | buscador | botón)
    ============================================================ */
 header {
-  background-color: var(--mar-profundo);
+  background-color: var(--negro);
   padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column; /* móvil: apilado */
@@ -48,7 +54,8 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  border-bottom: 2px solid var(--naranja);
 }
 
 @media (min-width: 768px) {
@@ -111,14 +118,25 @@ header {
 .search-input {
   width: 100%;
   padding: 0.65rem 1rem;
-  border: none;
+  border: 2px solid var(--gris-oscuro);
   border-radius: 20px;
   font-size: 0.95rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: var(--gris-oscuro);
+  color: var(--blanco);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.search-input::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--naranja);
 }
 
 .filters-btn {
-  background: var(--turquesa-claro);
+  background: var(--naranja);
   color: var(--blanco);
   border: none;
   border-radius: 20px;
@@ -126,6 +144,10 @@ header {
   cursor: pointer;
   font-weight: 600;
   width: 100%; /* full-width en móvil para fácil toque */
+}
+
+.filters-btn:hover {
+  background: #cf5516;
 }
 
 @media (min-width: 768px) {
@@ -142,8 +164,8 @@ header {
   padding: 0.75rem 1rem;
   overflow-x: auto;
   white-space: nowrap;
-  background-color: var(--blanco);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  background-color: var(--gris-oscuro);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   -ms-overflow-style: none;  /* IE/Edge */
   scrollbar-width: none;     /* Firefox */
 }
@@ -157,17 +179,19 @@ header {
   align-items: center;
   padding: 0.4rem 0.85rem;
   margin-right: 0.5rem;
-  background-color: var(--arena-suave);
+  background-color: var(--negro);
+  color: var(--blanco);
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  border: 1px solid var(--gris-oscuro);
 }
 
-.category-chip:hover  { background-color: var(--turquesa-claro); color: var(--blanco); }
-.category-chip.active { background-color: var(--mar-profundo);   color: var(--blanco); }
+.category-chip:hover  { background-color: var(--naranja); color: var(--blanco); border-color: var(--naranja); }
+.category-chip.active { background-color: var(--naranja); color: var(--blanco); border-color: var(--naranja); }
 
 /* ============================================================
    LAYOUT PRINCIPAL ← el cambio más importante
@@ -213,7 +237,7 @@ header {
    El usuario hace scroll hacia abajo para verla */
 .results-container {
   width: 100%;
-  background: var(--blanco);
+  background: var(--negro);
   overflow-y: auto;
   padding: 1rem;
   max-height: 60vh; /* scroll interno en móvil */
@@ -224,7 +248,7 @@ header {
     flex: 0 0 30%;
     height: 100%;
     max-height: none;
-    border-left: 1px solid #eee;
+    border-left: 1px solid var(--gris-oscuro);
   }
 }
 
@@ -237,18 +261,18 @@ header {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--turquesa-claro);
+  border-bottom: 2px solid var(--naranja);
 }
 
 .results-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
-  color: var(--mar-profundo);
+  color: var(--blanco);
   font-size: 1rem;
 }
 
 .results-count {
-  background-color: var(--turquesa-claro);
+  background-color: var(--naranja);
   color: var(--blanco);
   padding: 0.25rem 0.5rem;
   border-radius: 10px;
@@ -256,17 +280,19 @@ header {
 }
 
 .result-card {
-  background-color: var(--arena-suave);
+  background-color: var(--gris-oscuro);
   border-radius: 16px;
   padding: 1rem;
   margin-bottom: 1rem;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   transition: transform 0.2s ease;
   cursor: pointer;
+  border: 1px solid rgba(232,98,26,0.15);
 }
 
 .result-card:hover {
   transform: translateY(-2px);
+  border-color: var(--naranja);
 }
 
 .result-header {
@@ -279,12 +305,12 @@ header {
 .result-name {
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
-  color: var(--mar-profundo);
+  color: var(--blanco);
   font-size: 1rem;
 }
 
 .result-category {
-  background: var(--turquesa-claro);
+  background: var(--naranja);
   color: var(--blanco);
   padding: 0.25rem 0.5rem;
   border-radius: 8px;
@@ -301,8 +327,8 @@ header {
   font-size: 0.9rem;
 }
 
-.rating   { color: var(--sol-coral); }
-.distance { color: var(--gris-pardo); }
+.rating   { color: var(--naranja); }
+.distance { color: rgba(255,255,255,0.6); }
 
 .card-tags {
   display: flex;
@@ -312,16 +338,16 @@ header {
 }
 
 .mini-tag {
-  background: var(--blanco);
-  color: var(--mar-profundo);
+  background: var(--negro);
+  color: var(--blanco);
   font-size: 0.75rem;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
-  border: 1px solid var(--turquesa-claro);
+  border: 1px solid var(--naranja);
 }
 
 .get-directions {
-  background: var(--sol-coral);
+  background: var(--naranja);
   color: var(--blanco);
   border: none;
   padding: 0.5rem 1rem;
@@ -332,7 +358,7 @@ header {
   width: 100%;
 }
 
-.get-directions:hover { background: #ff6b3d; }
+.get-directions:hover { background: #cf5516; }
 
 /* ============================================================
    BOTÓN CENTRAR MAPA
@@ -341,18 +367,22 @@ header {
   position: absolute;
   bottom: 16px;
   right: 16px;
-  background: var(--sol-coral);
+  background: var(--naranja);
   color: var(--blanco);
   border: none;
   padding: 0.65rem 1.25rem;
   border-radius: 20px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(232,98,26,0.4);
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
+}
+
+.nearby-btn:hover {
+  background: #cf5516;
 }
 
 /* ============================================================
@@ -363,7 +393,7 @@ header {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.7);
   display: none;
   justify-content: center;
   align-items: flex-end; /* móvil: emerge desde abajo */
@@ -377,12 +407,12 @@ header {
 }
 
 .modal-content {
-  background: var(--blanco);
+  background: var(--gris-oscuro);
   border-radius: 16px 16px 0 0; /* móvil: solo esquinas superiores */
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 5px 30px rgba(0,0,0,0.5);
 }
 
 @media (min-width: 768px) {
@@ -395,7 +425,7 @@ header {
 }
 
 .modal-header {
-  background: var(--mar-profundo);
+  background: var(--negro);
   color: var(--blanco);
   padding: 1rem;
   border-top-left-radius: 16px;
@@ -406,6 +436,7 @@ header {
   position: sticky; /* el encabezado queda fijo al hacer scroll */
   top: 0;
   z-index: 1;
+  border-bottom: 2px solid var(--naranja);
 }
 
 .modal-title {
@@ -416,7 +447,8 @@ header {
 
 .modal-subtitle {
   font-size: 0.85rem;
-  opacity: 0.8;
+  opacity: 0.7;
+  color: var(--naranja);
 }
 
 .close-modal {
@@ -452,7 +484,13 @@ header {
   height: 180px;
   object-fit: cover;
   border-radius: 8px;
-  background: #f2f2f2;
+  background: var(--negro);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.modal-image:hover {
+  transform: scale(1.02);
 }
 
 @media (min-width: 480px) {
@@ -465,17 +503,19 @@ header {
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
   line-height: 1.5;
+  color: rgba(255,255,255,0.85);
 }
 
 .sinpe-badge {
   display: inline-block;
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: rgba(46,125,50,0.2);
+  color: #66bb6a;
   padding: 0.3rem 0.75rem;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.9rem;
   margin-top: 0.25rem;
+  border: 1px solid #66bb6a;
 }
 
 .modal-tags {
@@ -486,11 +526,12 @@ header {
 }
 
 .tag-item {
-  background: var(--arena-suave);
+  background: var(--negro);
   padding: 0.25rem 0.6rem;
   border-radius: 8px;
   font-size: 0.8rem;
-  color: var(--mar-profundo);
+  color: var(--naranja);
+  border: 1px solid var(--naranja);
 }
 
 /* Botones de acción
@@ -521,9 +562,9 @@ header {
   gap: 0.5rem;
 }
 
-.phone-btn    { background: var(--mar-profundo);   color: var(--blanco); }
-.whatsapp-btn { background: var(--turquesa-claro); color: var(--blanco); }
-.maps-btn     { background: var(--sol-coral);      color: var(--blanco); }
+.phone-btn    { background: var(--negro);   color: var(--blanco); border: 1px solid var(--naranja); }
+.whatsapp-btn { background: #25D366;        color: var(--blanco); }
+.maps-btn     { background: var(--naranja); color: var(--blanco); }
 
 /* ============================================================
    PANEL DE FILTROS
@@ -536,12 +577,13 @@ header {
   left: 0;
   right: 0;
   z-index: 1200;
-  background: var(--blanco);
+  background: var(--gris-oscuro);
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
   padding: 1.25rem;
   width: 100%;
   display: none;
+  border-top: 2px solid var(--naranja);
 }
 
 @media (min-width: 768px) {
@@ -552,6 +594,7 @@ header {
     left: auto;
     width: 320px;
     border-radius: 16px;
+    border: 1px solid var(--naranja);
   }
 }
 
@@ -560,7 +603,7 @@ header {
 .filters-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
-  color: var(--mar-profundo);
+  color: var(--blanco);
   margin-bottom: 0.75rem;
 }
 
@@ -580,7 +623,7 @@ header {
 
 .filters-row label {
   font-weight: 500;
-  color: var(--mar-profundo);
+  color: var(--blanco);
   min-width: 110px;
 }
 
@@ -588,8 +631,10 @@ header {
 .filters-row input[type="range"] {
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--naranja);
   border-radius: 8px;
+  background: var(--negro);
+  color: var(--blanco);
 }
 
 .filters-actions {
@@ -606,17 +651,17 @@ header {
   font-weight: 600;
 }
 
-.btn-apply { background: var(--mar-profundo); color: #fff; flex: 1; }
-.btn-clear { background: #eaeaea; color: #333; }
+.btn-apply { background: var(--naranja); color: var(--blanco); flex: 1; }
+.btn-clear { background: var(--negro);   color: var(--blanco); border: 1px solid var(--naranja); }
 
 /* ============================================================
    FOOTER / FORMULARIO DE SUGERENCIAS
    ============================================================ */
 .about-section {
   padding: 1.5rem 1rem;
-  background: var(--blanco);
+  background: var(--gris-oscuro);
   margin-top: 1rem;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
 }
 
 @media (min-width: 768px) {
@@ -630,16 +675,17 @@ header {
 .section-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
-  color: var(--mar-profundo);
+  color: var(--blanco);
   margin-bottom: 0.75rem;
   text-align: center;
 }
 
 .contact-form {
-  background: var(--arena-suave);
+  background: var(--negro);
   padding: 1.25rem;
   border-radius: 16px;
   margin-top: 1rem;
+  border: 1px solid var(--gris-oscuro);
 }
 
 /* Móvil: inputs apilados / Desktop: inputs en fila */
@@ -657,13 +703,24 @@ header {
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--gris-oscuro);
   border-radius: 8px;
   font-size: 1rem;
+  background: var(--gris-oscuro);
+  color: var(--blanco);
+}
+
+.form-input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--naranja);
 }
 
 .submit-btn {
-  background: var(--sol-coral);
+  background: var(--naranja);
   color: var(--blanco);
   border: none;
   padding: 0.85rem 1.5rem;
@@ -675,7 +732,7 @@ header {
   font-size: 1rem;
 }
 
-.submit-btn:hover { background: #ff6b3d; }
+.submit-btn:hover { background: #cf5516; }
 
 /* ============================================================
    ESTRELLAS DE RATING
@@ -691,25 +748,25 @@ header {
     line-height: 1;
 }
 
-/* Estrella llena — color coral del proyecto */
+/* Estrella llena — color naranja del proyecto */
 .star-full {
-    color: var(--sol-coral);
+    color: var(--naranja);
 }
 
 /* Media estrella — mismo color pero 50% opacidad */
 .star-half {
-    color: var(--sol-coral);
+    color: var(--naranja);
     opacity: 0.5;
 }
 
 /* Estrella vacía — gris claro */
 .star-empty {
-    color: #ddd;
+    color: #444;
 }
 
 .star-number {
     font-size: 0.8rem;
-    color: var(--gris-pardo);
+    color: rgba(255,255,255,0.6);
     margin-left: 4px;
     font-weight: 600;
 }
@@ -731,10 +788,10 @@ header {
 
 /* Verde cuando está abierto */
 .open-badge.open {
-    color: #2e7d32;
+    color: #66bb6a;
 }
 
 /* Rojo cuando está cerrado */
 .open-badge.closed {
-    color: #c62828;
+    color: #ef5350;
 }
