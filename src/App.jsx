@@ -2,7 +2,6 @@
 // App.jsx — Componente raíz de PuertoInforma
 // Su único trabajo es: manejar el estado global y conectar
 // todos los componentes entre sí.
-// Pasó de ~200 líneas a ~120 líneas legibles.
 // ============================================================
 
 import { useEffect, useState, useRef } from 'react';
@@ -19,7 +18,7 @@ import { PLACES, CATEGORIES } from './data/places';
 import Navbar      from './components/Navbar';
 import FilterPanel from './components/FilterPanel';
 import PlaceModal  from './components/PlaceModal';
-import StarRating from './components/StarRating';
+import StarRating  from './components/StarRating';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
@@ -36,6 +35,7 @@ function App() {
     const [searchQuery,    setSearchQuery   ] = useState("");
     const [filterCat,      setFilterCat     ] = useState("");
     const [filterRating,   setFilterRating  ] = useState(0);
+    const [activeTab,      setActiveTab     ] = useState("mapa"); // nuevo: tabs móvil
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -91,12 +91,12 @@ function App() {
         markersLayer.current.clearLayers();
 
         const defaultIcon = new L.Icon({
-            iconUrl:    markerIconPng,
-            shadowUrl:  markerShadowPng,
-            iconSize:   [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor:[1, -34],
-            shadowSize: [41, 41]
+            iconUrl:     markerIconPng,
+            shadowUrl:   markerShadowPng,
+            iconSize:    [25, 41],
+            iconAnchor:  [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize:  [41, 41]
         });
 
         const newMarkers = {};
@@ -111,11 +111,13 @@ function App() {
         setMarkers(newMarkers);
     };
 
-    // Al hacer clic en una tarjeta: vuela al marcador y abre el modal
+    // Al hacer clic en una tarjeta: vuela al marcador, abre modal
+    // y en móvil cambia al tab del mapa automáticamente
     const handlePlaceClick = (p) => {
         map.flyTo([p.lat, p.lng], 16);
         markers[p.id]?.openPopup();
         setSelectedPlace(p);
+        setActiveTab('mapa'); // regresa al mapa al seleccionar un comercio
     };
 
     // Limpia todos los filtros de una vez
@@ -161,11 +163,30 @@ function App() {
                 ))}
             </div>
 
+            {/* ============================================================
+                TABS — solo visibles en móvil
+                En desktop se ocultan y el layout es lado a lado normal
+                ============================================================ */}
+            <div className="mobile-tabs">
+                <button
+                    className={`tab-btn ${activeTab === 'mapa' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('mapa')}
+                >
+                    🗺️ Mapa
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'lista' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('lista')}
+                >
+                    📋 Lista ({filteredPlaces.length})
+                </button>
+            </div>
+
             {/* Layout principal: mapa + lista */}
             <main className="main-container">
 
-                {/* Mapa */}
-                <div className="map-container">
+                {/* Mapa — se oculta en móvil si el tab activo es lista */}
+                <div className={`map-container ${activeTab === 'lista' ? 'hidden-mobile' : ''}`}>
                     <div id="map" ref={mapRef}></div>
                     <button
                         className="nearby-btn"
@@ -175,8 +196,8 @@ function App() {
                     </button>
                 </div>
 
-                {/* Lista de resultados */}
-                <aside className="results-container">
+                {/* Lista — se oculta en móvil si el tab activo es mapa */}
+                <aside className={`results-container ${activeTab === 'mapa' ? 'hidden-mobile' : ''}`}>
                     <div className="results-header">
                         <h2 className="results-title">Comercios encontrados</h2>
                         <span className="results-count">{filteredPlaces.length}</span>
@@ -190,15 +211,15 @@ function App() {
                                     className="result-card"
                                     onClick={() => handlePlaceClick(p)}
                                 >
-                                  <div className="result-header">
-                                    <div className="result-name-group">
-                                        <h3 className="result-name">{p.name}</h3>
-                                        <span className={`open-badge ${p.openNow ? 'open' : 'closed'}`}>
-                                        {p.openNow ? '● Abierto' : '● Cerrado'}
-                                        </span>
+                                    <div className="result-header">
+                                        <div className="result-name-group">
+                                            <h3 className="result-name">{p.name}</h3>
+                                            <span className={`open-badge ${p.openNow ? 'open' : 'closed'}`}>
+                                                {p.openNow ? '● Abierto' : '● Cerrado'}
+                                            </span>
+                                        </div>
+                                        <span className="result-category">{p.category}</span>
                                     </div>
-                                    <span className="result-category">{p.category}</span>
-                                </div>
                                     <div className="result-info">
                                         <StarRating rating={p.rating} />
                                         <div className="distance">📍 {p.distance} km</div>

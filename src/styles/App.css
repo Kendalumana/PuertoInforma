@@ -795,3 +795,59 @@ header {
 .open-badge.closed {
     color: #ef5350;
 }
+
+/* ============================================================
+   TABS DE NAVEGACIÓN MÓVIL
+   Solo visibles en móvil, ocultos en desktop
+   ============================================================ */
+.mobile-tabs {
+    display: flex;
+    background: var(--gris-oscuro);
+    border-bottom: 2px solid var(--naranja);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 0.85rem;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px; /* se solapa con el border del contenedor */
+}
+
+.tab-btn.active {
+    color: var(--naranja);
+    border-bottom: 3px solid var(--naranja);
+    background: var(--negro);
+}
+
+/* Ocultar en móvil según tab activo */
+.hidden-mobile {
+    display: none;
+}
+
+/* En móvil la lista ocupa toda la pantalla cuando está activa */
+.results-container:not(.hidden-mobile) {
+    max-height: calc(100vh - 180px); /* pantalla completa menos header y tabs */
+    overflow-y: auto;
+}
+
+/* En desktop: ocultar tabs, mostrar todo lado a lado */
+@media (min-width: 768px) {
+    .mobile-tabs {
+        display: none; /* tabs invisibles en desktop */
+    }
+
+    .hidden-mobile {
+        display: flex !important; /* en desktop siempre se muestra todo */
+    }
+
+    .results-container:not(.hidden-mobile) {
+        max-height: none;
+    }
+}
