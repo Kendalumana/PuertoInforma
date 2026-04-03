@@ -1,7 +1,5 @@
 // ============================================================
-// App.jsx — Componente raíz de PuertoInforma
-// Su único trabajo es: manejar el estado global y conectar
-// todos los componentes entre sí.
+// App.jsx — Componente raíz de PuertoInforma (CONECTADO AL BACKEND)
 // ============================================================
 
 import { useEffect, useState, useRef } from 'react';
@@ -11,8 +9,8 @@ import markerIconPng from 'leaflet/dist/images/marker-icon.png';
 import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
 import './styles/App.css';
 
-// Datos
-import { PLACES, CATEGORIES } from './data/places';
+// --- NUEVO: Importamos el túnel de Axios ---
+import api from './api/axios';
 
 // Componentes
 import Navbar      from './components/Navbar';
@@ -20,7 +18,6 @@ import FilterPanel from './components/FilterPanel';
 import PlaceModal  from './components/PlaceModal';
 import StarRating  from './components/StarRating';
 
-// Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
 
 function App() {
@@ -28,133 +25,142 @@ function App() {
     // --- Estado global ---
     const [map,            setMap           ] = useState(null);
     const [markers,        setMarkers       ] = useState({});
-    const [filteredPlaces, setFilteredPlaces] = useState(PLACES);
+    const [allPlaces,      setAllPlaces     ] = useState([]); // 👈 Reemplaza al PLACES estático
+    const [categories,     setCategories    ] = useState([]); // 👈 Reemplaza al CATEGORIES estático
+    const [filteredPlaces, setFilteredPlaces] = useState([]);
     const [selectedPlace,  setSelectedPlace ] = useState(null);
     const [activeChip,     setActiveChip    ] = useState("");
     const [showFilters,    setShowFilters   ] = useState(false);
     const [searchQuery,    setSearchQuery   ] = useState("");
     const [filterCat,      setFilterCat     ] = useState("");
     const [filterRating,   setFilterRating  ] = useState(0);
-    const [activeTab,      setActiveTab     ] = useState("mapa"); // nuevo: tabs móvil
+    const [activeTab,      setActiveTab     ] = useState("mapa");
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
 
     // -------------------------------------------------------
-    // Inicialización del mapa — corre solo una vez al montar
+    // 1. CARGA DE DATOS DESDE EL BACKEND (Render)
+    // -------------------------------------------------------
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                // Traemos lugares y categorías en paralelo
+                const [resLugares, resCats] = await Promise.all([
+                    api.get('/lugar'),
+                    api.get('/categoria')
+                ]);
+
+                // MAPEO: Convertimos los nombres de Java a los nombres que ya usa tu Front
+                const mappedPlaces = resLugares.data.map(p => ({
+                    id: p.id,
+                    name: p.nombre,          // Java 'nombre' -> Front 'name'
+                    lat: p.latitud,         // Java 'latitud' -> Front 'lat'
+                    lng: p.longitud,        // Java 'longitud' -> Front 'lng'
+                    category: p.categoria.nombre,
+                    puntos: p.puntosQueOtorga,
+                    urlImagen: p.urlImagen,
+                    rating: 5.0,            // Hardcodeado por ahora si no hay en DB
+                    openNow: true,          // Hardcodeado por ahora
+                    distance: "0.5",        // Hardcodeado por ahora
+                    tags: ["Puerto", "Turismo"]
+                }));
+
+                setAllPlaces(mappedPlaces);
+                setFilteredPlaces(mappedPlaces); // Inicialmente mostramos todos
+                setCategories(resCats.data.map(c => c.nombre));
+                
+            } catch (err) {
+                console.error("Error cargando datos del Puerto:", err);
+            }
+        };
+
+        fetchInitialData();
+    }, []);
+
+    // -------------------------------------------------------
+    // 2. Inicialización del mapa
     // -------------------------------------------------------
     useEffect(() => {
         if (!mapRef.current) return;
-
-        const instance = L.map(mapRef.current).setView(
-            [CENTER.lat, CENTER.lng], 14
-        );
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(instance);
-
+        const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(instance);
         markersLayer.current.addTo(instance);
         setMap(instance);
-
-        // Limpia el mapa cuando el componente se desmonta
         return () => instance.remove();
     }, []);
 
     // -------------------------------------------------------
-    // Aplicar filtros — corre cada vez que cambia cualquier
-    // criterio de búsqueda o cuando el mapa está listo
+    // 3. Aplicar filtros (Ahora usa allPlaces en vez de PLACES)
     // -------------------------------------------------------
     useEffect(() => {
-        if (!map) return;
+        if (!allPlaces.length) return;
+
+        const applyFilters = () => {
+            const list = allPlaces.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesChip   = activeChip ? p.category === activeChip : true;
+                const matchesCat    = filterCat ? p.category === filterCat : true;
+                const matchesRating = p.rating >= filterRating;
+                return matchesSearch && matchesChip && matchesCat && matchesRating;
+            });
+
+            setFilteredPlaces(list);
+            if (map) updateMarkers(list);
+        };
+
         applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map, activeChip, filterCat, filterRating, searchQuery]);
+    }, [allPlaces, map, activeChip, filterCat, filterRating, searchQuery]);
 
-    const applyFilters = () => {
-        const list = PLACES.filter(p => {
-            const matchesSearch  = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesChip    = activeChip   ? p.category === activeChip  : true;
-            const matchesCat     = filterCat    ? p.category === filterCat   : true;
-            const matchesRating  = p.rating >= filterRating;
-            return matchesSearch && matchesChip && matchesCat && matchesRating;
-        });
-
-        setFilteredPlaces(list);
-        updateMarkers(list);
-    };
-
-    // -------------------------------------------------------
-    // Marcadores del mapa
-    // -------------------------------------------------------
     const updateMarkers = (list) => {
         markersLayer.current.clearLayers();
-
         const defaultIcon = new L.Icon({
-            iconUrl:     markerIconPng,
-            shadowUrl:   markerShadowPng,
-            iconSize:    [25, 41],
-            iconAnchor:  [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize:  [41, 41]
+            iconUrl: markerIconPng,
+            shadowUrl: markerShadowPng,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41]
         });
 
         const newMarkers = {};
         list.forEach(p => {
-            const m = L.marker([p.lat, p.lng], { icon: defaultIcon })
-                .addTo(markersLayer.current);
+            const m = L.marker([p.lat, p.lng], { icon: defaultIcon }).addTo(markersLayer.current);
             m.bindPopup(`<strong>${p.name}</strong><br>${p.category}`);
             m.on('click', () => setSelectedPlace(p));
             newMarkers[p.id] = m;
         });
-
         setMarkers(newMarkers);
     };
 
-    // Al hacer clic en una tarjeta: vuela al marcador, abre modal
-    // y en móvil cambia al tab del mapa automáticamente
     const handlePlaceClick = (p) => {
         map.flyTo([p.lat, p.lng], 16);
         markers[p.id]?.openPopup();
         setSelectedPlace(p);
-        setActiveTab('mapa'); // regresa al mapa al seleccionar un comercio
+        setActiveTab('mapa');
     };
 
-    // Limpia todos los filtros de una vez
     const handleClearFilters = () => {
         setFilterCat("");
         setFilterRating(0);
         setActiveChip("");
     };
 
-    // -------------------------------------------------------
-    // Render
-    // -------------------------------------------------------
     return (
         <div className="app-wrapper">
-
-            {/* Barra de navegación */}
-            <Navbar
-                onSearch={setSearchQuery}
-                onToggleFilters={() => setShowFilters(!showFilters)}
-            />
-
-            {/* Panel de filtros */}
-            <FilterPanel
-                visible={showFilters}
-                filterCat={filterCat}
-                filterRating={filterRating}
-                onChangeCat={setFilterCat}
-                onChangeRating={setFilterRating}
+            <Navbar onSearch={setSearchQuery} onToggleFilters={() => setShowFilters(!showFilters)} />
+            
+            <FilterPanel 
+                visible={showFilters} 
+                filterCat={filterCat} 
+                onChangeCat={setFilterCat} 
                 onClear={handleClearFilters}
                 onClose={() => setShowFilters(false)}
             />
 
-            {/* Chips de categorías rápidas */}
+            {/* Chips dinámicos desde el Backend */}
             <div className="categories-container">
-                {CATEGORIES.slice(0, 10).map(c => (
-                    <div
-                        key={c}
+                {categories.map(c => (
+                    <div 
+                        key={c} 
                         className={`category-chip ${activeChip === c ? 'active' : ''}`}
                         onClick={() => setActiveChip(activeChip === c ? "" : c)}
                     >
@@ -163,109 +169,41 @@ function App() {
                 ))}
             </div>
 
-            {/* ============================================================
-                TABS — solo visibles en móvil
-                En desktop se ocultan y el layout es lado a lado normal
-                ============================================================ */}
             <div className="mobile-tabs">
-                <button
-                    className={`tab-btn ${activeTab === 'mapa' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('mapa')}
-                >
-                    🗺️ Mapa
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'lista' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('lista')}
-                >
-                    📋 Lista ({filteredPlaces.length})
-                </button>
+                <button className={`tab-btn ${activeTab === 'mapa' ? 'active' : ''}`} onClick={() => setActiveTab('mapa')}>🗺️ Mapa</button>
+                <button className={`tab-btn ${activeTab === 'lista' ? 'active' : ''}`} onClick={() => setActiveTab('lista')}>📋 Lista ({filteredPlaces.length})</button>
             </div>
 
-            {/* Layout principal: mapa + lista */}
             <main className="main-container">
-
-                {/* Mapa — se oculta en móvil si el tab activo es lista */}
                 <div className={`map-container ${activeTab === 'lista' ? 'hidden-mobile' : ''}`}>
                     <div id="map" ref={mapRef}></div>
-                    <button
-                        className="nearby-btn"
-                        onClick={() => map.setView([CENTER.lat, CENTER.lng], 14)}
-                    >
-                        📍 Centrar Mapa
-                    </button>
+                    <button className="nearby-btn" onClick={() => map.setView([CENTER.lat, CENTER.lng], 14)}>📍 Centrar</button>
                 </div>
 
-                {/* Lista — se oculta en móvil si el tab activo es mapa */}
                 <aside className={`results-container ${activeTab === 'mapa' ? 'hidden-mobile' : ''}`}>
                     <div className="results-header">
-                        <h2 className="results-title">Comercios encontrados</h2>
+                        <h2 className="results-title">Comercios en el Puerto</h2>
                         <span className="results-count">{filteredPlaces.length}</span>
                     </div>
-
                     <div className="results-list">
-                        {filteredPlaces.length > 0
-                            ? filteredPlaces.map(p => (
-                                <div
-                                    key={p.id}
-                                    className="result-card"
-                                    onClick={() => handlePlaceClick(p)}
-                                >
-                                    <div className="result-header">
-                                        <div className="result-name-group">
-                                            <h3 className="result-name">{p.name}</h3>
-                                            <span className={`open-badge ${p.openNow ? 'open' : 'closed'}`}>
-                                                {p.openNow ? '● Abierto' : '● Cerrado'}
-                                            </span>
-                                        </div>
-                                        <span className="result-category">{p.category}</span>
-                                    </div>
-                                    <div className="result-info">
-                                        <StarRating rating={p.rating} />
-                                        <div className="distance">📍 {p.distance} km</div>
-                                    </div>
-                                    <div className="card-tags">
-                                        {p.tags?.slice(0, 2).map(t => (
-                                            <span key={t} className="mini-tag">{t}</span>
-                                        ))}
-                                    </div>
-                                    <button className="get-directions">Ver detalles</button>
+                        {filteredPlaces.map(p => (
+                            <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
+                                <div className="result-header">
+                                    <h3 className="result-name">{p.name}</h3>
+                                    <span className="result-category">{p.category}</span>
                                 </div>
-                            ))
-                            : <p style={{ padding: '20px' }}>No se encontraron resultados.</p>
-                        }
+                                <div className="result-info">
+                                    <StarRating rating={p.rating} />
+                                    <div className="puntos-badge">⭐ {p.puntos} pts</div>
+                                </div>
+                                <button className="get-directions">Ver detalles</button>
+                            </div>
+                        ))}
                     </div>
                 </aside>
-
             </main>
 
-            {/* Modal de detalle */}
-            <PlaceModal
-                place={selectedPlace}
-                onClose={() => setSelectedPlace(null)}
-            />
-
-            {/* Footer / Formulario de sugerencias */}
-            <section className="about-section">
-                <h2 className="section-title">¿Sos dueño de un negocio?</h2>
-                <p>Ayudanos a crecer la guía de Puntarenas. Sugerí tu comercio aquí mismo.</p>
-                <div className="contact-form">
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Nombre del negocio / Servicio"
-                        />
-                        <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Tu número de contacto"
-                        />
-                    </div>
-                    <button className="submit-btn">Enviar Información</button>
-                </div>
-            </section>
-
+            <PlaceModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />
         </div>
     );
 }
