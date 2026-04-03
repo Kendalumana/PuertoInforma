@@ -1,16 +1,21 @@
 /* ============================================================
    App.css — PuertoInforma
-   Estrategia Mobile-First: primero móvil, luego @media desktop
+   Estrategia Mobile-First: primero definimos estilos para móvil
+   y luego usamos @media para ampliar en pantallas grandes
    ============================================================ */
 
-/* --- Paleta de colores --- */
+/* ── VARIABLES DE COLOR ──────────────────────────────────────
+   Definidas aquí una sola vez, se usan en todo el archivo
+   con var(--nombre). Para cambiar la paleta, solo modificá aquí
+   ============================================================ */
 :root {
-  --naranja:      #E8621A;
-  --negro:        #1A1A1A;
-  --gris-oscuro:  #2D2D2D;
-  --blanco:       #FFFFFF;
+  --naranja:      #E8621A;   /* color principal de acción y acento */
+  --negro:        #1A1A1A;   /* fondo oscuro general */
+  --gris-oscuro:  #2D2D2D;   /* tarjetas y superficies secundarias */
+  --blanco:       #FFFFFF;   /* textos e íconos */
 
-  /* Variables antiguas redirigidas a la nueva paleta */
+  /* Variables del diseño anterior redirigidas a la nueva paleta
+     Existen para no romper clases que todavía las usen */
   --mar-profundo:   #1A1A1A;
   --turquesa-claro: #E8621A;
   --arena-suave:    #2D2D2D;
@@ -18,170 +23,201 @@
   --gris-pardo:     #FFFFFF;
 }
 
-/* --- Reset básico --- */
+/* ── RESET BÁSICO ────────────────────────────────────────────
+   Elimina márgenes y paddings por defecto del navegador
+   box-sizing: border-box → el padding no agranda los elementos
+   ============================================================ */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", sans-serif; /* fuente principal del proyecto */
 }
 
+/* ── BODY ────────────────────────────────────────────────────
+   Fondo negro y texto blanco por defecto en toda la app
+   ============================================================ */
 body {
   background-color: var(--negro);
   color: var(--blanco);
-  line-height: 1.6;
+  line-height: 1.6; /* espaciado entre líneas de texto */
 }
 
+/* ── CONTENEDOR RAÍZ ─────────────────────────────────────────
+   Ocupa todo el ancho disponible
+   overflow-x: hidden → evita scroll horizontal accidental en móvil
+   ============================================================ */
 .app-wrapper {
   width: 100%;
-  max-width: 100vw;
+  max-width: 100vw;            /* nunca más ancho que la pantalla */
   overflow-x: hidden;
 }
 
 /* ============================================================
-   HEADER
+   HEADER — Barra de navegación superior
+   Móvil:   columna (logo → buscador → botón filtros apilados)
+   Desktop: fila    (logo | buscador | botón en una línea)
    ============================================================ */
 header {
   background-color: var(--negro);
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1rem;       /* ← cambiar padding del header en móvil aquí */
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  flex-direction: column;      /* móvil: apilado verticalmente */
+  gap: 0.75rem;                /* espacio entre logo, buscador y botón */
+  position: sticky;            /* se queda fijo al hacer scroll */
+  top: 0;                      /* pegado al borde superior */
+  z-index: 100;                /* por encima del resto del contenido */
   box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-  border-bottom: 2px solid var(--naranja);
+  border-bottom: 2px solid var(--naranja); /* línea naranja inferior */
 }
 
+/* Desktop: todos los elementos del header en una sola fila */
 @media (min-width: 768px) {
   header {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
+    padding: 1rem 2rem;        /* ← cambiar padding del header en desktop aquí */
   }
 }
 
+/* Contenedor del logo y nombre de la app */
 .header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  justify-content: center;
+  justify-content: center;     /* centrado en móvil */
 }
 
 @media (min-width: 768px) {
   .header-left {
-    justify-content: flex-start;
+    justify-content: flex-start; /* alineado a la izquierda en desktop */
   }
 }
 
+/* Imagen del logo en el navbar */
 .logo-navbar {
-  height: 44px;
-  width: auto;
-  border-radius: 0;
+  height: 44px;                /* ← cambiar altura del logo en móvil aquí */
+  width: auto;                 /* mantiene la proporción */
+  border-radius: 0;            /* sin bordes redondeados en el logo */
 }
 
 @media (min-width: 768px) {
   .logo-navbar {
-    height: 52px;
+    height: 52px;              /* ← cambiar altura del logo en desktop aquí */
   }
 }
 
+/* Título de la marca — oculto porque el texto ya va dentro del logo */
 .brand-title {
-  display: none; /* el texto ya va dentro de la imagen del logo */
+  display: none;
 }
 
+/* Contenedor del input de búsqueda */
+/* Contenedor del input de búsqueda */
 .search-container {
-  width: 100%;
+  width: 100%; /* full-width en móvil — no tocar */
 }
 
 @media (min-width: 768px) {
   .search-container {
     flex: 1;
+    max-width: 400px; /* ← cambiá este número para controlar el largo en desktop */
+                      /* 300px = más corto | 500px = más largo */
   }
 }
 
+/* Input de búsqueda */
 .search-input {
   width: 100%;
-  padding: 0.65rem 1rem;
+  padding: 0.65rem 1rem;       /* ← cambiar padding del buscador aquí */
   border: 2px solid var(--gris-oscuro);
-  border-radius: 20px;
-  font-size: 0.95rem;
+  border-radius: 20px;         /* bordes redondeados tipo pastilla */
+  font-size: 0.95rem;          /* ← cambiar tamaño del texto del buscador aquí */
   background: var(--gris-oscuro);
   color: var(--blanco);
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
+/* Texto fantasma del buscador */
 .search-input::placeholder {
   color: rgba(255,255,255,0.45);
 }
 
+/* Borde naranja cuando el usuario hace clic en el buscador */
 .search-input:focus {
   outline: none;
   border-color: var(--naranja);
 }
 
+/* Botón de filtros */
 .filters-btn {
   background: var(--naranja);
   color: var(--blanco);
   border: none;
   border-radius: 20px;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1rem;        /* ← cambiar tamaño del botón de filtros aquí */
   cursor: pointer;
   font-weight: 600;
-  width: 100%;
+  width: 100%;                 /* full-width en móvil para ser fácil de tocar */
 }
 
 .filters-btn:hover {
-  background: #cf5516;
+  background: #cf5516;         /* naranja más oscuro al pasar el mouse */
 }
 
 @media (min-width: 768px) {
   .filters-btn {
-    width: auto;
+    width: auto;               /* tamaño natural en desktop */
   }
 }
 
 /* ============================================================
    CHIPS DE CATEGORÍAS
+   Fila de botones con scroll horizontal para filtrar por tipo
+   -ms-overflow-style y scrollbar-width ocultan la barra de scroll
    ============================================================ */
 .categories-container {
-  padding: 0.75rem 1rem;
-  overflow-x: auto;
-  white-space: nowrap;
+  padding: 0.75rem 1rem;       /* ← cambiar padding de la fila de chips aquí */
+  overflow-x: auto;            /* scroll horizontal si no caben todos */
+  white-space: nowrap;         /* evita que los chips bajen a otra línea */
   background-color: var(--gris-oscuro);
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none;    /* oculta scrollbar en IE/Edge */
+  scrollbar-width: none;       /* oculta scrollbar en Firefox */
 }
 
+/* Oculta la barra de scroll en Chrome y Safari */
 .categories-container::-webkit-scrollbar {
   display: none;
 }
 
+/* Cada chip individual de categoría */
 .category-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 0.85rem;
-  margin-right: 0.5rem;
+  padding: 0.4rem 0.85rem;     /* ← cambiar tamaño de los chips aquí */
+  margin-right: 0.5rem;        /* espacio entre chips */
   background-color: var(--negro);
   color: var(--blanco);
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.85rem;          /* ← cambiar tamaño del texto de los chips aquí */
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease;   /* animación suave al cambiar de estado */
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   border: 1px solid var(--gris-oscuro);
 }
 
+/* Chip al pasar el mouse */
 .category-chip:hover  { background-color: var(--naranja); color: var(--blanco); border-color: var(--naranja); }
+/* Chip seleccionado actualmente */
 .category-chip.active { background-color: var(--naranja); color: var(--blanco); border-color: var(--naranja); }
 
 /* ============================================================
    TABS DE NAVEGACIÓN MÓVIL
-   Solo visibles en móvil, ocultos en desktop
+   Dos pestañas: Mapa y Lista
+   Solo visibles en móvil — en desktop se ocultan con display:none
    ============================================================ */
 .mobile-tabs {
   display: flex;
@@ -189,20 +225,22 @@ header {
   border-bottom: 2px solid var(--naranja);
 }
 
+/* Cada pestaña ocupa el 50% del ancho */
 .tab-btn {
   flex: 1;
-  padding: 0.85rem;
+  padding: 0.85rem;            /* ← cambiar altura de las tabs aquí */
   border: none;
   background: transparent;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.95rem;
+  color: rgba(255,255,255,0.5); /* gris cuando no está activa */
+  font-size: 0.95rem;          /* ← cambiar tamaño del texto de las tabs aquí */
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
+  margin-bottom: -2px;         /* se solapa con el border del contenedor */
 }
 
+/* Tab activa — naranja y con línea inferior */
 .tab-btn.active {
   color: var(--naranja);
   border-bottom: 3px solid var(--naranja);
@@ -211,63 +249,71 @@ header {
 
 /* ============================================================
    LAYOUT PRINCIPAL
-   Móvil:   columna → tabs controlan qué se ve
-   Desktop: fila    → mapa 70% / lista 30%
+   Móvil:   columna — las tabs controlan qué se muestra
+   Desktop: fila    — mapa 70% izquierda / lista 30% derecha
    ============================================================ */
 .main-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;      /* móvil: apilado */
   height: auto;
 }
 
 @media (min-width: 768px) {
   .main-container {
-    flex-direction: row;
-    height: calc(100vh - 160px);
+    flex-direction: row;       /* desktop: lado a lado */
+    height: calc(100vh - 160px); /* ← ajustar si el header cambia de alto */
   }
 }
 
-/* Ocultar según tab activo — SOLO en móvil */
+/* Clase para ocultar mapa o lista según tab activa — SOLO en móvil */
 .hidden-mobile {
   display: none;
 }
 
-/* Mapa */
+/* ── MAPA ─────────────────────────────────────────────────────
+   En móvil ocupa toda la pantalla menos header y tabs
+   En desktop ocupa el 70% del ancho
+   ============================================================ */
 .map-container {
   width: 100%;
-  height: calc(100vh - 180px); /* pantalla completa menos header y tabs */
-  position: relative;
+  height: calc(100vh - 180px); /* ← cambiar altura del mapa en móvil aquí */
+  position: relative;          /* necesario para posicionar el botón de centrar */
   overflow: hidden;
-  background: #ddd;
+  background: #ddd;            /* color de fondo mientras carga el mapa */
 }
 
 @media (min-width: 768px) {
   .map-container {
-    flex: 0 0 70%;
+    flex: 0 0 70%;             /* ← cambiar porcentaje del mapa en desktop aquí */
     height: 100%;
   }
 }
 
+/* El div donde Leaflet renderiza el mapa */
 #map {
   width: 100%;
   height: 100%;
 }
 
-/* Lista */
+/* ── LISTA DE RESULTADOS ─────────────────────────────────────
+   En móvil ocupa toda la pantalla cuando su tab está activa
+   En desktop ocupa el 30% derecho con scroll interno
+   ============================================================ */
 .results-container {
   width: 100%;
   background: var(--negro);
-  overflow-y: auto;
+  overflow-y: auto;            /* scroll interno si hay muchos resultados */
   padding: 1rem;
-  height: calc(100vh - 180px); /* misma altura que el mapa en móvil */
+  height: calc(100vh - 180px); /* ← cambiar altura de la lista en móvil aquí */
 }
 
 @media (min-width: 768px) {
-  /* En desktop: ignorar hidden-mobile y mostrar todo */
+  /* En desktop: anular el hidden-mobile y mostrar siempre */
   .hidden-mobile {
     display: block !important;
   }
 
+  /* Ocultar las tabs en desktop */
   .mobile-tabs {
     display: none;
   }
@@ -278,16 +324,19 @@ header {
   }
 
   .results-container {
-    flex: 0 0 30%;
+    flex: 0 0 30%;             /* ← cambiar porcentaje de la lista en desktop aquí */
     height: 100%;
     max-height: none;
-    border-left: 1px solid var(--gris-oscuro);
+    border-left: 1px solid var(--gris-oscuro); /* separador entre mapa y lista */
   }
 }
 
 /* ============================================================
    TARJETAS DE RESULTADOS
+   Cada comercio se muestra como una tarjeta en la lista
    ============================================================ */
+
+/* Encabezado de la sección con título y contador */
 .results-header {
   display: flex;
   justify-content: space-between;
@@ -301,33 +350,37 @@ header {
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
   color: var(--blanco);
-  font-size: 1rem;
+  font-size: 1rem;             /* ← cambiar tamaño del título de resultados aquí */
 }
 
+/* Badge naranja con el número de resultados */
 .results-count {
   background-color: var(--naranja);
   color: var(--blanco);
   padding: 0.25rem 0.5rem;
   border-radius: 10px;
-  font-size: 0.8rem;
+  font-size: 0.8rem;           /* ← cambiar tamaño del contador aquí */
 }
 
+/* Tarjeta individual de cada comercio */
 .result-card {
   background-color: var(--gris-oscuro);
-  border-radius: 16px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  border-radius: 16px;         /* ← cambiar redondez de las tarjetas aquí */
+  padding: 1rem;               /* ← cambiar padding interno de las tarjetas aquí */
+  margin-bottom: 1rem;         /* espacio entre tarjetas */
   box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   transition: transform 0.2s ease;
   cursor: pointer;
-  border: 1px solid rgba(232,98,26,0.15);
+  border: 1px solid rgba(232,98,26,0.15); /* borde naranja sutil */
 }
 
+/* Tarjeta sube levemente al pasar el mouse */
 .result-card:hover {
   transform: translateY(-2px);
-  border-color: var(--naranja);
+  border-color: var(--naranja); /* borde más visible al hover */
 }
 
+/* Fila superior de la tarjeta: nombre + badge de categoría */
 .result-header {
   display: flex;
   justify-content: space-between;
@@ -335,23 +388,26 @@ header {
   margin-bottom: 0.5rem;
 }
 
+/* Nombre del comercio */
 .result-name {
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
   color: var(--blanco);
-  font-size: 1rem;
+  font-size: 1rem;             /* ← cambiar tamaño del nombre del comercio aquí */
 }
 
+/* Badge naranja con la categoría del comercio */
 .result-category {
   background: var(--naranja);
   color: var(--blanco);
   padding: 0.25rem 0.5rem;
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: 0.75rem;          /* ← cambiar tamaño del badge de categoría aquí */
   margin-left: 0.5rem;
-  white-space: nowrap;
+  white-space: nowrap;         /* evita que el badge se parta en dos líneas */
 }
 
+/* Fila con rating y distancia */
 .result-info {
   display: flex;
   justify-content: space-between;
@@ -360,50 +416,54 @@ header {
   font-size: 0.9rem;
 }
 
-.rating   { color: var(--naranja); }
-.distance { color: rgba(255,255,255,0.6); }
+.rating   { color: var(--naranja); }                /* color de las estrellas */
+.distance { color: rgba(255,255,255,0.6); }          /* distancia en gris claro */
 
+/* Contenedor de mini tags debajo del rating */
 .card-tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap;             /* los tags bajan a otra línea si no caben */
   gap: 0.4rem;
   margin-top: 0.5rem;
 }
 
+/* Cada mini tag de la tarjeta */
 .mini-tag {
   background: var(--negro);
   color: var(--blanco);
-  font-size: 0.75rem;
+  font-size: 0.75rem;          /* ← cambiar tamaño de los mini tags aquí */
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
   border: 1px solid var(--naranja);
 }
 
+/* Botón "Ver detalles" dentro de la tarjeta */
 .get-directions {
   background: var(--naranja);
   color: var(--blanco);
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1rem;        /* ← cambiar tamaño del botón aquí */
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   margin-top: 0.75rem;
-  width: 100%;
+  width: 100%;                 /* ocupa todo el ancho de la tarjeta */
 }
 
 .get-directions:hover { background: #cf5516; }
 
 /* ============================================================
    BOTÓN CENTRAR MAPA
+   Flota sobre el mapa en la esquina inferior derecha
    ============================================================ */
 .nearby-btn {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
+  position: absolute;          /* flota sobre el mapa */
+  bottom: 16px;                /* ← cambiar distancia desde abajo aquí */
+  right: 16px;                 /* ← cambiar distancia desde la derecha aquí */
   background: var(--naranja);
   color: var(--blanco);
   border: none;
-  padding: 0.65rem 1.25rem;
+  padding: 0.65rem 1.25rem;    /* ← cambiar tamaño del botón aquí */
   border-radius: 20px;
   cursor: pointer;
   font-weight: 600;
@@ -411,48 +471,57 @@ header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.9rem;           /* ← cambiar tamaño del texto del botón aquí */
 }
 
 .nearby-btn:hover { background: #cf5516; }
 
 /* ============================================================
    MODAL DE DETALLE
+   Ventana que muestra la información completa de un comercio
+   Móvil:   sube desde abajo, esquinas redondeadas solo arriba
+   Desktop: ventana centrada con ancho máximo
    ============================================================ */
+
+/* Fondo oscuro semitransparente detrás del modal */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed;             /* cubre toda la pantalla */
+  inset: 0;                    /* top, right, bottom, left = 0 */
   background: rgba(0,0,0,0.7);
-  display: none;
+  display: none;               /* oculto por defecto, JS lo muestra */
   justify-content: center;
-  align-items: flex-end;
-  z-index: 2000;
+  align-items: flex-end;       /* móvil: el modal sube desde abajo */
+  z-index: 2000;               /* por encima de todo */
 }
 
+/* Desktop: el modal se centra verticalmente */
 @media (min-width: 768px) {
   .modal-overlay {
     align-items: center;
   }
 }
 
+/* Contenedor blanco del modal */
 .modal-content {
   background: var(--gris-oscuro);
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px 16px 0 0; /* móvil: solo esquinas superiores redondeadas */
   width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: 90vh;            /* ← cambiar altura máxima del modal en móvil aquí */
+  overflow-y: auto;            /* scroll si el contenido es muy largo */
   box-shadow: 0 5px 30px rgba(0,0,0,0.5);
 }
 
+/* Desktop: todas las esquinas redondeadas y ancho limitado */
 @media (min-width: 768px) {
   .modal-content {
     border-radius: 16px;
     width: 90%;
-    max-width: 520px;
-    max-height: 80vh;
+    max-width: 520px;          /* ← cambiar ancho máximo del modal en desktop aquí */
+    max-height: 80vh;          /* ← cambiar altura máxima del modal en desktop aquí */
   }
 }
 
+/* Encabezado fijo del modal — no se mueve al hacer scroll */
 .modal-header {
   background: var(--negro);
   color: var(--blanco);
@@ -462,79 +531,95 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
+  position: sticky;            /* se queda fijo al hacer scroll dentro del modal */
   top: 0;
   z-index: 1;
   border-bottom: 2px solid var(--naranja);
 }
 
+/* Nombre del comercio en el modal */
 .modal-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.1rem;           /* ← cambiar tamaño del título del modal aquí */
 }
 
+/* Categoría debajo del nombre */
 .modal-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.85rem;          /* ← cambiar tamaño de la categoría aquí */
   opacity: 0.7;
   color: var(--naranja);
 }
 
+/* Botón X para cerrar el modal */
 .close-modal {
   background: none;
   border: none;
-  font-size: 1.75rem;
+  font-size: 1.75rem;          /* ← cambiar tamaño del botón cerrar aquí */
   cursor: pointer;
   color: var(--blanco);
   line-height: 1;
   padding: 0;
 }
 
+/* Cuerpo del modal con el contenido */
 .modal-body {
-  padding: 1.25rem;
+  padding: 1.25rem;            /* ← cambiar padding interno del modal aquí */
 }
 
+/* ── GALERÍA DE IMÁGENES DEL MODAL ───────────────────────────
+   1 columna en móvil, grid automático en pantallas mayores
+   ============================================================ */
 .modal-images {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
+  grid-template-columns: 1fr;  /* móvil: una imagen por fila */
+  gap: 8px;                    /* ← cambiar espacio entre imágenes aquí */
   margin-bottom: 1rem;
 }
 
 @media (min-width: 480px) {
   .modal-images {
+    /* desktop: columnas automáticas de mínimo 140px */
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
 
+/* Cada imagen de la galería */
 .modal-image {
   width: 100%;
-  height: 180px;
-  object-fit: cover;
+  height: 180px;               /* ← cambiar altura de las imágenes en móvil aquí */
+  object-fit: cover;           /* recorta la imagen para llenar el espacio */
   border-radius: 8px;
   background: var(--negro);
   cursor: pointer;
-  position: relative; /* Requisito para que z-index funcione */
-  z-index: 1; /* Posición base */
-  transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0s; /* Transición suave */}
-
-.modal-image:hover { transform: scale(1.15); /* Aumenta el tamaño sin desacomodar el Grid */
-  z-index: 10; /* Coloca la imagen por encima de las demás */
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6); /* Sombra para potenciar el efecto pop-up */}
-
-@media (min-width: 480px) {
-  .modal-image { height: 140px; }
+  position: relative;          /* necesario para que z-index funcione */
+  z-index: 1;                  /* posición base en el stack */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* animación suave */
 }
 
+/* Efecto pop-up al pasar el mouse sobre una imagen */
+.modal-image:hover {
+  transform: scale(1.15);      /* ← cambiar escala del zoom aquí (1.15 = 15% más grande) */
+  z-index: 10;                 /* se pone por encima de las otras imágenes */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6); /* sombra para el efecto de profundidad */
+}
+
+/* Altura menor en pantallas más grandes para el grid */
+@media (min-width: 480px) {
+  .modal-image { height: 140px; } /* ← cambiar altura de las imágenes en desktop aquí */
+}
+
+/* Información del comercio */
 .modal-details { margin-bottom: 1rem; }
 
 .modal-details p {
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 0.95rem;          /* ← cambiar tamaño del texto de detalles aquí */
   line-height: 1.5;
   color: rgba(255,255,255,0.85);
 }
 
+/* Badge verde de SINPE Móvil */
 .sinpe-badge {
   display: inline-block;
   background: rgba(46,125,50,0.2);
@@ -542,11 +627,12 @@ header {
   padding: 0.3rem 0.75rem;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.9rem;           /* ← cambiar tamaño del badge SINPE aquí */
   margin-top: 0.25rem;
   border: 1px solid #66bb6a;
 }
 
+/* Contenedor de tags del modal */
 .modal-tags {
   display: flex;
   flex-wrap: wrap;
@@ -554,76 +640,90 @@ header {
   margin-top: 0.75rem;
 }
 
+/* Cada tag individual */
 .tag-item {
   background: var(--negro);
   padding: 0.25rem 0.6rem;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.8rem;           /* ← cambiar tamaño de los tags aquí */
   color: var(--naranja);
   border: 1px solid var(--naranja);
 }
 
+/* ── BOTONES DE ACCIÓN DEL MODAL ─────────────────────────────
+   Móvil:   apilados en columna para ser fáciles de tocar
+   Desktop: en una sola fila
+   ============================================================ */
 .modal-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;      /* móvil: apilados */
   gap: 0.6rem;
   margin-top: 1rem;
 }
 
 @media (min-width: 480px) {
-  .modal-actions { flex-direction: row; }
+  .modal-actions { flex-direction: row; } /* desktop: en fila */
 }
 
+/* Base de todos los botones de acción */
 .action-btn {
-  flex: 1;
-  padding: 0.85rem;
+  flex: 1;                     /* cada botón ocupa el mismo espacio */
+  padding: 0.85rem;            /* ← cambiar tamaño de los botones de acción aquí */
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1rem;             /* ← cambiar tamaño del texto de los botones aquí */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
 }
 
+/* Botón de llamada — fondo negro con borde naranja */
 .phone-btn    { background: var(--negro);   color: var(--blanco); border: 1px solid var(--naranja); }
+/* Botón de WhatsApp — verde oficial de WhatsApp */
 .whatsapp-btn { background: #25D366;        color: var(--blanco); }
+/* Botón de Google Maps — naranja del proyecto */
 .maps-btn     { background: var(--naranja); color: var(--blanco); }
 
 /* ============================================================
    PANEL DE FILTROS
+   Móvil:   hoja que sube desde abajo (full-width)
+   Desktop: panel flotante en la esquina superior derecha
    ============================================================ */
 .filters-panel {
-  position: fixed;
-  bottom: 0;
+  position: fixed;             /* flota sobre el contenido */
+  bottom: 0;                   /* pegado al fondo en móvil */
   left: 0;
   right: 0;
-  z-index: 1200;
+  z-index: 1200;               /* por encima del mapa pero debajo del modal */
   background: var(--gris-oscuro);
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px 16px 0 0; /* esquinas redondeadas solo arriba en móvil */
   box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
-  padding: 1.25rem;
+  padding: 1.25rem;            /* ← cambiar padding interno del panel aquí */
   width: 100%;
-  display: none;
+  display: none;               /* oculto por defecto, .visible lo muestra */
   border-top: 2px solid var(--naranja);
 }
 
+/* Desktop: panel flotante en la esquina superior derecha */
 @media (min-width: 768px) {
   .filters-panel {
-    top: 84px;
+    top: 84px;                 /* ← ajustar si el header cambia de alto */
     bottom: auto;
-    right: 20px;
+    right: 20px;               /* ← cambiar distancia desde la derecha aquí */
     left: auto;
-    width: 320px;
+    width: 320px;              /* ← cambiar ancho del panel de filtros aquí */
     border-radius: 16px;
     border: 1px solid var(--naranja);
   }
 }
 
+/* Clase que hace visible el panel — la agrega/quita JavaScript */
 .filters-panel.visible { display: block; }
 
+/* Título del panel de filtros */
 .filters-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
@@ -631,26 +731,29 @@ header {
   margin-bottom: 0.75rem;
 }
 
+/* Fila de cada filtro: label + control */
 .filters-row {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;      /* móvil: label encima del control */
   gap: 0.3rem;
   margin: 0.75rem 0;
 }
 
 @media (min-width: 480px) {
   .filters-row {
-    flex-direction: row;
+    flex-direction: row;       /* desktop: label al lado del control */
     align-items: center;
   }
 }
 
+/* Etiqueta del filtro */
 .filters-row label {
   font-weight: 500;
   color: var(--blanco);
-  min-width: 110px;
+  min-width: 110px;            /* ← cambiar ancho mínimo de las etiquetas aquí */
 }
 
+/* Select y slider de los filtros */
 .filters-row select,
 .filters-row input[type="range"] {
   flex: 1;
@@ -661,28 +764,32 @@ header {
   color: var(--blanco);
 }
 
+/* Botones del panel de filtros */
 .filters-actions {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
 
+/* Base compartida de botones del panel */
 .btn {
   border: none;
   border-radius: 10px;
-  padding: 0.65rem 1rem;
+  padding: 0.65rem 1rem;       /* ← cambiar tamaño de los botones del panel aquí */
   cursor: pointer;
   font-weight: 600;
 }
 
+/* Botón aplicar filtros — naranja */
 .btn-apply { background: var(--naranja); color: var(--blanco); flex: 1; }
+/* Botón limpiar filtros — negro con borde naranja */
 .btn-clear { background: var(--negro);   color: var(--blanco); border: 1px solid var(--naranja); }
 
 /* ============================================================
-   FOOTER / FORMULARIO DE SUGERENCIAS
+   FOOTER / FORMULARIO DE SUGERENCIAS DE NEGOCIOS
    ============================================================ */
 .about-section {
-  padding: 1.5rem 1rem;
+  padding: 1.5rem 1rem;        /* ← cambiar padding del footer en móvil aquí */
   background: var(--gris-oscuro);
   margin-top: 1rem;
   box-shadow: 0 3px 10px rgba(0,0,0,0.3);
@@ -690,12 +797,13 @@ header {
 
 @media (min-width: 768px) {
   .about-section {
-    padding: 2rem;
+    padding: 2rem;             /* ← cambiar padding del footer en desktop aquí */
     border-radius: 16px;
     margin: 1rem;
   }
 }
 
+/* Título de sección */
 .section-title {
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
@@ -704,6 +812,7 @@ header {
   text-align: center;
 }
 
+/* Formulario de sugerencia de negocios */
 .contact-form {
   background: var(--negro);
   padding: 1.25rem;
@@ -712,23 +821,25 @@ header {
   border: 1px solid var(--gris-oscuro);
 }
 
+/* Grupo de inputs — apilados en móvil, en fila en desktop */
 .form-group {
   display: flex;
-  flex-direction: column;
+  flex-direction: column;      /* móvil: uno debajo del otro */
   gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
 @media (min-width: 600px) {
-  .form-group { flex-direction: row; }
+  .form-group { flex-direction: row; } /* desktop: lado a lado */
 }
 
+/* Inputs del formulario */
 .form-input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.75rem;            /* ← cambiar padding de los inputs aquí */
   border: 1px solid var(--gris-oscuro);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1rem;             /* ← cambiar tamaño del texto de los inputs aquí */
   background: var(--gris-oscuro);
   color: var(--blanco);
 }
@@ -737,43 +848,47 @@ header {
   color: rgba(255,255,255,0.4);
 }
 
+/* Borde naranja al hacer foco en un input */
 .form-input:focus {
   outline: none;
   border-color: var(--naranja);
 }
 
+/* Botón enviar del formulario */
 .submit-btn {
   background: var(--naranja);
   color: var(--blanco);
   border: none;
-  padding: 0.85rem 1.5rem;
+  padding: 0.85rem 1.5rem;     /* ← cambiar tamaño del botón enviar aquí */
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   width: 100%;
   margin-top: 0.75rem;
-  font-size: 1rem;
+  font-size: 1rem;             /* ← cambiar tamaño del texto del botón aquí */
 }
 
 .submit-btn:hover { background: #cf5516; }
 
 /* ============================================================
    ESTRELLAS DE RATING
+   Componente StarRating.jsx — muestra ★ llenas, medias y vacías
    ============================================================ */
 .star-rating {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 2px;                    /* ← cambiar espacio entre estrellas aquí */
 }
 
-.star { font-size: 1rem; line-height: 1; }
+.star { font-size: 1rem; line-height: 1; } /* ← cambiar tamaño de las estrellas aquí */
 
-.star-full  { color: var(--naranja); }
-.star-half  { color: var(--naranja); opacity: 0.5; }
-.star-empty { color: #444; }
+.star-full  { color: var(--naranja); }          /* estrella llena — naranja */
+.star-half  { color: var(--naranja); opacity: 0.5; } /* media estrella — naranja al 50% */
+.star-empty { color: #444; }                    /* estrella vacía — gris oscuro */
 
+/* Número de rating al lado de las estrellas */
 .star-number {
-  font-size: 0.8rem;
+  font-size: 0.8rem;           /* ← cambiar tamaño del número de rating aquí */
   color: rgba(255,255,255,0.6);
   margin-left: 4px;
   font-weight: 600;
@@ -781,18 +896,22 @@ header {
 
 /* ============================================================
    BADGE ABIERTO / CERRADO
+   Aparece debajo del nombre del comercio en cada tarjeta
    ============================================================ */
+
+/* Agrupa el nombre y el badge en columna */
 .result-name-group {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
 
+/* Base del badge */
 .open-badge {
-  font-size: 0.75rem;
+  font-size: 0.75rem;          /* ← cambiar tamaño del badge aquí */
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 
-.open-badge.open   { color: #66bb6a; }
-.open-badge.closed { color: #ef5350; }
+.open-badge.open   { color: #66bb6a; } /* verde cuando está abierto */
+.open-badge.closed { color: #ef5350; } /* rojo cuando está cerrado */
