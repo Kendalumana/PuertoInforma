@@ -1,0 +1,70 @@
+/* ============================================================
+   components.css — PuertoInforma
+   Componentes reutilizables: StarRating, badges, tabs móvil
+   ============================================================ */
+
+/* ── Tabs de navegación móvil ── */
+.mobile-tabs {
+  display: flex;
+  background: var(--gris-oscuro);
+  border-bottom: 2px solid var(--naranja);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.85rem;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.tab-btn.active {
+  color: var(--naranja);
+  border-bottom: 3px solid var(--naranja);
+  background: var(--negro);
+}
+
+@media (min-width: 768px) {
+  .mobile-tabs { display: none; }
+}
+
+/* ── StarRating ── */
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star          { font-size: 1rem; line-height: 1; }
+.star-full     { color: var(--naranja); }
+.star-half     { color: var(--naranja); opacity: 0.5; }
+.star-empty    { color: #444; }
+
+.star-number {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+/* ── Badge Abierto / Cerrado ── */
+.result-name-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.open-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.open-badge.open   { color: #66bb6a; }
+.open-badge.closed { color: #ef5350; }

@@ -1,0 +1,115 @@
+/* ============================================================
+   cards.css — PuertoInforma
+   Tarjetas de resultados en la lista lateral
+   ============================================================ */
+
+/* ── Encabezado de sección ── */
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--naranja);
+}
+
+.results-title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  color: var(--blanco);
+  font-size: 1rem;
+}
+
+.results-count {
+  background-color: var(--naranja);
+  color: var(--blanco);
+  padding: 0.25rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+/* ── Tarjeta individual ── */
+.result-card {
+  background-color: var(--gris-oscuro);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+  border: 1px solid rgba(232,98,26,0.15);
+}
+
+.result-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--naranja);
+}
+
+/* Fila nombre + badge categoría */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.result-name {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  color: var(--blanco);
+  font-size: 1rem;
+}
+
+.result-category {
+  background: var(--naranja);
+  color: var(--blanco);
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}
+
+/* Fila rating + distancia */
+.result-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.rating   { color: var(--naranja); }
+.distance { color: rgba(255,255,255,0.6); }
+
+/* Mini tags */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.mini-tag {
+  background: var(--negro);
+  color: var(--blanco);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--naranja);
+}
+
+/* Botón "Ver detalles" */
+.get-directions {
+  background: var(--naranja);
+  color: var(--blanco);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.get-directions:hover { background: #cf5516; }

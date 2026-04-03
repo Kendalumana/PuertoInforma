@@ -1,0 +1,144 @@
+/* ============================================================
+   navbar.css — PuertoInforma
+   Header sticky, logo, buscador, botón filtros y dropdown
+   ============================================================ */
+
+header,
+.navbar-header {
+  background-color: var(--negro);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  border-bottom: 2px solid var(--naranja);
+}
+
+@media (min-width: 768px) {
+  header,
+  .navbar-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+  }
+}
+
+/* ── Logo + nombre ── */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .header-left { justify-content: flex-start; }
+}
+
+.logo-navbar {
+  height: 44px;
+  width: auto;
+  border-radius: 0;
+}
+
+@media (min-width: 768px) {
+  .logo-navbar { height: 52px; }
+}
+
+.brand-title { display: none; }
+
+/* ── Buscador ── */
+.search-container { width: 100%; }
+
+@media (min-width: 768px) {
+  .search-container {
+    flex: 1;
+    max-width: 400px;
+  }
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 2px solid var(--gris-oscuro);
+  border-radius: 20px;
+  font-size: 0.95rem;
+  background: var(--gris-oscuro);
+  color: var(--blanco);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.search-input::placeholder { color: rgba(255,255,255,0.45); }
+.search-input:focus { outline: none; border-color: var(--naranja); }
+
+/* ── Botón filtros ── */
+.filters-btn {
+  background: var(--naranja);
+  color: var(--blanco);
+  border: none;
+  border-radius: 20px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+}
+
+.filters-btn:hover { background: #cf5516; }
+
+@media (min-width: 768px) {
+  .filters-btn { width: auto; }
+}
+
+/* ── Derecha del navbar ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .header-right { justify-content: flex-end; }
+}
+
+/* ── Botón hamburguesa ── */
+.three-dots-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--blanco);
+  font-size: 1.2rem;
+}
+
+/* ── Dropdown ── */
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  background: var(--gris-oscuro);
+  border-radius: 10px;
+  padding: 0.5rem;
+  min-width: 150px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  z-index: 200;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 0.5rem;
+  color: var(--blanco);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dropdown-item:hover { background: var(--naranja); }
+
+.dropdown-divider {
+  height: 1px;
+  background: #444;
+  margin: 5px 0;
+}

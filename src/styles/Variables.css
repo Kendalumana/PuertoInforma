@@ -1,0 +1,37 @@
+/* ============================================================
+   variables.css — PuertoInforma
+   Variables de color, reset base y body
+   ============================================================ */
+
+:root {
+  --naranja:      #E8621A;
+  --negro:        #1A1A1A;
+  --gris-oscuro:  #2D2D2D;
+  --blanco:       #FFFFFF;
+
+  /* Alias del diseño anterior — no eliminar */
+  --mar-profundo:   #1A1A1A;
+  --turquesa-claro: #E8621A;
+  --arena-suave:    #2D2D2D;
+  --sol-coral:      #E8621A;
+  --gris-pardo:     #FFFFFF;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  background-color: var(--negro);
+  color: var(--blanco);
+  line-height: 1.6;
+}
+
+.app-wrapper {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}

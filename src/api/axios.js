@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Aquí pones la URL que te dio Render (sin la barra al final)
-const BASE_URL = 'https://tu-proyecto-en-render.onrender.com/api/v1';
+const BASE_URL = 'https://puertoinforma-backend.onrender.com/api/v1';
 
 export default axios.create({
     baseURL: BASE_URL,

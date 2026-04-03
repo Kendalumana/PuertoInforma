@@ -1,0 +1,188 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #121212;
+  overflow-x: hidden;
+}
+
+:root {
+  --naranja: #e8621a;
+  --negro: #121212;
+  --gris-oscuro: #1e1e1e;
+  --blanco: #ffffff;
+  --gris-claro: #f0f0f0;
+}
+
+.profile-page {
+  min-height: 100vh;
+  background-color: var(--negro);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.profile-layout {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 800px) {
+  .profile-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.profile-sidebar {
+  background-color: var(--gris-oscuro);
+  border: 1px solid rgba(232, 98, 26, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 800px) {
+  .profile-sidebar {
+    width: 320px;
+    min-width: 320px;
+    position: sticky;
+    top: 2rem;
+  }
+}
+
+.btn-back {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--blanco);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.6rem 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.btn-back:hover {
+  background: rgba(232, 98, 26, 0.1);
+  border-color: var(--naranja);
+  color: var(--naranja);
+}
+
+.avatar-wrapper { position: relative; margin-bottom: 1.5rem; }
+.avatar-display {
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  border: 3px solid var(--naranja);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.avatar-display:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(232, 98, 26, 0.6); }
+.avatar-emoji { font-size: 4rem; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-edit-badge {
+  position: absolute; bottom: 5px; right: 5px;
+  width: 32px; height: 32px;
+  background-color: var(--naranja);
+  border-radius: 50%; border: 3px solid var(--gris-oscuro);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.avatar-selector {
+  position: absolute; top: 140px; left: 50%; transform: translateX(-50%);
+  width: 240px; background-color: #1a1a1a;
+  border: 1px solid var(--naranja); border-radius: 15px;
+  padding: 1rem; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+.avatar-selector-titulo { color: white; text-align: center; margin-bottom: 10px; font-weight: 600; }
+.avatares-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.avatar-opcion { font-size: 2rem; cursor: pointer; text-align: center; padding: 5px; border-radius: 8px; }
+.avatar-opcion:hover { transform: scale(1.1); }
+.avatar-opcion.activo { background: rgba(232, 98, 26, 0.2); border: 1px solid var(--naranja); }
+.avatar-divider { text-align: center; color: gray; font-size: 0.8rem; margin: 10px 0; }
+.btn-subir-foto { display: block; text-align: center; background: var(--naranja); color: white; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+.profile-info-basica { text-align: center; margin-bottom: 1.5rem; width: 100%; }
+.profile-nombre { color: white; margin-bottom: 5px; font-size: 1.4rem; }
+.profile-rango { color: var(--naranja); font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: 10px; }
+.profile-puntos-mini { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 10px; color: gray; font-size: 0.9rem; }
+.profile-puntos-mini strong { color: var(--naranja); font-size: 1.2rem; }
+
+.xp-container { width: 100%; margin-bottom: 2rem; }
+.xp-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: gray; margin-bottom: 5px; }
+.xp-barra { width: 100%; height: 8px; background: #0a0a0a; border-radius: 10px; overflow: hidden; }
+.xp-relleno { height: 100%; background: linear-gradient(90deg, var(--naranja), #ff8c42); transition: width 0.8s ease; }
+.xp-texto { text-align: center; font-size: 0.75rem; color: gray; margin-top: 8px; }
+
+.profile-nav-vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.nav-btn {
+  background: transparent; color: rgba(255, 255, 255, 0.6);
+  border: 1px solid transparent; padding: 12px 20px;
+  border-radius: 12px; cursor: pointer; text-align: left;
+  font-size: 1rem; font-weight: 500; transition: all 0.2s ease;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-btn:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+.nav-btn.activo { background: rgba(232, 98, 26, 0.15); color: var(--naranja); border: 1px solid var(--naranja); }
+
+.profile-main-content {
+  flex: 1;
+  background-color: var(--gris-oscuro);
+  border: 1px solid rgba(232, 98, 26, 0.2);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  min-height: 500px;
+}
+
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-titulo { color: var(--blanco); font-size: 1.8rem; margin-bottom: 5px; }
+.tab-desc { color: gray; font-size: 0.95rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+.misiones-lista { display: flex; flex-direction: column; gap: 1rem; max-height: 500px; overflow-y: auto; padding-right: 8px; }
+.mision-card { display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; padding: 1.2rem; border-radius: 12px; border-left: 4px solid #444; transition: all 0.3s ease; }
+.mision-card.completada { border-left-color: #28a745; opacity: 0.7; }
+.mision-info h4 { color: white; margin: 0 0 5px 0; font-size: 1.1rem; }
+.mision-xp { color: var(--naranja); font-weight: bold; font-size: 0.9rem; }
+.mision-estado { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; background: #222; color: white; }
+
+.avance-timeline { position: relative; padding-left: 20px; }
+.avance-timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: rgba(232, 98, 26, 0.3); }
+.timeline-item { position: relative; margin-bottom: 1.5rem; }
+.timeline-dot { position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: var(--naranja); border-radius: 50%; box-shadow: 0 0 8px var(--naranja); }
+.timeline-content { background: #0a0a0a; padding: 1rem; border-radius: 10px; }
+.timeline-fecha { font-size: 0.8rem; color: gray; }
+.timeline-accion { color: white; margin: 5px 0; }
+.timeline-xp { color: #28a745; font-weight: bold; font-size: 0.9rem; }
+
+.rangos-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+.rango-card { background: #0a0a0a; padding: 1.5rem; border-radius: 15px; text-align: center; border: 1px solid #333; position: relative; overflow: hidden; }
+.rango-card.bloqueado { opacity: 0.5; filter: grayscale(1); }
+.rango-card.rango-actual { border-color: var(--naranja); background: rgba(232, 98, 26, 0.05); }
+.rango-nivel { font-size: 0.8rem; color: gray; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.rango-nombre { color: white; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+.rango-req { color: var(--naranja); font-size: 0.9rem; }
+.rango-badge { position: absolute; top: 0; left: 0; width: 100%; background: var(--naranja); color: white; font-size: 0.7rem; padding: 3px 0; font-weight: bold; text-transform: uppercase; }
+
+.sitios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; }
+.sitio-card { background: #0a0a0a; border-radius: 15px; padding: 1.5rem; display: flex; align-items: center; gap: 15px; border: 1px solid #222; transition: transform 0.2s ease; }
+.sitio-card:hover { transform: translateY(-5px); border-color: rgba(232, 98, 26, 0.5); }
+.sitio-icono { font-size: 2.5rem; background: #1a1a1a; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+.sitio-info h4 { color: white; margin: 0 0 5px 0; font-size: 1.1rem; }
+.sitio-info span { color: gray; font-size: 0.85rem; }

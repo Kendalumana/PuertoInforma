@@ -1,12 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-// Ruta corregida: App.jsx está dentro de assets
 import App from "./App.jsx"; 
-// Ruta corregida: App.css está dentro de styles
-import "./styles/App.css"; 
+import "./styles/index.css"; 
+import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
+
+

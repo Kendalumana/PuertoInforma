@@ -1,0 +1,39 @@
+/* ============================================================
+   categories.css — PuertoInforma
+   Fila de chips con scroll horizontal para filtrar por tipo
+   ============================================================ */
+
+.categories-container {
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  background-color: var(--gris-oscuro);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.categories-container::-webkit-scrollbar { display: none; }
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  margin-right: 0.5rem;
+  background-color: var(--negro);
+  color: var(--blanco);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  border: 1px solid var(--gris-oscuro);
+}
+
+.category-chip:hover,
+.category-chip.active {
+  background-color: var(--naranja);
+  color: var(--blanco);
+  border-color: var(--naranja);
+}

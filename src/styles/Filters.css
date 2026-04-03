@@ -1,0 +1,90 @@
+/* ============================================================
+   filters.css — PuertoInforma
+   Panel de filtros: móvil (bottom sheet) y desktop (flotante)
+   ============================================================ */
+
+.filters-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background: var(--gris-oscuro);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+  padding: 1.25rem;
+  width: 100%;
+  display: none;
+  border-top: 2px solid var(--naranja);
+}
+
+@media (min-width: 768px) {
+  .filters-panel {
+    top: 84px;
+    bottom: auto;
+    right: 20px;
+    left: auto;
+    width: 320px;
+    border-radius: 16px;
+    border: 1px solid var(--naranja);
+  }
+}
+
+.filters-panel.visible { display: block; }
+
+/* Título */
+.filters-title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  color: var(--blanco);
+  margin-bottom: 0.75rem;
+}
+
+/* Fila de cada filtro */
+.filters-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.75rem 0;
+}
+
+@media (min-width: 480px) {
+  .filters-row {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.filters-row label {
+  font-weight: 500;
+  color: var(--blanco);
+  min-width: 110px;
+}
+
+.filters-row select,
+.filters-row input[type="range"] {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--naranja);
+  border-radius: 8px;
+  background: var(--negro);
+  color: var(--blanco);
+}
+
+/* Botones del panel */
+.filters-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-apply { background: var(--naranja); color: var(--blanco); flex: 1; }
+.btn-clear { background: var(--negro);   color: var(--blanco); border: 1px solid var(--naranja); }

@@ -1,0 +1,88 @@
+/* ============================================================
+   layout.css — PuertoInforma
+   Layout principal: contenedor, mapa y lista de resultados
+   ============================================================ */
+
+/* ── Layout principal ── */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+
+@media (min-width: 768px) {
+  .main-container {
+    flex-direction: row;
+    height: calc(100vh - 160px);
+  }
+}
+
+/* Ocultar mapa o lista según tab activa — solo móvil */
+.hidden-mobile { display: none; }
+
+/* ── Mapa ── */
+.map-container {
+  width: 100%;
+  height: calc(100vh - 180px);
+  position: relative;
+  overflow: hidden;
+  background: #ddd;
+}
+
+@media (min-width: 768px) {
+  .map-container {
+    flex: 0 0 70%;
+    height: 100%;
+  }
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Lista de resultados ── */
+.results-container {
+  width: 100%;
+  background: var(--negro);
+  overflow-y: auto;
+  padding: 1rem;
+  height: calc(100vh - 180px);
+}
+
+@media (min-width: 768px) {
+  .hidden-mobile    { display: block !important; }
+
+  .map-container {
+    flex: 0 0 70%;
+    height: 100%;
+  }
+
+  .results-container {
+    flex: 0 0 30%;
+    height: 100%;
+    max-height: none;
+    border-left: 1px solid var(--gris-oscuro);
+  }
+}
+
+/* ── Botón centrar mapa ── */
+.nearby-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: var(--naranja);
+  color: var(--blanco);
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(232,98,26,0.4);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.nearby-btn:hover { background: #cf5516; }
