@@ -1,7 +1,3 @@
-// ============================================================
-// App.jsx — Componente raíz de PuertoInforma (CONECTADO AL BACKEND)
-// ============================================================
-
 import { useEffect, useState, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -9,98 +5,81 @@ import markerIconPng from 'leaflet/dist/images/marker-icon.png';
 import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
 import './styles/App.css';
 
-// --- NUEVO: Importamos el túnel de Axios ---
 import api from './api/axios';
-
-// Componentes
-import Navbar      from './components/Navbar';
+import Navbar from './components/Navbar';
 import FilterPanel from './components/FilterPanel';
-import PlaceModal  from './components/PlaceModal';
-import StarRating  from './components/StarRating';
+import PlaceModal from './components/PlaceModal';
+import StarRating from './components/StarRating';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
 function App() {
-
-    // --- Estado global ---
-    const [map,            setMap           ] = useState(null);
-    const [markers,        setMarkers       ] = useState({});
-    const [allPlaces,      setAllPlaces     ] = useState([]); // 👈 Reemplaza al PLACES estático
-    const [categories,     setCategories    ] = useState([]); // 👈 Reemplaza al CATEGORIES estático
+    const [map, setMap] = useState(null);
+    const [markers, setMarkers] = useState({});
+    const [allPlaces, setAllPlaces] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
-    const [selectedPlace,  setSelectedPlace ] = useState(null);
-    const [activeChip,     setActiveChip    ] = useState("");
-    const [showFilters,    setShowFilters   ] = useState(false);
-    const [searchQuery,    setSearchQuery   ] = useState("");
-    const [filterCat,      setFilterCat     ] = useState("");
-    const [filterRating,   setFilterRating  ] = useState(0);
-    const [activeTab,      setActiveTab     ] = useState("mapa");
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const [activeChip, setActiveChip] = useState("");
+    const [showFilters, setShowFilters] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filterCat, setFilterCat] = useState("");
+    const [filterRating, setFilterRating] = useState(0);
+    const [activeTab, setActiveTab] = useState("mapa");
 
-    const mapRef       = useRef(null);
+    const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
 
-    // -------------------------------------------------------
-    // 1. CARGA DE DATOS DESDE EL BACKEND (Render)
-    // -------------------------------------------------------
+    // 1. Carga de datos y Mapa (Una sola vez)
     useEffect(() => {
+        if (!mapRef.current) return;
+
+        // Inicializar Mapa
+        const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(instance);
+        markersLayer.current.addTo(instance);
+        setMap(instance);
+
         const fetchInitialData = async () => {
             try {
-                // Traemos lugares y categorías en paralelo
                 const [resLugares, resCats] = await Promise.all([
                     api.get('/lugar'),
                     api.get('/categoria')
                 ]);
 
-                // MAPEO: Convertimos los nombres de Java a los nombres que ya usa tu Front
                 const mappedPlaces = resLugares.data.map(p => ({
                     id: p.id,
-                    name: p.nombre,          // Java 'nombre' -> Front 'name'
-                    lat: p.latitud,         // Java 'latitud' -> Front 'lat'
-                    lng: p.longitud,        // Java 'longitud' -> Front 'lng'
+                    name: p.nombre,
+                    lat: p.latitud,
+                    lng: p.longitud,
                     category: p.categoria.nombre,
                     puntos: p.puntosQueOtorga,
                     urlImagen: p.urlImagen,
-                    rating: 5.0,            // Hardcodeado por ahora si no hay en DB
-                    openNow: true,          // Hardcodeado por ahora
-                    distance: "0.5",        // Hardcodeado por ahora
+                    rating: 5.0, // Temporal
+                    openNow: true,
+                    distance: "0.5",
                     tags: ["Puerto", "Turismo"]
                 }));
 
                 setAllPlaces(mappedPlaces);
-                setFilteredPlaces(mappedPlaces); // Inicialmente mostramos todos
+                setFilteredPlaces(mappedPlaces);
                 setCategories(resCats.data.map(c => c.nombre));
-                
             } catch (err) {
-                console.error("Error cargando datos del Puerto:", err);
+                console.error("Error cargando datos:", err);
             }
         };
 
         fetchInitialData();
-    }, []);
-
-    // -------------------------------------------------------
-    // 2. Inicialización del mapa
-    // -------------------------------------------------------
-    useEffect(() => {
-        if (!mapRef.current) return;
-        const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(instance);
-        markersLayer.current.addTo(instance);
-        setMap(instance);
         return () => instance.remove();
     }, []);
 
-    // -------------------------------------------------------
-    // 3. Aplicar filtros (Ahora usa allPlaces en vez de PLACES)
-    // -------------------------------------------------------
+    // 2. Lógica de Filtros
     useEffect(() => {
-        if (!allPlaces.length) return;
-
         const applyFilters = () => {
             const list = allPlaces.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesChip   = activeChip ? p.category === activeChip : true;
-                const matchesCat    = filterCat ? p.category === filterCat : true;
+                const matchesChip = activeChip ? p.category === activeChip : true;
+                const matchesCat = filterCat ? p.category === filterCat : true;
                 const matchesRating = p.rating >= filterRating;
                 return matchesSearch && matchesChip && matchesCat && matchesRating;
             });
@@ -138,12 +117,6 @@ function App() {
         setActiveTab('mapa');
     };
 
-    const handleClearFilters = () => {
-        setFilterCat("");
-        setFilterRating(0);
-        setActiveChip("");
-    };
-
     return (
         <div className="app-wrapper">
             <Navbar onSearch={setSearchQuery} onToggleFilters={() => setShowFilters(!showFilters)} />
@@ -152,11 +125,10 @@ function App() {
                 visible={showFilters} 
                 filterCat={filterCat} 
                 onChangeCat={setFilterCat} 
-                onClear={handleClearFilters}
+                onClear={() => {setFilterCat(""); setFilterRating(0); setActiveChip("");}}
                 onClose={() => setShowFilters(false)}
             />
 
-            {/* Chips dinámicos desde el Backend */}
             <div className="categories-container">
                 {categories.map(c => (
                     <div 
@@ -188,15 +160,10 @@ function App() {
                     <div className="results-list">
                         {filteredPlaces.map(p => (
                             <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                <div className="result-header">
-                                    <h3 className="result-name">{p.name}</h3>
-                                    <span className="result-category">{p.category}</span>
-                                </div>
-                                <div className="result-info">
-                                    <StarRating rating={p.rating} />
-                                    <div className="puntos-badge">⭐ {p.puntos} pts</div>
-                                </div>
-                                <button className="get-directions">Ver detalles</button>
+                                <h3 className="result-name">{p.name}</h3>
+                                <p className="result-category">{p.category}</p>
+                                <StarRating rating={p.rating} />
+                                <div className="puntos-badge">⭐ {p.puntos} pts</div>
                             </div>
                         ))}
                     </div>
