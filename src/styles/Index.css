@@ -1,33 +1,9 @@
-/* ============================================================
-   index.css — PuertoInforma
-   Punto de entrada: importa todos los módulos CSS en orden.
-   Importá este archivo UNA SOLA VEZ en main.jsx:
-       import './styles/index.css'
-   ============================================================ */
-
-/* 1. Variables y reset — siempre primero */
 @import './variables.css';
-
-/* 2. Estructura y layout */
 @import './layout.css';
-
-/* 3. Navbar */
 @import './navbar.css';
-
-/* 4. Chips de categorías */
 @import './categories.css';
-
-/* 5. Tarjetas de resultados */
 @import './cards.css';
-
-/* 6. Modal de detalle */
 @import './modal.css';
-
-/* 7. Panel de filtros */
 @import './filters.css';
-
-/* 8. Footer y formulario */
 @import './footer.css';
-
-/* 9. Componentes pequeños (StarRating, badges, tabs) */
 @import './components.css';
