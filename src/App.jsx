@@ -4,46 +4,72 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIconPng from 'leaflet/dist/images/marker-icon.png';
 import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
-import './styles/Index.css';
+import './styles/index.css';
 
-// Datos
-import { PLACES, CATEGORIES } from './data/places';
+// API
+import api from './api/axios';
 
 // Componentes
-import Navbar      from './components/Navbar';
-import FilterPanel from './components/FilterPanel';
-import PlaceModal  from './components/PlaceModal';
-import StarRating  from './components/StarRating';
+import Navbar       from './components/Navbar';
+import FilterPanel  from './components/FilterPanel';
+import PlaceModal   from './components/PlaceModal';
+import StarRating   from './components/StarRating';
 import PaginaPerfil from './components/PaginaPerfil';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
 
-// Componente de la vista del Mapa y Lista
 function MapaView() {
-    // --- Estado global ---
-    const [map,            setMap           ] = useState(null);
-    const [markers,        setMarkers       ] = useState({});
-    const [filteredPlaces, setFilteredPlaces] = useState(PLACES);
-    const [selectedPlace,  setSelectedPlace ] = useState(null);
-    const [showFilters,    setShowFilters   ] = useState(false);
-    const [activeChip,     setActiveChip    ] = useState("");
-    const [searchQuery,    setSearchQuery   ] = useState("");
-    const [filterCat,      setFilterCat     ] = useState("");
-    const [filterRating,   setFilterRating  ] = useState(0);
-    const [activeTab,      setActiveTab     ] = useState("mapa");
+    const [map,             setMap            ] = useState(null);
+    const [markers,         setMarkers        ] = useState({});
+    const [allPlaces,       setAllPlaces      ] = useState([]);       // todos los lugares del backend
+    const [categories,      setCategories     ] = useState([]);       // categorías únicas
+    const [filteredPlaces,  setFilteredPlaces ] = useState([]);
+    const [selectedPlace,   setSelectedPlace  ] = useState(null);
+    const [showFilters,     setShowFilters    ] = useState(false);
+    const [activeChip,      setActiveChip     ] = useState("");
+    const [searchQuery,     setSearchQuery    ] = useState("");
+    const [filterCat,       setFilterCat      ] = useState("");
+    const [activeTab,       setActiveTab      ] = useState("mapa");
+    const [loading,         setLoading        ] = useState(true);
+    const [error,           setError          ] = useState(null);
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
 
     // -------------------------------------------------------
-    // Inicialización del mapa
+    // 1. Fetch de lugares desde el backend
+    // -------------------------------------------------------
+    useEffect(() => {
+        api.get('/lugar')
+            .then(res => {
+                const lugares = res.data;
+                setAllPlaces(lugares);
+                setFilteredPlaces(lugares);
+
+                // Extraer categorías únicas para los chips
+                const cats = [];
+                const seen = new Set();
+                lugares.forEach(l => {
+                    if (l.categoria && !seen.has(l.categoria.id)) {
+                        seen.add(l.categoria.id);
+                        cats.push(l.categoria);
+                    }
+                });
+                setCategories(cats);
+            })
+            .catch(() => setError('No se pudieron cargar los lugares. Intentá de nuevo.'))
+            .finally(() => setLoading(false));
+    }, []);
+
+    // -------------------------------------------------------
+    // 2. Inicialización del mapa
     // -------------------------------------------------------
     useEffect(() => {
         if (!mapRef.current) return;
 
         const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
-        
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(instance);
@@ -55,20 +81,19 @@ function MapaView() {
     }, []);
 
     // -------------------------------------------------------
-    // Aplicar filtros
+    // 3. Aplicar filtros cuando cambia algo
     // -------------------------------------------------------
     useEffect(() => {
-        if (!map) return;
+        if (!map || allPlaces.length === 0) return;
         applyFilters();
-    }, [searchQuery, activeChip, filterCat, filterRating, map]);
+    }, [searchQuery, activeChip, filterCat, map, allPlaces]);
 
     const applyFilters = () => {
-        const list = PLACES.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesChip   = activeChip  ? p.category === activeChip : true;
-            const matchesCat    = filterCat   ? p.category === filterCat  : true;
-            const matchesRating = p.rating >= filterRating;
-            return matchesSearch && matchesChip && matchesCat && matchesRating;
+        const list = allPlaces.filter(p => {
+            const matchesSearch = p.nombre.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesChip   = activeChip ? p.categoria?.id === activeChip : true;
+            const matchesCat    = filterCat  ? p.categoria?.id === Number(filterCat) : true;
+            return matchesSearch && matchesChip && matchesCat;
         });
 
         setFilteredPlaces(list);
@@ -76,7 +101,7 @@ function MapaView() {
     };
 
     // -------------------------------------------------------
-    // Marcadores del mapa
+    // 4. Marcadores
     // -------------------------------------------------------
     const updateMarkers = (list) => {
         markersLayer.current.clearLayers();
@@ -92,9 +117,9 @@ function MapaView() {
 
         const newMarkers = {};
         list.forEach(p => {
-            const m = L.marker([p.lat, p.lng], { icon: defaultIcon })
-                      .bindPopup(`<b>${p.name}</b>`);
-            
+            const m = L.marker([p.latitud, p.longitud], { icon: defaultIcon })
+                       .bindPopup(`<b>${p.nombre}</b>`);
+
             m.addTo(markersLayer.current);
             m.on('click', () => setSelectedPlace(p));
             newMarkers[p.id] = m;
@@ -105,7 +130,7 @@ function MapaView() {
 
     const handlePlaceClick = (p) => {
         if (map) {
-            map.flyTo([p.lat, p.lng], 16);
+            map.flyTo([p.latitud, p.longitud], 16);
             markers[p.id]?.openPopup();
         }
         setSelectedPlace(p);
@@ -114,10 +139,12 @@ function MapaView() {
 
     const handleClearFilters = () => {
         setFilterCat("");
-        setFilterRating(0);
         setActiveChip("");
     };
 
+    // -------------------------------------------------------
+    // Render
+    // -------------------------------------------------------
     return (
         <div className="app-wrapper">
             <Navbar
@@ -128,21 +155,22 @@ function MapaView() {
             <FilterPanel
                 visible={showFilters}
                 filterCat={filterCat}
-                filterRating={filterRating}
+                filterRating={0}
                 onSetCat={setFilterCat}
-                onSetRating={setFilterRating}
+                onSetRating={() => {}}
                 onClear={handleClearFilters}
                 onClose={() => setShowFilters(false)}
             />
 
+            {/* Chips de categorías */}
             <div className="categories-container">
-                {CATEGORIES.slice(0, 10).map(c => (
+                {categories.map(c => (
                     <div
                         key={c.id}
                         className={`category-chip ${activeChip === c.id ? 'active' : ''}`}
                         onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
                     >
-                        {c.name}
+                        {c.nombre}
                     </div>
                 ))}
             </div>
@@ -165,7 +193,7 @@ function MapaView() {
             <main className="main-container">
                 <div className={`map-container ${activeTab === 'lista' ? 'hidden-mobile' : ''}`}>
                     <div id="map" ref={mapRef}></div>
-                    <button className="recenter-btn" onClick={() => map.setView([CENTER.lat, CENTER.lng], 14)}>
+                    <button className="recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
                         📍 Mi ubicación
                     </button>
                 </div>
@@ -176,24 +204,65 @@ function MapaView() {
                         <span className="results-count">{filteredPlaces.length}</span>
                     </div>
 
-                    <div className="results-list">
-                        {filteredPlaces.length > 0 ? (
-                            filteredPlaces.map(p => (
-                                <div key={p.id} className="place-card" onClick={() => handlePlaceClick(p)}>
-                                    <img src={p.image} alt={p.name} className="place-img" />
-                                    <div className="place-info">
-                                        <h3 className="place-name">{p.name}</h3>
-                                        <div className="place-meta">
-                                            <StarRating rating={p.rating} />
-                                            <span className="place-category">{p.category}</span>
+                    {/* Estados: cargando / error / resultados */}
+                    {loading && (
+                        <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>
+                            Cargando lugares...
+                        </p>
+                    )}
+
+                    {error && (
+                        <p style={{ color: '#ef5350', textAlign: 'center', marginTop: '2rem' }}>
+                            {error}
+                        </p>
+                    )}
+
+                    {!loading && !error && (
+                        <div className="results-list">
+                            {filteredPlaces.length > 0 ? (
+                                filteredPlaces.map(p => (
+                                    <div
+                                        key={p.id}
+                                        className="result-card"
+                                        onClick={() => handlePlaceClick(p)}
+                                    >
+                                        <div className="result-header">
+                                            <div className="result-name-group">
+                                                <span className="result-name">{p.nombre}</span>
+                                            </div>
+                                            {p.categoria && (
+                                                <span className="result-category">{p.categoria.nombre}</span>
+                                            )}
+                                        </div>
+
+                                        {p.urlImagen && (
+                                            <img
+                                                src={p.urlImagen}
+                                                alt={p.nombre}
+                                                style={{ width: '100%', borderRadius: '8px', marginTop: '0.5rem', height: '120px', objectFit: 'cover' }}
+                                            />
+                                        )}
+
+                                        {p.descripcion && (
+                                            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.5rem' }}>
+                                                {p.descripcion}
+                                            </p>
+                                        )}
+
+                                        <div className="result-info">
+                                            <span style={{ color: '#E8621A', fontSize: '0.8rem' }}>
+                                                🏆 {p.puntosQueOtorga} puntos
+                                            </span>
                                         </div>
                                     </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="no-results">No se encontraron lugares.</p>
-                        )}
-                    </div>
+                                ))
+                            ) : (
+                                <p className="no-results" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>
+                                    No se encontraron lugares.
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </aside>
             </main>
 
@@ -217,7 +286,6 @@ function MapaView() {
     );
 }
 
-// Página de Buses temporal
 function PaginaBuses() {
     return (
         <div style={{ padding: '2rem', color: 'white', textAlign: 'center' }}>
@@ -227,7 +295,6 @@ function PaginaBuses() {
     );
 }
 
-// Componente Raíz con Rutas
 function App() {
     return (
         <Routes>
