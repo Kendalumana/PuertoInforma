@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIconPng from 'leaflet/dist/images/marker-icon.png';
 import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
-import './styles/index.css';
+import './styles/Index.css';
 
 // API
 import api from './api/axios';
