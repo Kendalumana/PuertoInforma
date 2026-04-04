@@ -4,6 +4,7 @@ import logoIcon from '../Resources/logoFinal.ico';
 
 function Navbar({ onSearch, onToggleFilters }) {
 
+    // Controla si el menú hamburguesa está abierto o cerrado
     const [menuAbierto, setMenuAbierto] = useState(false);
 
     return (
@@ -14,37 +15,41 @@ function Navbar({ onSearch, onToggleFilters }) {
                 <img src={logoIcon} alt="Logo" className="logo-navbar" />
             </div>
 
-            {/* ── Buscador (centro) ── */}
+            {/* ── Buscador (centro) — ocupa todo el espacio disponible ── */}
             <div className="search-container">
                 <input
                     type="text"
-                    placeholder="Buscar..."
-                    className="search-input" // 🔥 FIX
-                    onChange={(e) => onSearch(e.target.value)}  
+                    placeholder="¿Qué buscás? ej. pizza, uñas, repuestos..."
+                    className="search-input"
+                    onChange={(e) => onSearch(e.target.value)}
                 />
             </div>
 
-            {/* ── Sección derecha ── */}
+            {/* ── Sección derecha: Filtros + Hamburguesa ── */}
             <div className="header-right">
 
-                {/* Botón filtros */}
+                {/* Botón filtros — llama al padre para mostrar/ocultar el panel */}
                 <button className="filters-btn" onClick={onToggleFilters}>
                     ⚙️ Filtros
                 </button>
 
-                {/* Menú hamburguesa */}
-                <div className="menu-container" style={{ position: "relative" }}>
+                {/* Contenedor del menú hamburguesa
+                    position: relative permite que el dropdown flote desde aquí */}
+                <div className="menu-container">
                     <button
                         className="three-dots-btn"
                         onClick={() => setMenuAbierto(!menuAbierto)}
                         aria-label="Menú"
                     >
+                        {/* Cambia entre X y ☰ según el estado */}
                         {menuAbierto ? '✕' : '☰'}
                     </button>
 
+                    {/* El dropdown solo existe en el DOM cuando menuAbierto es true */}
                     {menuAbierto && (
                         <div className="dropdown-menu">
 
+                            {/* Cada Link cierra el menú al navegar */}
                             <Link
                                 to="/perfil"
                                 className="dropdown-item"
@@ -61,8 +66,10 @@ function Navbar({ onSearch, onToggleFilters }) {
                                 🚌 Buses
                             </Link>
 
+                            {/* Separador visual antes de Cerrar Sesión */}
                             <div className="dropdown-divider"></div>
 
+                            {/* Usa button y no Link porque es una acción, no una navegación */}
                             <button
                                 className="dropdown-item dropdown-logout"
                                 onClick={() => {

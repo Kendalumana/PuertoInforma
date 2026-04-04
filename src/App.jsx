@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIconPng from 'leaflet/dist/images/marker-icon.png';
@@ -15,15 +15,35 @@ import FilterPanel  from './components/FilterPanel';
 import PlaceModal   from './components/PlaceModal';
 import StarRating   from './components/StarRating';
 import PaginaPerfil from './components/PaginaPerfil';
+import Login        from './components/Login';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
 
+// ============================================================
+// RutaProtegida — Componente guardia de rutas
+// Si el usuario NO tiene token en localStorage, lo manda al login
+// Si SÍ tiene token, muestra la página pedida normalmente
+// ============================================================
+function RutaProtegida({ children }) {
+    // Leemos el token del localStorage
+    const token = localStorage.getItem('token');
+
+    // Si no hay token, redirigimos al login
+    // replace evita que el login quede en el historial del navegador
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // Si hay token, mostramos la página normalmente
+    return children;
+}
+
 function MapaView() {
     const [map,             setMap            ] = useState(null);
     const [markers,         setMarkers        ] = useState({});
-    const [allPlaces,       setAllPlaces      ] = useState([]);       // todos los lugares del backend
-    const [categories,      setCategories     ] = useState([]);       // categorías únicas
+    const [allPlaces,       setAllPlaces      ] = useState([]);
+    const [categories,      setCategories     ] = useState([]);
     const [filteredPlaces,  setFilteredPlaces ] = useState([]);
     const [selectedPlace,   setSelectedPlace  ] = useState(null);
     const [showFilters,     setShowFilters    ] = useState(false);
@@ -142,9 +162,6 @@ function MapaView() {
         setActiveChip("");
     };
 
-    // -------------------------------------------------------
-    // Render
-    // -------------------------------------------------------
     return (
         <div className="app-wrapper">
             <Navbar
@@ -204,7 +221,6 @@ function MapaView() {
                         <span className="results-count">{filteredPlaces.length}</span>
                     </div>
 
-                    {/* Estados: cargando / error / resultados */}
                     {loading && (
                         <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>
                             Cargando lugares...
@@ -257,7 +273,7 @@ function MapaView() {
                                     </div>
                                 ))
                             ) : (
-                                <p className="no-results" style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>
                                     No se encontraron lugares.
                                 </p>
                             )}
@@ -295,12 +311,37 @@ function PaginaBuses() {
     );
 }
 
+// ============================================================
+// App — Define todas las rutas de la aplicación
+// CAMBIO: /login es pública, todo lo demás requiere token
+// ============================================================
 function App() {
     return (
         <Routes>
-            <Route path="/"       element={<MapaView />} />
-            <Route path="/perfil" element={<PaginaPerfil />} />
-            <Route path="/buses"  element={<PaginaBuses />} />
+            {/* Ruta pública — no necesita token */}
+            <Route path="/login" element={<Login />} />
+
+            {/* Rutas protegidas — redirigen a /login si no hay token */}
+            <Route path="/" element={
+                <RutaProtegida>
+                    <MapaView />
+                </RutaProtegida>
+            } />
+
+            <Route path="/perfil" element={
+                <RutaProtegida>
+                    <PaginaPerfil />
+                </RutaProtegida>
+            } />
+
+            <Route path="/buses" element={
+                <RutaProtegida>
+                    <PaginaBuses />
+                </RutaProtegida>
+            } />
+
+            {/* Cualquier ruta desconocida redirige al login */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
     );
 }

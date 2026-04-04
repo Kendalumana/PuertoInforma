@@ -1,0 +1,165 @@
+/* ============================================================
+   Login.css — Estilos de la pantalla de login
+   Usa las mismas variables de color que el resto del proyecto
+   ============================================================ */
+
+/* ── PÁGINA COMPLETA ─────────────────────────────────────────
+   Centra la tarjeta vertical y horizontalmente
+   ============================================================ */
+.login-page {
+  min-height: 100vh;               /* ocupa toda la pantalla */
+  background-color: #1A1A1A;       /* --negro */
+  display: flex;
+  justify-content: center;         /* centra horizontalmente */
+  align-items: center;             /* centra verticalmente */
+  padding: 1rem;                   /* ← cambiar padding general aquí */
+}
+
+/* ── TARJETA DEL FORMULARIO ──────────────────────────────────
+   ============================================================ */
+.login-card {
+  width: 100%;
+  max-width: 420px;                /* ← cambiar ancho máximo de la tarjeta aquí */
+  background-color: #2D2D2D;       /* --gris-oscuro */
+  border-radius: 20px;             /* ← cambiar redondez de esquinas aquí */
+  padding: 2.5rem 2rem;            /* ← cambiar padding interno aquí */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(232, 98, 26, 0.2); /* borde naranja sutil */
+  display: flex;
+  flex-direction: column;
+  align-items: center;             /* centra el contenido */
+}
+
+/* ── LOGO ────────────────────────────────────────────────────
+   ============================================================ */
+.login-logo {
+  margin-bottom: 1.5rem;           /* ← cambiar espacio debajo del logo aquí */
+}
+
+.login-logo-img {
+  height: 70px;                    /* ← cambiar tamaño del logo aquí */
+  width: auto;
+}
+
+/* ── TÍTULOS ─────────────────────────────────────────────────
+   ============================================================ */
+.login-titulo {
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.6rem;               /* ← cambiar tamaño del título aquí */
+  font-weight: 700;
+  color: #FFFFFF;                  /* --blanco */
+  margin-bottom: 0.3rem;
+  text-align: center;
+}
+
+.login-subtitulo {
+  font-size: 0.9rem;               /* ← cambiar tamaño del subtítulo aquí */
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* ── FORMULARIO ──────────────────────────────────────────────
+   ============================================================ */
+.login-form {
+  width: 100%;                     /* ocupa todo el ancho de la tarjeta */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;                       /* ← cambiar espacio entre campos aquí */
+}
+
+/* Cada grupo label + input */
+.login-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;                     /* ← cambiar espacio entre label e input aquí */
+}
+
+/* Etiqueta del campo */
+.login-label {
+  font-size: 0.85rem;              /* ← cambiar tamaño del texto de etiquetas aquí */
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Input de texto */
+.login-input {
+  width: 100%;
+  padding: 0.75rem 1rem;           /* ← cambiar padding de los inputs aquí */
+  background: #1A1A1A;             /* --negro */
+  border: 2px solid #2D2D2D;       /* borde gris por defecto */
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-size: 0.95rem;              /* ← cambiar tamaño del texto de inputs aquí */
+  transition: border-color 0.2s ease;
+}
+
+.login-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Borde naranja al hacer foco */
+.login-input:focus {
+  outline: none;
+  border-color: #E8621A;           /* --naranja */
+}
+
+/* ── MENSAJE DE ERROR ────────────────────────────────────────
+   Aparece solo cuando hay un error de credenciales
+   ============================================================ */
+.login-error {
+  background: rgba(239, 83, 80, 0.15); /* rojo muy suave de fondo */
+  border: 1px solid rgba(239, 83, 80, 0.4);
+  color: #ef9090;
+  padding: 0.65rem 1rem;           /* ← cambiar padding del error aquí */
+  border-radius: 8px;
+  font-size: 0.85rem;              /* ← cambiar tamaño del texto de error aquí */
+  text-align: center;
+}
+
+/* ── BOTÓN DE LOGIN ──────────────────────────────────────────
+   ============================================================ */
+.login-btn {
+  width: 100%;
+  padding: 0.85rem;                /* ← cambiar tamaño del botón aquí */
+  background: #E8621A;             /* --naranja */
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;                 /* ← cambiar tamaño del texto del botón aquí */
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.login-btn:hover {
+  background: #cf5516;             /* naranja más oscuro al hover */
+}
+
+/* Botón desactivado mientras carga */
+.login-btn:disabled {
+  opacity: 0.6;                    /* ← cambiar opacidad del botón cargando aquí */
+  cursor: not-allowed;
+}
+
+/* ── LINK DE REGISTRO ────────────────────────────────────────
+   ============================================================ */
+.login-registro {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;              /* ← cambiar tamaño del texto aquí */
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* Texto clickeable del link */
+.login-link {
+  color: #E8621A;                  /* --naranja */
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.login-link:hover {
+  opacity: 0.8;
+}
