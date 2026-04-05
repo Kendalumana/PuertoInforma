@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://puertoinforma-backend.onrender.com/api/v1';
+/*const BASE_URL = 'https://puertoinforma-backend.onrender.com/api/v1';*/
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
 // ── Instancia pública (login, lugares, etc.) ───────────────
 export default axios.create({

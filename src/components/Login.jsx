@@ -124,10 +124,12 @@ function Login() {
 
                 </form>
 
-                {/* Link para registro — pendiente de implementar */}
+                {/* Link para registro */}
                 <p className="login-registro">
                     ¿No tenés cuenta?{' '}
-                    <span className="login-link">Registrate</span>
+                    <span className="login-link" onClick={() => navigate('/registro')}>
+                        Registrate
+                    </span>
                 </p>
 
             </div>

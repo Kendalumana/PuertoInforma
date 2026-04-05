@@ -16,7 +16,8 @@ import PlaceModal   from './components/PlaceModal';
 import StarRating   from './components/StarRating';
 import PaginaPerfil from './components/PaginaPerfil';
 import Login        from './components/Login';
-import PaginaBuses from './components/PaginaBuses';
+import Registro     from './components/Registro';
+import PaginaBuses  from './components/PaginaBuses';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
@@ -306,13 +307,13 @@ function MapaView() {
 
 // ============================================================
 // App — Define todas las rutas de la aplicación
-// CAMBIO: /login es pública, todo lo demás requiere token
 // ============================================================
 function App() {
     return (
         <Routes>
-            {/* Ruta pública — no necesita token */}
-            <Route path="/login" element={<Login />} />
+            {/* Rutas públicas — no necesitan token */}
+            <Route path="/login"    element={<Login />} />
+            <Route path="/registro" element={<Registro />} />
 
             {/* Rutas protegidas — redirigen a /login si no hay token */}
             <Route path="/" element={
