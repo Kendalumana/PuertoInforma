@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';          // instancia base con baseURL
+import { supabase } from '../lib/supabase'; // ← agregado para Google OAuth
 import logoIcon from '../Resources/logoFinal.ico';
 import '../styles/Login.css';
 
@@ -54,6 +55,18 @@ function Login() {
         }
     };
 
+    // ── Login con Google ───────────────────────────────────
+    const handleGoogle = async () => {
+        setError('');
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: 'https://puerto-informa.vercel.app/auth/callback'
+            }
+        });
+        if (error) setError('No se pudo iniciar sesión con Google.');
+    };
+
     return (
         // Contenedor que centra la tarjeta en la pantalla
         <div className="login-page">
@@ -80,7 +93,7 @@ function Login() {
                             id="email"
                             type="email"
                             className="login-input"
-                            placeholder="tucorreo@ejemplo.com"
+                            placeholder="tucorreo@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required   // el navegador valida que no esté vacío
@@ -123,6 +136,21 @@ function Login() {
                     </button>
 
                 </form>
+
+                {/* Separador visual entre los dos métodos de login */}
+                <div className="login-separador">
+                    <span>o</span>
+                </div>
+
+                {/* Botón Google OAuth */}
+                <button className="login-btn-google" onClick={handleGoogle}>
+                    <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt="Google"
+                        className="login-google-icon"
+                    />
+                    Continuar con Google
+                </button>
 
                 {/* Link para registro */}
                 <p className="login-registro">
