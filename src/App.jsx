@@ -16,6 +16,7 @@ import PlaceModal   from './components/PlaceModal';
 import StarRating   from './components/StarRating';
 import PaginaPerfil from './components/PaginaPerfil';
 import Login        from './components/Login';
+import PaginaBuses from './components/PaginaBuses';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
@@ -302,14 +303,6 @@ function MapaView() {
     );
 }
 
-function PaginaBuses() {
-    return (
-        <div style={{ padding: '2rem', color: 'white', textAlign: 'center' }}>
-            <h1>🚌 Página de Buses</h1>
-            <p>Próximamente disponible para Puntarenas.</p>
-        </div>
-    );
-}
 
 // ============================================================
 // App — Define todas las rutas de la aplicación

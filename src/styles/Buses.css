@@ -1,0 +1,456 @@
+/* ============================================================
+   Buses.css — PuertoInforma
+   Página de rutas de buses de Puntarenas
+   ============================================================ */
+
+.buses-page {
+  min-height: 100vh;
+  background-color: var(--negro);
+  color: var(--blanco);
+  padding-bottom: 2rem;
+}
+
+/* ── Header ── */
+.buses-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--negro);
+  border-bottom: 2px solid var(--naranja);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.buses-back-btn {
+  background: transparent;
+  border: none;
+  color: var(--blanco);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.buses-back-btn:hover { background: rgba(255,255,255,0.08); }
+
+.buses-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--blanco);
+}
+
+/* ── Buscador ── */
+.buses-search-container {
+  position: relative;
+  margin: 1rem 1.25rem 0.75rem;
+}
+
+.buses-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.buses-search-input {
+  width: 100%;
+  padding: 0.7rem 1rem 0.7rem 2.5rem;
+  background: var(--gris-oscuro);
+  border: 2px solid transparent;
+  border-radius: 20px;
+  color: var(--blanco);
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+}
+
+.buses-search-input::placeholder { color: rgba(255,255,255,0.4); }
+.buses-search-input:focus {
+  outline: none;
+  border-color: var(--naranja);
+}
+
+/* ── Chips de destino ── */
+.buses-chips-container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.25rem 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.buses-chips-container::-webkit-scrollbar { display: none; }
+
+.buses-chip {
+  padding: 0.35rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--gris-oscuro);
+  background: var(--gris-oscuro);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.buses-chip:hover { border-color: var(--naranja); color: var(--blanco); }
+.buses-chip.active {
+  background: var(--naranja);
+  border-color: var(--naranja);
+  color: var(--blanco);
+  font-weight: 700;
+}
+
+/* ── Mini mapa de paradas ── */
+.buses-mini-mapa {
+  margin: 0 1.25rem 1rem;
+  background: #1f2a1f;
+  border: 1px solid rgba(232, 98, 26, 0.3);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+.mini-mapa-linea {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 1.5rem; /* espacio para las etiquetas */
+  position: relative;
+}
+
+.mini-mapa-parada {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.parada-punto {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  border: 2px solid rgba(255,255,255,0.4);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.parada-punto.origen  { background: var(--naranja); border-color: var(--naranja); width: 14px; height: 14px; }
+.parada-punto.destino { background: #aaa; border-color: #aaa; }
+
+.parada-linea-conectora {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(232,98,26,0.6), rgba(255,255,255,0.2));
+}
+
+.parada-label {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+
+/* ── Tabs por destino ── */
+.buses-tabs-destino {
+  display: flex;
+  border-bottom: 1px solid var(--gris-oscuro);
+  padding: 0 1.25rem;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.buses-tabs-destino::-webkit-scrollbar { display: none; }
+
+.buses-tab-destino {
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: -1px;
+  transition: all 0.2s ease;
+}
+
+.buses-tab-destino:hover { color: var(--blanco); }
+.buses-tab-destino.active {
+  color: var(--naranja);
+  border-bottom-color: var(--naranja);
+}
+
+/* ── Lista de rutas ── */
+.buses-lista {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Card de cada ruta ── */
+.buses-card {
+  background: var(--gris-oscuro);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.buses-card:hover { border-color: rgba(232,98,26,0.4); transform: translateY(-1px); }
+.buses-card.seleccionada { border-color: var(--naranja); }
+
+/* Fila superior de la card */
+.buses-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.buses-card-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Badge de número de ruta */
+.buses-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.buses-badge.normal  { background: var(--naranja); color: var(--blanco); }
+.buses-badge.expreso { background: #1a3a1a; color: #66bb6a; border: 1px solid #66bb6a; }
+
+.buses-card-ruta {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--blanco);
+}
+
+.buses-expreso-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: #66bb6a;
+  margin-left: 0.4rem;
+}
+
+/* Próxima salida */
+.buses-proxima {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--naranja);
+  flex-shrink: 0;
+}
+
+/* Horarios */
+.buses-horarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.buses-hora {
+  padding: 0.25rem 0.6rem;
+  background: var(--negro);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+}
+
+/* Primera hora del día resaltada en naranja */
+.buses-hora.proxima-hora {
+  background: rgba(232,98,26,0.2);
+  color: var(--naranja);
+  font-weight: 700;
+  border: 1px solid rgba(232,98,26,0.4);
+}
+
+.buses-hora-mas {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.4);
+  align-self: center;
+}
+
+/* Meta: frecuencia, duración, empresa */
+.buses-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.buses-meta-item {
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.5);
+  background: var(--negro);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+}
+
+/* ── Panel de paradas dentro de la card ── */
+.buses-paradas-panel {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.buses-paradas-linea {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 1.5rem;
+  position: relative;
+}
+
+.buses-paradas-linea::-webkit-scrollbar { display: none; }
+
+.buses-parada-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.buses-parada-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  border: 2px solid rgba(255,255,255,0.3);
+  z-index: 1;
+}
+
+.buses-parada-dot.origen  { background: var(--naranja); border-color: var(--naranja); width: 12px; height: 12px; }
+.buses-parada-dot.destino { background: #999; border-color: #999; }
+
+.buses-parada-item::after {
+  content: '';
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(232,98,26,0.5), rgba(255,255,255,0.15));
+  flex-shrink: 0;
+}
+
+.buses-parada-item:last-child::after { display: none; }
+
+.buses-parada-nombre {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+}
+
+/* Sin resultados */
+.buses-sin-resultados {
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .buses-page { max-width: 600px; margin: 0 auto; }
+}
+
+/* ── Mini mapa SVG ── */
+.buses-mini-mapa-container {
+  margin: 0 1.25rem 1rem;
+  background: #1a2a1a;    /* verde oscuro como en el mockup */
+  border: 1px solid rgba(232, 98, 26, 0.35);
+  border-radius: 16px;
+  padding: 1rem 1.25rem 0.75rem;
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Badge + título dentro del mini mapa */
+.minimapa-badge-ruta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.minimapa-titulo-ruta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+}
+
+/* SVG ocupa todo el ancho del contenedor */
+.minimapa-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.minimapa-svg-wrapper {
+  width: 100%;
+}
+
+/* Info rápida debajo del SVG */
+.minimapa-info-rapida {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+}
+
+/* Botón cerrar mapa */
+.minimapa-cerrar-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.4rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.minimapa-cerrar-btn:hover {
+  border-color: var(--naranja);
+  color: var(--naranja);
+}

@@ -1,22 +1,3 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background-color: #121212;
-  overflow-x: hidden;
-}
-
-:root {
-  --naranja: #e8621a;
-  --negro: #121212;
-  --gris-oscuro: #1e1e1e;
-  --blanco: #ffffff;
-  --gris-claro: #f0f0f0;
-}
-
 .profile-page {
   min-height: 100vh;
   background-color: var(--negro);
