@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logoIcon from '../Resources/logoFinal.ico';
 
 function Navbar({ onSearch, onToggleFilters }) {
 
-    // Controla si el menú hamburguesa está abierto o cerrado
     const [menuAbierto, setMenuAbierto] = useState(false);
+    const navigate = useNavigate();
+
+    const handleCerrarSesion = () => {
+        setMenuAbierto(false);
+        localStorage.removeItem('token'); // borra el token
+        navigate('/login');               // redirige al login
+    };
 
     return (
         <header className="navbar-header">
@@ -72,10 +78,7 @@ function Navbar({ onSearch, onToggleFilters }) {
                             {/* Usa button y no Link porque es una acción, no una navegación */}
                             <button
                                 className="dropdown-item dropdown-logout"
-                                onClick={() => {
-                                    setMenuAbierto(false);
-                                    console.log('Cerrando sesión...');
-                                }}
+                                onClick={handleCerrarSesion}
                             >
                                 🚪 Cerrar Sesión
                             </button>
