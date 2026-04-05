@@ -18,7 +18,7 @@ import PaginaPerfil from './components/PaginaPerfil';
 import Login        from './components/Login';
 import Registro     from './components/Registro';
 import PaginaBuses  from './components/PaginaBuses';
-import AuthCallback from './pages/AuthCallback'; // ← NUEVO
+import AuthCallback from './components/AuthCallback'; 
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
