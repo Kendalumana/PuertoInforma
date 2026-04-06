@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import '../styles/Perfil.css';
 
 const AVATARES = [
@@ -20,13 +21,48 @@ function PaginaPerfil() {
   const [mostrarSelector, setMostrarSelector] = useState(false);
   const [tabActiva, setTabActiva] = useState('misiones');
 
+  // --- NUEVO: estado para el perfil real ---
+  const [perfil, setPerfil] = useState(null);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    async function cargarPerfil() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/v1/perfil/usuario/${session.user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setPerfil(data);
+        }
+      } catch (err) {
+        console.error('Error al cargar el perfil:', err);
+      } finally {
+        setCargando(false);
+      }
+    }
+
+    cargarPerfil();
+  }, []);
+
+  // Datos que se muestran: reales si ya cargaron, fallback mientras tanto
   const usuario = {
-    nombre: 'Kendal Rodríguez',
-    rango: 'Explorador Novato',
-    puntos: 340,
-    experiencia: 340,
+    nombre:           perfil?.nombreUsuario     ?? '—',
+    rango:            perfil?.rango?.nombre     ?? '—',
+    puntos:           perfil?.puntosTotales     ?? 0,
+    experiencia:      perfil?.puntosTotales     ?? 0,
     expSiguienteNivel: 500,
   };
+  // -----------------------------------------
 
   const calcularPorcentajeXP = () => {
     return Math.round((usuario.experiencia / usuario.expSiguienteNivel) * 100);
@@ -76,6 +112,8 @@ function PaginaPerfil() {
     { id: 2, nombre: 'Puntarenas',   fecha: '05 Nov 2023', icono: '🛳️' },
     { id: 3, nombre: 'Limón Centro', fecha: '18 Dic 2023', icono: '🏙️' },
   ];
+
+  if (cargando) return <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>Cargando perfil...</div>;
 
   return (
     <div className="profile-page">
