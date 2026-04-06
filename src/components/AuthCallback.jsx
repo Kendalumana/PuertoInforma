@@ -28,7 +28,8 @@ function AuthCallback() {
                         const response = await axios.post('/usuario/login-google', {
                             email,
                             nombre,
-                            googleId: session.user.id
+                            googleId: session.user.id,
+                            supabaseToken: session.access_token  // ← esto faltaba
                         });
 
                         // 3. Guardamos el token de TU backend
