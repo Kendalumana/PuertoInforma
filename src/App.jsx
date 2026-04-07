@@ -292,7 +292,7 @@ function MapaView() {
 
             <section className="about-section">
                 <h2 className="section-title">¿Sos dueño de un negocio?</h2>
-                <p>Ayudanos a crecer la guía de Puntarenas. Sugerí tu comercio aquí mismo.</p>
+                <p>No queremos ayuda de pobres, si tenes platica escribenos.</p>
                 <div className="contact-form">
                     <div className="form-group">
                         <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
