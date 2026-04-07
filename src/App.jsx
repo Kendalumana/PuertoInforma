@@ -19,6 +19,8 @@ import Login        from './components/Login';
 import Registro     from './components/Registro';
 import PaginaBuses  from './components/PaginaBuses';
 import AuthCallback from './components/AuthCallback'; 
+import PaginaNoticias from './components/PaginaNoticias';
+import PaginaFerry    from './components/PaginaFerry';
 
 // Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
@@ -315,6 +317,8 @@ function App() {
             {/* Rutas públicas — no necesitan token */}
             <Route path="/login"         element={<Login />} />
             <Route path="/registro"      element={<Registro />} />
+            <Route path="/noticias" element={<PaginaNoticias />} />
+            <Route path="/ferry"    element={<PaginaFerry />} />
             <Route path="/auth/callback" element={<AuthCallback />} /> {/* ← NUEVO */}
 
             {/* Rutas protegidas — redirigen a /login si no hay token */}
@@ -338,6 +342,8 @@ function App() {
 
             {/* Cualquier ruta desconocida redirige al login */}
             <Route path="*" element={<Navigate to="/login" replace />} />
+
+            
         </Routes>
     );
 }

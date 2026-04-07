@@ -1,0 +1,120 @@
+/* ============================================================
+   Ferry.css — PuertoInforma
+   ============================================================ */
+
+.ferry-page {
+  min-height: 100vh;
+  background-color: var(--negro);
+  color: var(--blanco);
+  padding-bottom: 2rem;
+}
+
+.ferry-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--negro);
+  border-bottom: 2px solid var(--naranja);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.ferry-back-btn {
+  background: transparent;
+  border: none;
+  color: var(--blanco);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.ferry-back-btn:hover { background: rgba(255,255,255,0.08); }
+
+.ferry-titulo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+.ferry-badge-pronto {
+  padding: 0.2rem 0.65rem;
+  background: rgba(232, 98, 26, 0.15);
+  border: 1px solid rgba(232, 98, 26, 0.4);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--naranja);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.ferry-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2.5rem 1.25rem 1.5rem;
+}
+
+.ferry-placeholder-icono { font-size: 3.5rem; opacity: 0.35; }
+
+.ferry-placeholder-texto { text-align: center; }
+.ferry-placeholder-texto h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--blanco);
+  margin-bottom: 0.5rem;
+}
+.ferry-placeholder-texto p {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+.ferry-preview-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.ferry-preview-card {
+  background: var(--gris-oscuro);
+  border-radius: 14px;
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color 0.2s;
+}
+
+.ferry-preview-card:hover { border-color: rgba(232,98,26,0.3); }
+
+.ferry-preview-icono  { font-size: 1.4rem; }
+.ferry-preview-titulo { font-size: 0.85rem; font-weight: 700; color: var(--blanco); }
+.ferry-preview-desc   { font-size: 0.75rem; color: rgba(255,255,255,0.4); line-height: 1.4; }
+
+.ferry-footer-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.3);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.ferry-footer-aviso span { color: var(--naranja); font-weight: 600; }

@@ -1,17 +1,15 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import logoIcon from '../Resources/logoFinal.ico';
 
 function Navbar({ onSearch, onToggleFilters }) {
 
+    // Controla si el menú hamburguesa está abierto o cerrado
     const [menuAbierto, setMenuAbierto] = useState(false);
-    const navigate = useNavigate();
 
-    const handleCerrarSesion = () => {
-        setMenuAbierto(false);
-        localStorage.removeItem('token'); // borra el token
-        navigate('/login');               // redirige al login
-    };
+    // Para redirigir al cerrar sesión
+    const navigate = useNavigate();
 
     return (
         <header className="navbar-header">
@@ -21,7 +19,7 @@ function Navbar({ onSearch, onToggleFilters }) {
                 <img src={logoIcon} alt="Logo" className="logo-navbar" />
             </div>
 
-            {/* ── Buscador (centro) — ocupa todo el espacio disponible ── */}
+            {/* ── Buscador (centro) ── */}
             <div className="search-container">
                 <input
                     type="text"
@@ -34,28 +32,27 @@ function Navbar({ onSearch, onToggleFilters }) {
             {/* ── Sección derecha: Filtros + Hamburguesa ── */}
             <div className="header-right">
 
-                {/* Botón filtros — llama al padre para mostrar/ocultar el panel */}
+                {/* Botón filtros */}
                 <button className="filters-btn" onClick={onToggleFilters}>
                     ⚙️ Filtros
                 </button>
 
-                {/* Contenedor del menú hamburguesa
-                    position: relative permite que el dropdown flote desde aquí */}
+                {/* Menú hamburguesa */}
                 <div className="menu-container">
                     <button
                         className="three-dots-btn"
                         onClick={() => setMenuAbierto(!menuAbierto)}
                         aria-label="Menú"
                     >
-                        {/* Cambia entre X y ☰ según el estado */}
+                        {/* Alterna entre X y ☰ según el estado */}
                         {menuAbierto ? '✕' : '☰'}
                     </button>
 
-                    {/* El dropdown solo existe en el DOM cuando menuAbierto es true */}
+                    {/* Dropdown — solo existe en el DOM cuando está abierto */}
                     {menuAbierto && (
                         <div className="dropdown-menu">
 
-                            {/* Cada Link cierra el menú al navegar */}
+                            {/* ── Perfil ── */}
                             <Link
                                 to="/perfil"
                                 className="dropdown-item"
@@ -64,6 +61,7 @@ function Navbar({ onSearch, onToggleFilters }) {
                                 🧑‍✈️ Perfil
                             </Link>
 
+                            {/* ── Buses ── */}
                             <Link
                                 to="/buses"
                                 className="dropdown-item"
@@ -72,16 +70,39 @@ function Navbar({ onSearch, onToggleFilters }) {
                                 🚌 Buses
                             </Link>
 
-                            {/* Separador visual antes de Cerrar Sesión */}
+                            {/* ── Noticias y Eventos ── */}
+                            <Link
+                                to="/noticias"
+                                className="dropdown-item"
+                                onClick={() => setMenuAbierto(false)}
+                            >
+                                📰 Noticias y Eventos
+                            </Link>
+
+                            {/* ── Ferry ── */}
+                            <Link
+                                to="/ferry"
+                                className="dropdown-item"
+                                onClick={() => setMenuAbierto(false)}
+                            >
+                                ⛵ Ferry
+                            </Link>
+
+                            {/* Separador antes de Cerrar Sesión */}
                             <div className="dropdown-divider"></div>
 
-                            {/* Usa button y no Link porque es una acción, no una navegación */}
+                            {/* ── Cerrar Sesión — borra token y redirige al login ── */}
                             <button
                                 className="dropdown-item dropdown-logout"
-                                onClick={handleCerrarSesion}
+                                onClick={() => {
+                                    setMenuAbierto(false);
+                                    localStorage.removeItem('token'); // borra el JWT
+                                    navigate('/login');               // manda al login
+                                }}
                             >
                                 🚪 Cerrar Sesión
                             </button>
+
                         </div>
                     )}
                 </div>
