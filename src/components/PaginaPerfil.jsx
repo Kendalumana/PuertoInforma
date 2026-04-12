@@ -45,9 +45,8 @@ function PaginaPerfil() {
         const { data: { session: s } } = await supabase.auth.getSession();
         if (!s) { navigate('/login'); return; }
         setSession(s);
-
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${s.access_token}` };
+        const base = import.meta.env.VITE_API_URL ?? '';
+        const headers = { Authorization: `Bearer ${s.access_token}` };
 
         // 2. Cargar perfil base
         const resPerfil = await fetch(`${base}/api/v1/perfil/usuario/${s.user.id}`, { headers });
