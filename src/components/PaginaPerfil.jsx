@@ -12,119 +12,141 @@ const AVATARES = [
   { id: 6, emoji: '🦀', label: 'Cangrejo' },
 ];
 
+// XP necesaria para subir de nivel — se puede ajustar después
+const XP_SIGUIENTE_NIVEL = 500;
+
 function PaginaPerfil() {
   const navigate = useNavigate();
 
-  const [avatarTipo, setAvatarTipo] = useState('prediseñado');
+  // --- Avatar ---
+  const [avatarTipo,         setAvatarTipo        ] = useState('prediseñado');
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(1);
-  const [avatarImagen, setAvatarImagen] = useState(null);
-  const [mostrarSelector, setMostrarSelector] = useState(false);
-  const [tabActiva, setTabActiva] = useState('misiones');
+  const [avatarImagen,       setAvatarImagen      ] = useState(null);
+  const [mostrarSelector,    setMostrarSelector   ] = useState(false);
+  const [tabActiva,          setTabActiva         ] = useState('misiones');
 
-  // --- NUEVO: estado para el perfil real ---
-  const [perfil, setPerfil] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  // --- Datos de BD ---
+  const [perfil,          setPerfil         ] = useState(null);
+  const [misiones,        setMisiones       ] = useState([]);
+  const [perfilMisiones,  setPerfilMisiones ] = useState([]);
+  const [historial,       setHistorial      ] = useState([]);
+  const [rangos,          setRangos         ] = useState([]);
+  const [sitiosVisitados, setSitiosVisitados] = useState([]);
+  const [cargando,        setCargando       ] = useState(true);
+  const [error,           setError          ] = useState(null);
+
+  // --- Session ---
+  const [session, setSession] = useState(null);
 
   useEffect(() => {
-    async function cargarPerfil() {
+    async function cargarTodo() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+        // 1. Obtener sesión de Supabase
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (!s) { navigate('/login'); return; }
+        setSession(s);
 
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/v1/perfil/usuario/${session.user.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          }
-        );
+        const headers = { Authorization: `Bearer ${s.access_token}` };
+        const base    = import.meta.env.VITE_API_URL;
 
-        if (res.ok) {
-          const data = await res.json();
-          setPerfil(data);
-        }
+        // 2. Cargar perfil base
+        const resPerfil = await fetch(`${base}/api/v1/perfil/usuario/${s.user.id}`, { headers });
+        if (!resPerfil.ok) throw new Error('No se pudo cargar el perfil');
+        const datosPerfil = await resPerfil.json();
+        setPerfil(datosPerfil);
+
+        const perfilId = datosPerfil.id;
+
+        // 3. Cargar en paralelo — misiones, historial, sitios visitados, rangos
+        const [
+          resMisiones,
+          resPerfilMisiones,
+          resHistorial,
+          resSitios,
+          resRangos,
+        ] = await Promise.all([
+          fetch(`${base}/api/v1/mision`,                       { headers }),
+          fetch(`${base}/api/v1/mision/perfil/${perfilId}`,    { headers }),
+          fetch(`${base}/api/v1/mision/historial/${perfilId}`, { headers }),
+          fetch(`${base}/api/v1/mision/visitados/${perfilId}`, { headers }),
+          fetch(`${base}/api/v1/rango`,                        { headers }),
+        ]);
+
+        if (resMisiones.ok)       setMisiones(await resMisiones.json());
+        if (resPerfilMisiones.ok) setPerfilMisiones(await resPerfilMisiones.json());
+        if (resHistorial.ok)      setHistorial(await resHistorial.json());
+        if (resSitios.ok)         setSitiosVisitados(await resSitios.json());
+        if (resRangos.ok)         setRangos(await resRangos.json());
+
       } catch (err) {
-        console.error('Error al cargar el perfil:', err);
+        console.error(err);
+        setError('No se pudo cargar el perfil. Intentá de nuevo.');
       } finally {
         setCargando(false);
       }
     }
 
-    cargarPerfil();
-  }, []);
+    cargarTodo();
+  }, [navigate]);
 
-  // Datos que se muestran: reales si ya cargaron, fallback mientras tanto
-  const usuario = {
-    nombre:           perfil?.nombreUsuario     ?? '—',
-    rango:            perfil?.rango?.nombre     ?? '—',
-    puntos:           perfil?.puntosTotales     ?? 0,
-    experiencia:      perfil?.puntosTotales     ?? 0,
-    expSiguienteNivel: 500,
-  };
-  // -----------------------------------------
+  // --- Helpers ---
 
+  // Verifica si una misión está completada por este perfil
+  const estaCompletada = (misionId) =>
+    perfilMisiones.some(pm => pm.mision?.id === misionId && pm.completada);
+
+  // Calcula el % de XP para la barra
   const calcularPorcentajeXP = () => {
-    return Math.round((usuario.experiencia / usuario.expSiguienteNivel) * 100);
+    const xp = perfil?.experienciaXp ?? 0;
+    return Math.min(Math.round((xp / XP_SIGUIENTE_NIVEL) * 100), 100);
   };
+
+  // Marca el rango actual comparando XP
+  const xpActual = perfil?.experienciaXp ?? 0;
+  const rangoActual = [...rangos]
+    .filter(r => xpActual >= r.puntosRequeridos)
+    .sort((a, b) => b.puntosRequeridos - a.puntosRequeridos)[0];
 
   const handleSubirImagen = (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
-    const urlTemporal = URL.createObjectURL(archivo);
-    setAvatarImagen(urlTemporal);
+    setAvatarImagen(URL.createObjectURL(archivo));
     setAvatarTipo('subido');
     setMostrarSelector(false);
   };
 
-  const misiones = [
-    { id: 1,  titulo: 'Visita tu primer puerto',                xp: 50,  completada: true },
-    { id: 2,  titulo: 'Explora 3 sitios diferentes',            xp: 100, completada: false },
-    { id: 3,  titulo: 'Visita un sitio fuera de tu provincia',  xp: 150, completada: false },
-    { id: 4,  titulo: 'Marca asistencia en 5 lugares',          xp: 200, completada: false },
-    { id: 5,  titulo: 'Deja tu primera reseña',                 xp: 75,  completada: false },
-    { id: 6,  titulo: 'Deja 3 reseñas en sitios diferentes',   xp: 150, completada: false },
-    { id: 7,  titulo: 'Recibe 10 "útil" en tus reseñas',       xp: 200, completada: false },
-    { id: 8,  titulo: 'Comparte un sitio con un amigo',         xp: 80,  completada: false },
-    { id: 9,  titulo: 'Completa tu información de perfil',      xp: 50,  completada: false },
-    { id: 10, titulo: 'Sube una foto de perfil personalizada',  xp: 100, completada: avatarTipo === 'subido' },
-    { id: 11, titulo: 'Agrega un sitio a favoritos',            xp: 30,  completada: false },
-    { id: 12, titulo: 'Inicia sesión 5 días seguidos',          xp: 200, completada: false },
-    { id: 13, titulo: 'Usa la app durante 1 mes',               xp: 300, completada: false },
-    { id: 14, titulo: 'Completa 10 misiones en total',          xp: 500, completada: false },
-  ];
+  // Formatea fecha ISO a texto legible
+  const formatearFecha = (isoString) => {
+    if (!isoString) return '—';
+    return new Date(isoString).toLocaleDateString('es-CR', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    });
+  };
 
-  const historialAvance = [
-    { id: 1, fecha: 'Hoy',  accion: 'Completaste la misión "Visita tu primer puerto"', xpObtenida: '+50 XP' },
-    { id: 2, fecha: 'Ayer', accion: 'Te registraste en PuertoInforma',                 xpObtenida: '+100 XP' },
-    { id: 3, fecha: 'Ayer', accion: 'Agregaste "Playa Hermosa" a favoritos',           xpObtenida: '+10 XP' },
-  ];
+  // --- Estados de carga y error ---
+  if (cargando) return (
+    <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>
+      Cargando perfil...
+    </div>
+  );
 
-  const rangosDisponibles = [
-    { nivel: 1, nombre: 'Turista Curioso',      xpReq: 0,    actual: false },
-    { nivel: 2, nombre: 'Explorador Novato',    xpReq: 200,  actual: true },
-    { nivel: 3, nombre: 'Navegante Frecuente',  xpReq: 500,  actual: false },
-    { nivel: 4, nombre: 'Capitán de la Costa',  xpReq: 1000, actual: false },
-  ];
-
-  const sitiosVisitados = [
-    { id: 1, nombre: 'Puerto Viejo', fecha: '12 Oct 2023', icono: '🌴' },
-    { id: 2, nombre: 'Puntarenas',   fecha: '05 Nov 2023', icono: '🛳️' },
-    { id: 3, nombre: 'Limón Centro', fecha: '18 Dic 2023', icono: '🏙️' },
-  ];
-
-  if (cargando) return <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>Cargando perfil...</div>;
+  if (error) return (
+    <div className="profile-page" style={{ color: '#ef5350', textAlign: 'center', paddingTop: '4rem' }}>
+      {error}
+    </div>
+  );
 
   return (
     <div className="profile-page">
       <div className="profile-layout">
 
-        {/* BARRA LATERAL */}
+        {/* ── BARRA LATERAL ── */}
         <aside className="profile-sidebar">
           <button className="btn-back" onClick={() => navigate('/')}>
             ⬅️ Volver al Inicio
           </button>
 
+          {/* Avatar */}
           <div className="avatar-wrapper">
             <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
               {avatarTipo === 'subido' && avatarImagen ? (
@@ -162,33 +184,38 @@ function PaginaPerfil() {
             )}
           </div>
 
+          {/* Info básica — datos reales de BD */}
           <div className="profile-info-basica">
-            <h2 className="profile-nombre">{usuario.nombre}</h2>
-            <span className="profile-rango">{usuario.rango}</span>
+            <h2 className="profile-nombre">{perfil?.nombreUsuario ?? '—'}</h2>
+            <span className="profile-rango">{rangoActual?.nombre ?? '—'}</span>
             <div className="profile-puntos-mini">
-              <strong>{usuario.puntos}</strong> puntos
+              <strong>{perfil?.puntosTotales ?? 0}</strong> puntos canjeables
             </div>
           </div>
 
+          {/* Barra XP — usa experienciaXp real */}
           <div className="xp-container">
             <div className="xp-labels">
-              <span>{usuario.experiencia} XP</span>
-              <span>{usuario.expSiguienteNivel} XP</span>
+              <span>{xpActual} XP</span>
+              <span>{XP_SIGUIENTE_NIVEL} XP</span>
             </div>
             <div className="xp-barra">
               <div className="xp-relleno" style={{ width: `${calcularPorcentajeXP()}%` }}></div>
             </div>
-            <p className="xp-texto">Faltan {usuario.expSiguienteNivel - usuario.experiencia} XP para subir</p>
+            <p className="xp-texto">
+              Faltan {Math.max(XP_SIGUIENTE_NIVEL - xpActual, 0)} XP para subir
+            </p>
           </div>
 
+          {/* Navegación de tabs */}
           <nav className="profile-nav-vertical">
-            <button className={`nav-btn ${tabActiva === 'misiones' ? 'activo' : ''}`} onClick={() => setTabActiva('misiones')}>
+            <button className={`nav-btn ${tabActiva === 'misiones'  ? 'activo' : ''}`} onClick={() => setTabActiva('misiones')}>
               🎯 Misiones
             </button>
-            <button className={`nav-btn ${tabActiva === 'avance' ? 'activo' : ''}`} onClick={() => setTabActiva('avance')}>
+            <button className={`nav-btn ${tabActiva === 'avance'    ? 'activo' : ''}`} onClick={() => setTabActiva('avance')}>
               📈 Mi Avance
             </button>
-            <button className={`nav-btn ${tabActiva === 'rango' ? 'activo' : ''}`} onClick={() => setTabActiva('rango')}>
+            <button className={`nav-btn ${tabActiva === 'rango'     ? 'activo' : ''}`} onClick={() => setTabActiva('rango')}>
               🏅 Rango
             </button>
             <button className={`nav-btn ${tabActiva === 'visitados' ? 'activo' : ''}`} onClick={() => setTabActiva('visitados')}>
@@ -197,41 +224,63 @@ function PaginaPerfil() {
           </nav>
         </aside>
 
-        {/* CONTENIDO PRINCIPAL */}
+        {/* ── CONTENIDO PRINCIPAL ── */}
         <main className="profile-main-content">
 
+          {/* MISIONES — vienen de BD, estado real por perfil */}
           {tabActiva === 'misiones' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">🎯 Misiones Disponibles</h3>
-              <p className="tab-desc">Completa estas tareas para ganar experiencia y subir de rango.</p>
+              <p className="tab-desc">Completá estas tareas para ganar XP y puntos.</p>
               <div className="misiones-lista">
-                {misiones.map(mision => (
-                  <div key={mision.id} className={`mision-card ${mision.completada ? 'completada' : ''}`}>
-                    <div className="mision-info">
-                      <h4>{mision.titulo}</h4>
-                      <span className="mision-xp">+{mision.xp} XP</span>
+                {misiones.length === 0 && (
+                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>No hay misiones disponibles.</p>
+                )}
+                {misiones.map(mision => {
+                  const completada = estaCompletada(mision.id);
+                  return (
+                    <div key={mision.id} className={`mision-card ${completada ? 'completada' : ''}`}>
+                      <div className="mision-info">
+                        <h4>{mision.titulo}</h4>
+                        {mision.descripcion && (
+                          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{mision.descripcion}</p>
+                        )}
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                          <span className="mision-xp">+{mision.xpRecompensa} XP</span>
+                          <span className="mision-xp" style={{ background: '#E8621A' }}>
+                            +{mision.puntosRecompensa} pts
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mision-estado">
+                        {completada ? '✅ Lista' : '⏳ Pendiente'}
+                      </div>
                     </div>
-                    <div className="mision-estado">
-                      {mision.completada ? '✅ Lista' : '⏳ Pendiente'}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
+          {/* AVANCE — historial real de BD */}
           {tabActiva === 'avance' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">📈 Tu Historial</h3>
               <p className="tab-desc">Todo lo que has hecho recientemente en PuertoInforma.</p>
               <div className="avance-timeline">
-                {historialAvance.map(item => (
+                {historial.length === 0 && (
+                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>Aún no tenés actividad registrada.</p>
+                )}
+                {historial.map(item => (
                   <div key={item.id} className="timeline-item">
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
-                      <span className="timeline-fecha">{item.fecha}</span>
-                      <p className="timeline-accion">{item.accion}</p>
-                      <span className="timeline-xp">{item.xpObtenida}</span>
+                      <span className="timeline-fecha">{formatearFecha(item.fecha)}</span>
+                      <p className="timeline-accion">{item.descripcion}</p>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {item.xp   > 0 && <span className="timeline-xp">+{item.xp} XP</span>}
+                        {item.puntos > 0 && <span className="timeline-xp" style={{ background: '#E8621A' }}>+{item.puntos} pts</span>}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -239,34 +288,48 @@ function PaginaPerfil() {
             </div>
           )}
 
+          {/* RANGO — rangos reales de BD */}
           {tabActiva === 'rango' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">🏅 Progreso de Rango</h3>
-              <p className="tab-desc">Gana puntos para desbloquear nuevos títulos.</p>
+              <p className="tab-desc">Ganás XP para desbloquear nuevos títulos.</p>
               <div className="rangos-lista">
-                {rangosDisponibles.map(rango => (
-                  <div key={rango.nivel} className={`rango-card ${rango.actual ? 'rango-actual' : ''} ${usuario.experiencia >= rango.xpReq ? 'desbloqueado' : 'bloqueado'}`}>
-                    <div className="rango-nivel">Nivel {rango.nivel}</div>
-                    <div className="rango-nombre">{rango.nombre}</div>
-                    <div className="rango-req">{rango.xpReq} XP requeridos</div>
-                    {rango.actual && <div className="rango-badge">Tú estás aquí</div>}
-                  </div>
-                ))}
+                {rangos
+                  .sort((a, b) => a.puntosRequeridos - b.puntosRequeridos)
+                  .map((rango, index) => {
+                    const esActual   = rangoActual?.id === rango.id;
+                    const desbloqueado = xpActual >= rango.puntosRequeridos;
+                    return (
+                      <div
+                        key={rango.id}
+                        className={`rango-card ${esActual ? 'rango-actual' : ''} ${desbloqueado ? 'desbloqueado' : 'bloqueado'}`}
+                      >
+                        <div className="rango-nivel">Nivel {index + 1}</div>
+                        <div className="rango-nombre">{rango.nombre}</div>
+                        <div className="rango-req">{rango.puntosRequeridos} XP requeridos</div>
+                        {esActual && <div className="rango-badge">Tú estás aquí</div>}
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
 
+          {/* SITIOS VISITADOS — reales de BD */}
           {tabActiva === 'visitados' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">📍 Tus Sitios Explorados</h3>
               <p className="tab-desc">Lugares en los que has marcado asistencia.</p>
               <div className="sitios-grid">
+                {sitiosVisitados.length === 0 && (
+                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>Aún no has visitado ningún lugar.</p>
+                )}
                 {sitiosVisitados.map(sitio => (
                   <div key={sitio.id} className="sitio-card">
-                    <div className="sitio-icono">{sitio.icono}</div>
+                    <div className="sitio-icono">📍</div>
                     <div className="sitio-info">
-                      <h4>{sitio.nombre}</h4>
-                      <span>Visitado el: {sitio.fecha}</span>
+                      <h4>{sitio.lugar?.nombre ?? '—'}</h4>
+                      <span>Visitado el: {formatearFecha(sitio.fecha)}</span>
                     </div>
                   </div>
                 ))}
