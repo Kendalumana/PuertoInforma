@@ -12,20 +12,17 @@ const AVATARES = [
   { id: 6, emoji: '🦀', label: 'Cangrejo' },
 ];
 
-// XP necesaria para subir de nivel — se puede ajustar después
 const XP_SIGUIENTE_NIVEL = 500;
 
 function PaginaPerfil() {
   const navigate = useNavigate();
 
-  // --- Avatar ---
   const [avatarTipo,         setAvatarTipo        ] = useState('prediseñado');
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(1);
   const [avatarImagen,       setAvatarImagen      ] = useState(null);
   const [mostrarSelector,    setMostrarSelector   ] = useState(false);
   const [tabActiva,          setTabActiva         ] = useState('misiones');
 
-  // --- Datos de BD ---
   const [perfil,          setPerfil         ] = useState(null);
   const [misiones,        setMisiones       ] = useState([]);
   const [perfilMisiones,  setPerfilMisiones ] = useState([]);
@@ -35,20 +32,17 @@ function PaginaPerfil() {
   const [cargando,        setCargando       ] = useState(true);
   const [error,           setError          ] = useState(null);
 
-  // --- Session ---
   const [session, setSession] = useState(null);
 
   useEffect(() => {
     async function cargarTodo() {
       try {
-        // 1. Obtener sesión de Supabase
         const { data: { session: s } } = await supabase.auth.getSession();
         if (!s) { navigate('/login'); return; }
         setSession(s);
         const base = import.meta.env.VITE_API_URL ?? '';
         const headers = { Authorization: `Bearer ${s.access_token}` };
 
-        // 2. Cargar perfil base
         const resPerfil = await fetch(`${base}/api/v1/perfil/usuario/${s.user.id}`, { headers });
         if (!resPerfil.ok) throw new Error('No se pudo cargar el perfil');
         const datosPerfil = await resPerfil.json();
@@ -56,7 +50,6 @@ function PaginaPerfil() {
 
         const perfilId = datosPerfil.id;
 
-        // 3. Cargar en paralelo — misiones, historial, sitios visitados, rangos
         const [
           resMisiones,
           resPerfilMisiones,
@@ -88,19 +81,14 @@ function PaginaPerfil() {
     cargarTodo();
   }, [navigate]);
 
-  // --- Helpers ---
-
-  // Verifica si una misión está completada por este perfil
   const estaCompletada = (misionId) =>
     perfilMisiones.some(pm => pm.mision?.id === misionId && pm.completada);
 
-  // Calcula el % de XP para la barra
   const calcularPorcentajeXP = () => {
     const xp = perfil?.experienciaXp ?? 0;
     return Math.min(Math.round((xp / XP_SIGUIENTE_NIVEL) * 100), 100);
   };
 
-  // Marca el rango actual comparando XP
   const xpActual = perfil?.experienciaXp ?? 0;
   const rangoActual = [...rangos]
     .filter(r => xpActual >= r.puntosRequeridos)
@@ -114,7 +102,6 @@ function PaginaPerfil() {
     setMostrarSelector(false);
   };
 
-  // Formatea fecha ISO a texto legible
   const formatearFecha = (isoString) => {
     if (!isoString) return '—';
     return new Date(isoString).toLocaleDateString('es-CR', {
@@ -122,7 +109,6 @@ function PaginaPerfil() {
     });
   };
 
-  // --- Estados de carga y error ---
   if (cargando) return (
     <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>
       Cargando perfil...
@@ -139,13 +125,11 @@ function PaginaPerfil() {
     <div className="profile-page">
       <div className="profile-layout">
 
-        {/* ── BARRA LATERAL ── */}
         <aside className="profile-sidebar">
           <button className="btn-back" onClick={() => navigate('/')}>
             ⬅️ Volver al Inicio
           </button>
 
-          {/* Avatar */}
           <div className="avatar-wrapper">
             <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
               {avatarTipo === 'subido' && avatarImagen ? (
@@ -183,16 +167,14 @@ function PaginaPerfil() {
             )}
           </div>
 
-          {/* Info básica — datos reales de BD */}
           <div className="profile-info-basica">
             <h2 className="profile-nombre">{perfil?.nombreUsuario ?? '—'}</h2>
-            <span className="profile-rango">{rangoActual?.nombre ?? '—'}</span>
+            <span className="profile-rango">{rangoActual?.urlIcono} {rangoActual?.nombre ?? '—'}</span>
             <div className="profile-puntos-mini">
               <strong>{perfil?.puntosTotales ?? 0}</strong> puntos canjeables
             </div>
           </div>
 
-          {/* Barra XP — usa experienciaXp real */}
           <div className="xp-container">
             <div className="xp-labels">
               <span>{xpActual} XP</span>
@@ -206,7 +188,6 @@ function PaginaPerfil() {
             </p>
           </div>
 
-          {/* Navegación de tabs */}
           <nav className="profile-nav-vertical">
             <button className={`nav-btn ${tabActiva === 'misiones'  ? 'activo' : ''}`} onClick={() => setTabActiva('misiones')}>
               🎯 Misiones
@@ -223,10 +204,8 @@ function PaginaPerfil() {
           </nav>
         </aside>
 
-        {/* ── CONTENIDO PRINCIPAL ── */}
         <main className="profile-main-content">
 
-          {/* MISIONES — vienen de BD, estado real por perfil */}
           {tabActiva === 'misiones' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">🎯 Misiones Disponibles</h3>
@@ -261,7 +240,6 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* AVANCE — historial real de BD */}
           {tabActiva === 'avance' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">📈 Tu Historial</h3>
@@ -287,7 +265,6 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* RANGO — rangos reales de BD */}
           {tabActiva === 'rango' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">🏅 Progreso de Rango</h3>
@@ -296,7 +273,7 @@ function PaginaPerfil() {
                 {rangos
                   .sort((a, b) => a.puntosRequeridos - b.puntosRequeridos)
                   .map((rango, index) => {
-                    const esActual   = rangoActual?.id === rango.id;
+                    const esActual     = rangoActual?.id === rango.id;
                     const desbloqueado = xpActual >= rango.puntosRequeridos;
                     return (
                       <div
@@ -304,7 +281,10 @@ function PaginaPerfil() {
                         className={`rango-card ${esActual ? 'rango-actual' : ''} ${desbloqueado ? 'desbloqueado' : 'bloqueado'}`}
                       >
                         <div className="rango-nivel">Nivel {index + 1}</div>
-                        <div className="rango-nombre">{rango.nombre}</div>
+                        <div className="rango-nombre">
+                          {rango.urlIcono && <span style={{ marginRight: '0.4rem' }}>{rango.urlIcono}</span>}
+                          {rango.nombre}
+                        </div>
                         <div className="rango-req">{rango.puntosRequeridos} XP requeridos</div>
                         {esActual && <div className="rango-badge">Tú estás aquí</div>}
                       </div>
@@ -314,7 +294,6 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* SITIOS VISITADOS — reales de BD */}
           {tabActiva === 'visitados' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">📍 Tus Sitios Explorados</h3>
