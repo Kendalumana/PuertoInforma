@@ -2,8 +2,6 @@ import { useEffect, useState, useRef } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import markerIconPng from 'leaflet/dist/images/marker-icon.png';
-import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
 import './styles/Index.css';
 
 // API
@@ -43,7 +41,6 @@ function MapaView() {
     const [filterCat,      setFilterCat     ] = useState("");
     const [loading,        setLoading       ] = useState(true);
     const [error,          setError         ] = useState(null);
-    const [mapaVisible,    setMapaVisible   ] = useState(false); // ← mapa oculto por defecto
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -70,14 +67,17 @@ function MapaView() {
             .finally(() => setLoading(false));
     }, []);
 
-    // ── 2. Inicializar mapa ───────────────────────────────────
+    // ── 2. Inicializar mapa — fondo oscuro CartoDB ────────────
     useEffect(() => {
         if (!mapRef.current) return;
 
         const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+        // Mapa oscuro que combina con la UI negra de la app
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
         }).addTo(instance);
 
         markersLayer.current.addTo(instance);
@@ -103,17 +103,27 @@ function MapaView() {
         updateMarkers(list);
     };
 
-    // ── 4. Marcadores ─────────────────────────────────────────
+    // ── 4. Marcadores — pines naranjas custom ─────────────────
     const updateMarkers = (list) => {
         markersLayer.current.clearLayers();
 
-        const defaultIcon = new L.Icon({
-            iconUrl:     markerIconPng,
-            shadowUrl:   markerShadowPng,
-            iconSize:    [25, 41],
-            iconAnchor:  [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize:  [41, 41]
+        // Pin naranja que hace match con la paleta de la app
+        const defaultIcon = L.divIcon({
+            className: '',
+            html: `
+                <div style="
+                    width: 28px;
+                    height: 28px;
+                    background: #E8621A;
+                    border: 3px solid #ffffff;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    box-shadow: 0 2px 8px rgba(232,98,26,0.7);
+                "></div>
+            `,
+            iconSize:    [28, 28],
+            iconAnchor:  [14, 28],
+            popupAnchor: [0, -32]
         });
 
         const newMarkers = {};
@@ -138,15 +148,6 @@ function MapaView() {
     const handleClearFilters = () => {
         setFilterCat("");
         setActiveChip("");
-    };
-
-    // ── Toggle mapa con invalidateSize para que Leaflet re-renderice ──
-    const handleToggleMapa = () => {
-        const nuevoEstado = !mapaVisible;
-        setMapaVisible(nuevoEstado);
-        if (nuevoEstado) {
-            setTimeout(() => map?.invalidateSize(), 350);
-        }
     };
 
     return (
@@ -179,19 +180,10 @@ function MapaView() {
                 ))}
             </div>
 
-            {/* Botón toggle mapa — solo visible en móvil */}
-            <button
-                className={`map-toggle-btn ${mapaVisible ? 'map-abierto' : ''}`}
-                onClick={handleToggleMapa}
-            >
-                🗺️ {mapaVisible ? 'Ocultar mapa' : 'Ver mapa'}
-                <span>▼</span>
-            </button>
-
             <main className="main-container">
 
-                {/* Mapa — oculto por defecto en móvil, toggle con botón */}
-                <div className={`map-container ${mapaVisible ? 'map-visible' : ''}`}>
+                {/* ── MAPA oscuro ── */}
+                <div className="map-container">
                     <div id="map" ref={mapRef}></div>
                     <button
                         className="recenter-btn"
@@ -201,7 +193,7 @@ function MapaView() {
                     </button>
                 </div>
 
-                {/* Lista — siempre visible, scroll libre */}
+                {/* ── Lista de lugares ── */}
                 <aside className="results-container">
                     <div className="results-header">
                         <h2 className="results-title">Comercios encontrados</h2>
@@ -229,7 +221,6 @@ function MapaView() {
                                         className="result-card"
                                         onClick={() => handlePlaceClick(p)}
                                     >
-                                        {/* Imagen o placeholder */}
                                         {p.urlImagen ? (
                                             <img
                                                 src={p.urlImagen}
@@ -240,7 +231,6 @@ function MapaView() {
                                             <div className="result-card-img-placeholder">🏖️</div>
                                         )}
 
-                                        {/* Contenido */}
                                         <div className="result-card-body">
                                             <div className="result-card-top">
                                                 <span className="result-name">{p.nombre}</span>
