@@ -41,6 +41,7 @@ function MapaView() {
     const [filterCat,      setFilterCat     ] = useState("");
     const [loading,        setLoading       ] = useState(true);
     const [error,          setError         ] = useState(null);
+    const [mapaVisible,    setMapaVisible   ] = useState(false); // oculto por defecto en móvil
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -73,7 +74,6 @@ function MapaView() {
 
         const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
 
-        // Mapa oscuro que combina con la UI negra de la app
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap contributors © CARTO',
             subdomains: 'abcd',
@@ -107,7 +107,6 @@ function MapaView() {
     const updateMarkers = (list) => {
         markersLayer.current.clearLayers();
 
-        // Pin naranja que hace match con la paleta de la app
         const defaultIcon = L.divIcon({
             className: '',
             html: `
@@ -150,6 +149,15 @@ function MapaView() {
         setActiveChip("");
     };
 
+    // ── Toggle mapa móvil — invalida tamaño para que Leaflet re-renderice ──
+    const handleToggleMapa = () => {
+        const nuevoEstado = !mapaVisible;
+        setMapaVisible(nuevoEstado);
+        if (nuevoEstado) {
+            setTimeout(() => map?.invalidateSize(), 350);
+        }
+    };
+
     return (
         <div className="app-wrapper">
             <Navbar
@@ -180,10 +188,19 @@ function MapaView() {
                 ))}
             </div>
 
+            {/* Botón toggle mapa — solo visible en móvil, oculto en desktop */}
+            <button
+                className={`map-toggle-btn ${mapaVisible ? 'map-abierto' : ''}`}
+                onClick={handleToggleMapa}
+            >
+                🗺️ {mapaVisible ? 'Ocultar mapa' : 'Ver mapa'}
+                <span>▼</span>
+            </button>
+
             <main className="main-container">
 
-                {/* ── MAPA oscuro ── */}
-                <div className="map-container">
+                {/* Mapa oscuro — colapsable en móvil, siempre visible en desktop */}
+                <div className={`map-container ${mapaVisible ? 'map-visible' : ''}`}>
                     <div id="map" ref={mapRef}></div>
                     <button
                         className="recenter-btn"
@@ -193,7 +210,7 @@ function MapaView() {
                     </button>
                 </div>
 
-                {/* ── Lista de lugares ── */}
+                {/* Lista de lugares — siempre visible */}
                 <aside className="results-container">
                     <div className="results-header">
                         <h2 className="results-title">Comercios encontrados</h2>
