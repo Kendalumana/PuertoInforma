@@ -43,6 +43,7 @@ function MapaView() {
     const [filterCat,      setFilterCat     ] = useState("");
     const [loading,        setLoading       ] = useState(true);
     const [error,          setError         ] = useState(null);
+    const [mapaVisible,    setMapaVisible   ] = useState(false); // ← mapa oculto por defecto
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -139,6 +140,15 @@ function MapaView() {
         setActiveChip("");
     };
 
+    // ── Toggle mapa con invalidateSize para que Leaflet re-renderice ──
+    const handleToggleMapa = () => {
+        const nuevoEstado = !mapaVisible;
+        setMapaVisible(nuevoEstado);
+        if (nuevoEstado) {
+            setTimeout(() => map?.invalidateSize(), 350);
+        }
+    };
+
     return (
         <div className="app-wrapper">
             <Navbar
@@ -169,10 +179,19 @@ function MapaView() {
                 ))}
             </div>
 
+            {/* Botón toggle mapa — solo visible en móvil */}
+            <button
+                className={`map-toggle-btn ${mapaVisible ? 'map-abierto' : ''}`}
+                onClick={handleToggleMapa}
+            >
+                🗺️ {mapaVisible ? 'Ocultar mapa' : 'Ver mapa'}
+                <span>▼</span>
+            </button>
+
             <main className="main-container">
 
-                {/* ── MAPA (38% superior en móvil) ── */}
-                <div className="map-container">
+                {/* Mapa — oculto por defecto en móvil, toggle con botón */}
+                <div className={`map-container ${mapaVisible ? 'map-visible' : ''}`}>
                     <div id="map" ref={mapRef}></div>
                     <button
                         className="recenter-btn"
@@ -182,7 +201,7 @@ function MapaView() {
                     </button>
                 </div>
 
-                {/* ── BOTTOM SHEET — lista de lugares ── */}
+                {/* Lista — siempre visible, scroll libre */}
                 <aside className="results-container">
                     <div className="results-header">
                         <h2 className="results-title">Comercios encontrados</h2>

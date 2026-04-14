@@ -1,6 +1,6 @@
 /* ============================================================
    Layout.css — PuertoInforma
-   Bottom Sheet layout: mapa arriba, lista deslizable abajo
+   Mapa colapsable + lista siempre visible
    ============================================================ */
 
 .app-wrapper {
@@ -9,34 +9,39 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  height: 100svh;
+  min-height: 100svh;        /* min, no fixed — permite scroll libre */
 }
 
-/* ── Tabs móvil — OCULTAS, ya no se necesitan con bottom sheet ── */
 .mobile-tabs { display: none; }
 
 /* ── Contenedor principal ── */
 .main-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+  width: 100%;
 }
 
 @media (min-width: 768px) {
   .main-container {
     flex-direction: row;
     height: calc(100svh - 80px);
+    overflow: hidden;
   }
 }
 
-/* ── MAPA — ocupa 38% en móvil, fijo ── */
+/* ── MAPA — colapsable en móvil ── */
 .map-container {
   width: 100%;
-  height: 38svh;
-  position: relative;
+  height: 0;                 /* oculto por defecto en móvil */
   overflow: hidden;
+  position: relative;
+  transition: height 0.35s ease;
   flex-shrink: 0;
+}
+
+/* Cuando está expandido */
+.map-container.map-visible {
+  height: 42svh;
 }
 
 #map {
@@ -45,53 +50,80 @@
 }
 
 @media (min-width: 768px) {
-  .map-container {
+  /* En desktop siempre visible, sin toggle */
+  .map-container,
+  .map-container.map-visible {
     flex: 0 0 68%;
     height: 100%;
+    overflow: hidden;
   }
 }
 
-/* ── BOTTOM SHEET — lista deslizable debajo del mapa ── */
+/* ── Botón toggle del mapa (solo móvil) ── */
+.map-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem;
+  background: var(--gris-oscuro);
+  color: var(--blanco);
+  border: none;
+  border-bottom: 2px solid var(--naranja);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  z-index: 20;
+}
+
+.map-toggle-btn:hover { background: #3a3a3a; }
+
+.map-toggle-btn span {
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.map-toggle-btn.map-abierto span {
+  transform: rotate(180deg);
+}
+
+@media (min-width: 768px) {
+  .map-toggle-btn { display: none; } /* oculto en desktop */
+}
+
+/* ── LISTA — siempre visible, scroll libre ── */
 .results-container {
   width: 100%;
   background: var(--negro);
-  overflow-y: auto;
-  padding: 0 1rem 1rem;
-  flex: 1;                  /* ocupa el resto de la pantalla */
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  padding: 0 1rem 2rem;
   position: relative;
   z-index: 10;
+  border-top: 2px solid rgba(232, 98, 26, 0.2);
 }
 
-/* Manija visual para indicar que es arrastrable */
+/* Manija decorativa */
 .results-container::before {
   content: '';
   display: block;
   width: 40px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
-  margin: 0.75rem auto 1rem;
+  margin: 0.85rem auto 1rem;
 }
 
 @media (min-width: 768px) {
   .results-container {
     flex: 0 0 32%;
     height: 100%;
-    border-radius: 0;
-    box-shadow: none;
+    overflow-y: auto;
+    border-top: none;
     border-left: 1px solid var(--gris-oscuro);
     padding: 1rem;
   }
-
-  /* Quitamos la manija en desktop */
   .results-container::before { display: none; }
-}
-
-/* ── hidden-mobile ya no se usa, pero lo dejamos por si acaso ── */
-@media (max-width: 767px) {
-  .hidden-mobile { display: block !important; }
 }
 
 /* ── Botón recentrar mapa ── */
@@ -120,7 +152,6 @@
   transform: translateY(-1px);
 }
 
-/* ── Pantallas muy pequeñas ── */
 @media (max-width: 380px) {
-  .map-container { height: 32svh; }
+  .map-container.map-visible { height: 36svh; }
 }
