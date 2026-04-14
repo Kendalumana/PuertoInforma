@@ -159,3 +159,20 @@
   background: rgba(248, 113, 113, 0.1);
   color: #f87171;
 }
+
+/* ── Ajuste navbar pantallas < 380px ── */
+@media (max-width: 380px) {
+  .filters-btn {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.55rem 0.85rem;
+  }
+
+  .logo-navbar {
+    height: 32px;
+  }
+}

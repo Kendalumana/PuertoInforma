@@ -116,3 +116,52 @@
 }
 
 .nearby-btn:hover { background: #cf5516; }
+
+/* ============================================================
+   RESPONSIVO MÓVIL — ajustes para pantallas pequeñas
+   ============================================================ */
+
+/* ── Altura dinámica del mapa en móvil ── */
+@media (max-width: 767px) {
+  .map-container {
+    height: calc(100svh - 170px); /* svh = viewport real del celular */
+  }
+
+  .results-container {
+    height: calc(100svh - 170px);
+  }
+}
+
+/* ── Pantallas muy pequeñas (< 380px) ── */
+@media (max-width: 380px) {
+  .map-container {
+    height: calc(100svh - 190px);
+  }
+
+  .results-container {
+    height: calc(100svh - 190px);
+  }
+}
+
+/* ── Botón recentrar — fix nombre de clase ── */
+.recenter-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: var(--naranja);
+  color: var(--blanco);
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(232, 98, 26, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  z-index: 500;
+  transition: background 0.2s ease;
+}
+
+.recenter-btn:hover { background: #cf5516; }
