@@ -10,61 +10,44 @@ import './styles/Index.css';
 import api from './api/axios';
 
 // Componentes
-import Navbar       from './components/Navbar';
-import FilterPanel  from './components/FilterPanel';
-import PlaceModal   from './components/PlaceModal';
-import StarRating   from './components/StarRating';
-import PaginaPerfil from './components/PaginaPerfil';
-import Login        from './components/Login';
-import Registro     from './components/Registro';
-import PaginaBuses  from './components/PaginaBuses';
-import AuthCallback from './components/AuthCallback'; 
+import Navbar         from './components/Navbar';
+import FilterPanel    from './components/FilterPanel';
+import PlaceModal     from './components/PlaceModal';
+import StarRating     from './components/StarRating';
+import PaginaPerfil   from './components/PaginaPerfil';
+import Login          from './components/Login';
+import Registro       from './components/Registro';
+import PaginaBuses    from './components/PaginaBuses';
+import AuthCallback   from './components/AuthCallback';
 import PaginaNoticias from './components/PaginaNoticias';
 import PaginaFerry    from './components/PaginaFerry';
 
-// Coordenadas del centro del mapa (Puntarenas)
 const CENTER = { lat: 9.976, lng: -84.833 };
 
-// ============================================================
-// RutaProtegida — Componente guardia de rutas
-// Si el usuario NO tiene token en localStorage, lo manda al login
-// Si SÍ tiene token, muestra la página pedida normalmente
-// ============================================================
 function RutaProtegida({ children }) {
-    // Leemos el token del localStorage
     const token = localStorage.getItem('token');
-
-    // Si no hay token, redirigimos al login
-    // replace evita que el login quede en el historial del navegador
-    if (!token) {
-        return <Navigate to="/login" replace />;
-    }
-
-    // Si hay token, mostramos la página normalmente
+    if (!token) return <Navigate to="/login" replace />;
     return children;
 }
 
 function MapaView() {
-    const [map,             setMap            ] = useState(null);
-    const [markers,         setMarkers        ] = useState({});
-    const [allPlaces,       setAllPlaces      ] = useState([]);
-    const [categories,      setCategories     ] = useState([]);
-    const [filteredPlaces,  setFilteredPlaces ] = useState([]);
-    const [selectedPlace,   setSelectedPlace  ] = useState(null);
-    const [showFilters,     setShowFilters    ] = useState(false);
-    const [activeChip,      setActiveChip     ] = useState("");
-    const [searchQuery,     setSearchQuery    ] = useState("");
-    const [filterCat,       setFilterCat      ] = useState("");
-    const [activeTab,       setActiveTab      ] = useState("mapa");
-    const [loading,         setLoading        ] = useState(true);
-    const [error,           setError          ] = useState(null);
+    const [map,            setMap           ] = useState(null);
+    const [markers,        setMarkers       ] = useState({});
+    const [allPlaces,      setAllPlaces     ] = useState([]);
+    const [categories,     setCategories    ] = useState([]);
+    const [filteredPlaces, setFilteredPlaces] = useState([]);
+    const [selectedPlace,  setSelectedPlace ] = useState(null);
+    const [showFilters,    setShowFilters   ] = useState(false);
+    const [activeChip,     setActiveChip    ] = useState("");
+    const [searchQuery,    setSearchQuery   ] = useState("");
+    const [filterCat,      setFilterCat     ] = useState("");
+    const [loading,        setLoading       ] = useState(true);
+    const [error,          setError         ] = useState(null);
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
 
-    // -------------------------------------------------------
-    // 1. Fetch de lugares desde el backend
-    // -------------------------------------------------------
+    // ── 1. Fetch lugares ──────────────────────────────────────
     useEffect(() => {
         api.get('/lugar')
             .then(res => {
@@ -72,7 +55,6 @@ function MapaView() {
                 setAllPlaces(lugares);
                 setFilteredPlaces(lugares);
 
-                // Extraer categorías únicas para los chips
                 const cats = [];
                 const seen = new Set();
                 lugares.forEach(l => {
@@ -87,9 +69,7 @@ function MapaView() {
             .finally(() => setLoading(false));
     }, []);
 
-    // -------------------------------------------------------
-    // 2. Inicialización del mapa
-    // -------------------------------------------------------
+    // ── 2. Inicializar mapa ───────────────────────────────────
     useEffect(() => {
         if (!mapRef.current) return;
 
@@ -105,9 +85,7 @@ function MapaView() {
         return () => instance.remove();
     }, []);
 
-    // -------------------------------------------------------
-    // 3. Aplicar filtros cuando cambia algo
-    // -------------------------------------------------------
+    // ── 3. Aplicar filtros ────────────────────────────────────
     useEffect(() => {
         if (!map || allPlaces.length === 0) return;
         applyFilters();
@@ -120,14 +98,11 @@ function MapaView() {
             const matchesCat    = filterCat  ? p.categoria?.id === Number(filterCat) : true;
             return matchesSearch && matchesChip && matchesCat;
         });
-
         setFilteredPlaces(list);
         updateMarkers(list);
     };
 
-    // -------------------------------------------------------
-    // 4. Marcadores
-    // -------------------------------------------------------
+    // ── 4. Marcadores ─────────────────────────────────────────
     const updateMarkers = (list) => {
         markersLayer.current.clearLayers();
 
@@ -144,12 +119,10 @@ function MapaView() {
         list.forEach(p => {
             const m = L.marker([p.latitud, p.longitud], { icon: defaultIcon })
                        .bindPopup(`<b>${p.nombre}</b>`);
-
             m.addTo(markersLayer.current);
             m.on('click', () => setSelectedPlace(p));
             newMarkers[p.id] = m;
         });
-
         setMarkers(newMarkers);
     };
 
@@ -159,7 +132,6 @@ function MapaView() {
             markers[p.id]?.openPopup();
         }
         setSelectedPlace(p);
-        setActiveTab('mapa');
     };
 
     const handleClearFilters = () => {
@@ -197,30 +169,21 @@ function MapaView() {
                 ))}
             </div>
 
-            <div className="mobile-tabs">
-                <button
-                    className={`tab-btn ${activeTab === 'mapa' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('mapa')}
-                >
-                    Mapa
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'lista' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('lista')}
-                >
-                    Lista
-                </button>
-            </div>
-
             <main className="main-container">
-                <div className={`map-container ${activeTab === 'lista' ? 'hidden-mobile' : ''}`}>
+
+                {/* ── MAPA (38% superior en móvil) ── */}
+                <div className="map-container">
                     <div id="map" ref={mapRef}></div>
-                    <button className="recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
-                        📍 Mi ubicación
+                    <button
+                        className="recenter-btn"
+                        onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}
+                    >
+                        📍 Centrar
                     </button>
                 </div>
 
-                <aside className={`results-container ${activeTab === 'mapa' ? 'hidden-mobile' : ''}`}>
+                {/* ── BOTTOM SHEET — lista de lugares ── */}
+                <aside className="results-container">
                     <div className="results-header">
                         <h2 className="results-title">Comercios encontrados</h2>
                         <span className="results-count">{filteredPlaces.length}</span>
@@ -247,33 +210,39 @@ function MapaView() {
                                         className="result-card"
                                         onClick={() => handlePlaceClick(p)}
                                     >
-                                        <div className="result-header">
-                                            <div className="result-name-group">
-                                                <span className="result-name">{p.nombre}</span>
-                                            </div>
-                                            {p.categoria && (
-                                                <span className="result-category">{p.categoria.nombre}</span>
-                                            )}
-                                        </div>
-
-                                        {p.urlImagen && (
+                                        {/* Imagen o placeholder */}
+                                        {p.urlImagen ? (
                                             <img
                                                 src={p.urlImagen}
                                                 alt={p.nombre}
-                                                style={{ width: '100%', borderRadius: '8px', marginTop: '0.5rem', height: '120px', objectFit: 'cover' }}
+                                                className="result-card-img"
                                             />
+                                        ) : (
+                                            <div className="result-card-img-placeholder">🏖️</div>
                                         )}
 
-                                        {p.descripcion && (
-                                            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.5rem' }}>
-                                                {p.descripcion}
-                                            </p>
-                                        )}
+                                        {/* Contenido */}
+                                        <div className="result-card-body">
+                                            <div className="result-card-top">
+                                                <span className="result-name">{p.nombre}</span>
+                                                {p.categoria && (
+                                                    <span className="result-category">
+                                                        {p.categoria.nombre}
+                                                    </span>
+                                                )}
+                                            </div>
 
-                                        <div className="result-info">
-                                            <span style={{ color: '#E8621A', fontSize: '0.8rem' }}>
-                                                🏆 {p.puntosQueOtorga} puntos
-                                            </span>
+                                            {p.descripcion && (
+                                                <p className="result-description">
+                                                    {p.descripcion}
+                                                </p>
+                                            )}
+
+                                            <div className="result-footer">
+                                                <span className="result-points">
+                                                    🏆 {p.puntosQueOtorga} pts
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -307,43 +276,31 @@ function MapaView() {
     );
 }
 
-
 // ============================================================
-// App — Define todas las rutas de la aplicación
+// App — Rutas de la aplicación
 // ============================================================
 function App() {
     return (
         <Routes>
-            {/* Rutas públicas — no necesitan token */}
+            {/* Rutas públicas */}
             <Route path="/login"         element={<Login />} />
             <Route path="/registro"      element={<Registro />} />
-            <Route path="/noticias" element={<PaginaNoticias />} />
-            <Route path="/ferry"    element={<PaginaFerry />} />
-            <Route path="/auth/callback" element={<AuthCallback />} /> {/* ← NUEVO */}
+            <Route path="/noticias"      element={<PaginaNoticias />} />
+            <Route path="/ferry"         element={<PaginaFerry />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Rutas protegidas — redirigen a /login si no hay token */}
+            {/* Rutas protegidas */}
             <Route path="/" element={
-                <RutaProtegida>
-                    <MapaView />
-                </RutaProtegida>
+                <RutaProtegida><MapaView /></RutaProtegida>
             } />
-
             <Route path="/perfil" element={
-                <RutaProtegida>
-                    <PaginaPerfil />
-                </RutaProtegida>
+                <RutaProtegida><PaginaPerfil /></RutaProtegida>
             } />
-
             <Route path="/buses" element={
-                <RutaProtegida>
-                    <PaginaBuses />
-                </RutaProtegida>
+                <RutaProtegida><PaginaBuses /></RutaProtegida>
             } />
 
-            {/* Cualquier ruta desconocida redirige al login */}
             <Route path="*" element={<Navigate to="/login" replace />} />
-
-            
         </Routes>
     );
 }
