@@ -8,6 +8,7 @@ import './styles/Index.css';
 import api from './api/axios';
 
 // Componentes
+import MiniCard from './components/MiniCard';
 import Navbar         from './components/Navbar';
 import FilterPanel    from './components/FilterPanel';
 import PlaceModal     from './components/PlaceModal';
@@ -41,6 +42,7 @@ function MapaView() {
     const [filterCat,      setFilterCat     ] = useState("");
     const [loading,        setLoading       ] = useState(true);
     const [error,          setError         ] = useState(null);
+    const [previewPlace,   setPreviewPlace  ] = useState(null);
     const [mapaVisible,    setMapaVisible   ] = useState(false); // oculto por defecto en móvil
 
     const mapRef       = useRef(null);
@@ -130,7 +132,7 @@ function MapaView() {
             const m = L.marker([p.latitud, p.longitud], { icon: defaultIcon })
                        .bindPopup(`<b>${p.nombre}</b>`);
             m.addTo(markersLayer.current);
-            m.on('click', () => setSelectedPlace(p));
+            m.on('click', () => { setPreviewPlace(p); setSelectedPlace(null); });
             newMarkers[p.id] = m;
         });
         setMarkers(newMarkers);
@@ -282,10 +284,19 @@ function MapaView() {
                 </aside>
             </main>
 
-            <PlaceModal
-                place={selectedPlace}
-                onClose={() => setSelectedPlace(null)}
+            <MiniCard
+            place={previewPlace}
+            onVerMas={() => {
+             setSelectedPlace(previewPlace);
+            setPreviewPlace(null);
+            }}
+            onClose={() => setPreviewPlace(null)}
             />
+
+    <PlaceModal
+            place={selectedPlace}
+            onClose={() => setSelectedPlace(null)}
+    />
 
             <section className="about-section">
                 <h2 className="section-title">¿Sos dueño de un negocio?</h2>
