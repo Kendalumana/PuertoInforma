@@ -43,7 +43,7 @@ function MapaView() {
     const [error,          setError         ] = useState(null);
     const [previewPlace,   setPreviewPlace  ] = useState(null);
     const [mapaVisible,    setMapaVisible   ] = useState(false);
-    const [showAboutModal, setShowAboutModal] = useState(false); // ✅ NUEVO
+    const [showAboutModal, setShowAboutModal] = useState(false);
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -149,7 +149,7 @@ function MapaView() {
             <Navbar
                 onSearch={setSearchQuery}
                 onToggleFilters={() => setShowFilters(!showFilters)}
-                onOpenAbout={() => setShowAboutModal(true)}  // ✅ NUEVO
+                onOpenAbout={() => setShowAboutModal(true)}
             />
 
             <FilterPanel
@@ -243,32 +243,31 @@ function MapaView() {
                 onClose={() => setSelectedPlace(null)}
             />
 
-            {/* ✅ SECCIÓN ACERCA DE - Ahora oculta en móvil y se abre desde el menú */}
-            <section className="about-section">
-                <h2 className="section-title">¿Sos dueño de un negocio?</h2>
-                <p>No queremos ayuda de pobres, si tenes platica escribenos.</p>
-                <div className="contact-form">
-                    <div className="form-group">
-                        <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
-                        <input type="text" className="form-input" placeholder="Tu número de contacto" />
-                    </div>
-                    <button className="submit-btn">Enviar Información</button>
-                </div>
-            </section>
-
-            {/* ✅ MODAL ACERCA DE (para móvil y también accesible desde menú) */}
+            {/* ✅ MODAL ACERCA DE (único lugar con el formulario) */}
             {showAboutModal && (
-                <div className="modal-overlay" onClick={() => setShowAboutModal(false)}>
+                <div 
+                    className="modal-overlay about-overlay" 
+                    onClick={() => setShowAboutModal(false)}
+                    style={{ display: 'flex' }}
+                >
                     <div className="modal-content about-modal" onClick={(e) => e.stopPropagation()}>
-                        <button className="close-modal" onClick={() => setShowAboutModal(false)}>×</button>
-                        <h2>¿Sos dueño de un negocio?</h2>
-                        <p>No queremos ayuda de pobres, si tenes platica escribenos.</p>
-                        <div className="contact-form">
-                            <div className="form-group">
-                                <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
-                                <input type="text" className="form-input" placeholder="Tu número de contacto" />
+                        <div className="modal-header">
+                            <h2 className="modal-title">📰 Acerca de PuertoInforma</h2>
+                            <button className="close-modal" onClick={() => setShowAboutModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{ marginBottom: '1rem' }}>
+                                PuertoInforma es un directorio interactivo de comercios, lugares culturales y servicios de Puntarenas, Costa Rica.
+                            </p>
+                            <h3 style={{ color: 'var(--naranja)', marginBottom: '0.5rem' }}>¿Sos dueño de un negocio?</h3>
+                            <p>Contactanos para aparecer en nuestra plataforma.</p>
+                            <div className="contact-form">
+                                <div className="form-group">
+                                    <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
+                                    <input type="text" className="form-input" placeholder="Tu número de contacto" />
+                                </div>
+                                <button className="submit-btn">Enviar Información</button>
                             </div>
-                            <button className="submit-btn">Enviar Información</button>
                         </div>
                     </div>
                 </div>
