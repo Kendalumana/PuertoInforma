@@ -110,7 +110,14 @@ function MapaView() {
             const m = L.marker([p.latitud, p.longitud], { icon: defaultIcon })
                        .bindPopup(`<b>${p.nombre}</b>`);
             m.addTo(markersLayer.current);
-            m.on('click', () => { setPreviewPlace(p); setSelectedPlace(null); });
+            m.on('click', () => {
+                // Hace zoom al marcador y abre su popup
+                map.flyTo([p.latitud, p.longitud], 16);
+                m.openPopup();
+                // Muestra la tarjeta de vista previa
+                setPreviewPlace(p);
+                setSelectedPlace(null);
+            });
             newMarkers[p.id] = m;
         });
         setMarkers(newMarkers);
