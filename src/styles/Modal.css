@@ -183,3 +183,39 @@
 .phone-btn    { background: var(--negro);   color: var(--blanco); border: 1px solid var(--naranja); }
 .whatsapp-btn { background: #25D366;        color: var(--blanco); }
 .maps-btn     { background: var(--naranja); color: var(--blanco); }
+
+/* ============================================================
+   Estilos específicos para el modal "Acerca de" (desde menú móvil)
+   ============================================================ */
+
+.about-modal {
+    max-width: 400px;
+    text-align: center;
+}
+
+.about-modal .contact-form {
+    margin-top: 1rem;
+}
+
+.about-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.about-modal .form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--gris-oscuro);
+    background: var(--gris-oscuro);
+    color: var(--blanco);
+}
+
+/* Ocultar la sección "Acerca de" (la del footer) en móviles */
+@media (max-width: 768px) {
+    .about-section {
+        display: none;
+    }
+}

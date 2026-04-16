@@ -43,6 +43,7 @@ function MapaView() {
     const [error,          setError         ] = useState(null);
     const [previewPlace,   setPreviewPlace  ] = useState(null);
     const [mapaVisible,    setMapaVisible   ] = useState(false);
+    const [showAboutModal, setShowAboutModal] = useState(false); // ✅ NUEVO
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -81,7 +82,7 @@ function MapaView() {
         return () => instance.remove();
     }, []);
 
-    // ── 3. Filtrar lugares con useMemo (sin efectos secundarios) ──
+    // ── 3. Filtrar lugares con useMemo ──
     const filteredPlaces = useMemo(() => {
         if (allPlaces.length === 0) return [];
         return allPlaces.filter(p => {
@@ -92,7 +93,7 @@ function MapaView() {
         });
     }, [allPlaces, searchQuery, activeChip, filterCat]);
 
-    // ── 4. Actualizar marcadores cuando cambia la lista filtrada o el mapa ──
+    // ── 4. Actualizar marcadores ──
     useEffect(() => {
         if (!map || filteredPlaces.length === 0) return;
         
@@ -111,19 +112,17 @@ function MapaView() {
                        .bindPopup(`<b>${p.nombre}</b>`);
             m.addTo(markersLayer.current);
             m.on('click', () => {
-                // Hace zoom al marcador y abre su popup
                 map.flyTo([p.latitud, p.longitud], 16);
                 m.openPopup();
-                // Muestra la tarjeta de vista previa
                 setPreviewPlace(p);
                 setSelectedPlace(null);
             });
             newMarkers[p.id] = m;
         });
         setMarkers(newMarkers);
-    }, [map, filteredPlaces]); // Solo se ejecuta cuando cambia el mapa o los lugares filtrados
+    }, [map, filteredPlaces]);
 
-    // ── 5. Manejadores de eventos ────────────────────────────
+    // ── 5. Manejadores ──
     const handlePlaceClick = (p) => {
         if (map) {
             map.flyTo([p.latitud, p.longitud], 16);
@@ -145,12 +144,12 @@ function MapaView() {
         }
     };
 
-    // ── Render ────────────────────────────────────────────────
     return (
         <div className="app-wrapper">
             <Navbar
                 onSearch={setSearchQuery}
                 onToggleFilters={() => setShowFilters(!showFilters)}
+                onOpenAbout={() => setShowAboutModal(true)}  // ✅ NUEVO
             />
 
             <FilterPanel
@@ -244,6 +243,7 @@ function MapaView() {
                 onClose={() => setSelectedPlace(null)}
             />
 
+            {/* ✅ SECCIÓN ACERCA DE - Ahora oculta en móvil y se abre desde el menú */}
             <section className="about-section">
                 <h2 className="section-title">¿Sos dueño de un negocio?</h2>
                 <p>No queremos ayuda de pobres, si tenes platica escribenos.</p>
@@ -255,6 +255,24 @@ function MapaView() {
                     <button className="submit-btn">Enviar Información</button>
                 </div>
             </section>
+
+            {/* ✅ MODAL ACERCA DE (para móvil y también accesible desde menú) */}
+            {showAboutModal && (
+                <div className="modal-overlay" onClick={() => setShowAboutModal(false)}>
+                    <div className="modal-content about-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-modal" onClick={() => setShowAboutModal(false)}>×</button>
+                        <h2>¿Sos dueño de un negocio?</h2>
+                        <p>No queremos ayuda de pobres, si tenes platica escribenos.</p>
+                        <div className="contact-form">
+                            <div className="form-group">
+                                <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
+                                <input type="text" className="form-input" placeholder="Tu número de contacto" />
+                            </div>
+                            <button className="submit-btn">Enviar Información</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
