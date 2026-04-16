@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -34,7 +34,6 @@ function MapaView() {
     const [markers,        setMarkers       ] = useState({});
     const [allPlaces,      setAllPlaces     ] = useState([]);
     const [categories,     setCategories    ] = useState([]);
-    const [filteredPlaces, setFilteredPlaces] = useState([]);
     const [selectedPlace,  setSelectedPlace ] = useState(null);
     const [showFilters,    setShowFilters   ] = useState(false);
     const [activeChip,     setActiveChip    ] = useState("");
@@ -43,7 +42,7 @@ function MapaView() {
     const [loading,        setLoading       ] = useState(true);
     const [error,          setError         ] = useState(null);
     const [previewPlace,   setPreviewPlace  ] = useState(null);
-    const [mapaVisible,    setMapaVisible   ] = useState(false); // oculto por defecto en móvil
+    const [mapaVisible,    setMapaVisible   ] = useState(false);
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -54,8 +53,6 @@ function MapaView() {
             .then(res => {
                 const lugares = res.data;
                 setAllPlaces(lugares);
-                setFilteredPlaces(lugares);
-
                 const cats = [];
                 const seen = new Set();
                 lugares.forEach(l => {
@@ -70,74 +67,46 @@ function MapaView() {
             .finally(() => setLoading(false));
     }, []);
 
-    // ── 2. Inicializar mapa — fondo oscuro CartoDB ────────────
+    // ── 2. Inicializar mapa ──────────────────────────────────
     useEffect(() => {
         if (!mapRef.current) return;
-
         const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
-
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap contributors © CARTO',
             subdomains: 'abcd',
             maxZoom: 19
         }).addTo(instance);
-
         markersLayer.current.addTo(instance);
         setMap(instance);
-
         return () => instance.remove();
     }, []);
 
-    // ── 3. Aplicar filtros ────────────────────────────────────
-    // ✅ CORREGIDO: Eliminé 'allPlaces' de las dependencias para evitar el bucle infinito
-    useEffect(() => {
-        if (!map || allPlaces.length === 0) return;
-        applyFilters();
-    }, [searchQuery, activeChip, filterCat, map]); // ← Ya no está 'allPlaces' aquí
-
-    // ── 3.5 Actualizar marcadores cuando cambian todos los lugares ──
-    // ✅ NUEVO: Este efecto maneja la actualización inicial de marcadores
-    useEffect(() => {
-        if (allPlaces.length > 0 && map) {
-            updateMarkers(allPlaces);
-        }
-    }, [allPlaces, map]);
-
-    const applyFilters = () => {
-        const list = allPlaces.filter(p => {
+    // ── 3. Filtrar lugares con useMemo (sin efectos secundarios) ──
+    const filteredPlaces = useMemo(() => {
+        if (allPlaces.length === 0) return [];
+        return allPlaces.filter(p => {
             const matchesSearch = p.nombre.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesChip   = activeChip ? p.categoria?.id === activeChip : true;
             const matchesCat    = filterCat  ? p.categoria?.id === Number(filterCat) : true;
             return matchesSearch && matchesChip && matchesCat;
         });
-        setFilteredPlaces(list);
-        updateMarkers(list);
-    };
+    }, [allPlaces, searchQuery, activeChip, filterCat]);
 
-    // ── 4. Marcadores — pines naranjas custom ─────────────────
-    const updateMarkers = (list) => {
+    // ── 4. Actualizar marcadores cuando cambia la lista filtrada o el mapa ──
+    useEffect(() => {
+        if (!map || filteredPlaces.length === 0) return;
+        
         markersLayer.current.clearLayers();
-
         const defaultIcon = L.divIcon({
             className: '',
-            html: `
-                <div style="
-                    width: 28px;
-                    height: 28px;
-                    background: #E8621A;
-                    border: 3px solid #ffffff;
-                    border-radius: 50% 50% 50% 0;
-                    transform: rotate(-45deg);
-                    box-shadow: 0 2px 8px rgba(232,98,26,0.7);
-                "></div>
-            `,
-            iconSize:    [28, 28],
-            iconAnchor:  [14, 28],
+            html: `<div style="width:28px;height:28px;background:#E8621A;border:3px solid #ffffff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(232,98,26,0.7);"></div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
             popupAnchor: [0, -32]
         });
 
         const newMarkers = {};
-        list.forEach(p => {
+        filteredPlaces.forEach(p => {
             const m = L.marker([p.latitud, p.longitud], { icon: defaultIcon })
                        .bindPopup(`<b>${p.nombre}</b>`);
             m.addTo(markersLayer.current);
@@ -145,8 +114,9 @@ function MapaView() {
             newMarkers[p.id] = m;
         });
         setMarkers(newMarkers);
-    };
+    }, [map, filteredPlaces]); // Solo se ejecuta cuando cambia el mapa o los lugares filtrados
 
+    // ── 5. Manejadores de eventos ────────────────────────────
     const handlePlaceClick = (p) => {
         if (map) {
             map.flyTo([p.latitud, p.longitud], 16);
@@ -160,7 +130,6 @@ function MapaView() {
         setActiveChip("");
     };
 
-    // ── Toggle mapa móvil — invalida tamaño para que Leaflet re-renderice ──
     const handleToggleMapa = () => {
         const nuevoEstado = !mapaVisible;
         setMapaVisible(nuevoEstado);
@@ -169,6 +138,7 @@ function MapaView() {
         }
     };
 
+    // ── Render ────────────────────────────────────────────────
     return (
         <div className="app-wrapper">
             <Navbar
@@ -186,7 +156,6 @@ function MapaView() {
                 onClose={() => setShowFilters(false)}
             />
 
-            {/* Chips de categorías */}
             <div className="categories-container">
                 {categories.map(c => (
                     <div
@@ -199,7 +168,6 @@ function MapaView() {
                 ))}
             </div>
 
-            {/* Botón toggle mapa — solo visible en móvil, oculto en desktop */}
             <button
                 className={`map-toggle-btn ${mapaVisible ? 'map-abierto' : ''}`}
                 onClick={handleToggleMapa}
@@ -209,8 +177,6 @@ function MapaView() {
             </button>
 
             <main className="main-container">
-
-                {/* Mapa oscuro — colapsable en móvil, siempre visible en desktop */}
                 <div className={`map-container ${mapaVisible ? 'map-visible' : ''}`}>
                     <div id="map" ref={mapRef}></div>
                     <button
@@ -221,72 +187,39 @@ function MapaView() {
                     </button>
                 </div>
 
-                {/* Lista de lugares — siempre visible */}
                 <aside className="results-container">
                     <div className="results-header">
                         <h2 className="results-title">Comercios encontrados</h2>
                         <span className="results-count">{filteredPlaces.length}</span>
                     </div>
 
-                    {loading && (
-                        <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>
-                            Cargando lugares...
-                        </p>
-                    )}
-
-                    {error && (
-                        <p style={{ color: '#ef5350', textAlign: 'center', marginTop: '2rem' }}>
-                            {error}
-                        </p>
-                    )}
+                    {loading && <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>Cargando lugares...</p>}
+                    {error && <p style={{ color: '#ef5350', textAlign: 'center', marginTop: '2rem' }}>{error}</p>}
 
                     {!loading && !error && (
                         <div className="results-list">
                             {filteredPlaces.length > 0 ? (
                                 filteredPlaces.map(p => (
-                                    <div
-                                        key={p.id}
-                                        className="result-card"
-                                        onClick={() => handlePlaceClick(p)}
-                                    >
+                                    <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
                                         {p.urlImagen ? (
-                                            <img
-                                                src={p.urlImagen}
-                                                alt={p.nombre}
-                                                className="result-card-img"
-                                            />
+                                            <img src={p.urlImagen} alt={p.nombre} className="result-card-img" />
                                         ) : (
                                             <div className="result-card-img-placeholder">🏖️</div>
                                         )}
-
                                         <div className="result-card-body">
                                             <div className="result-card-top">
                                                 <span className="result-name">{p.nombre}</span>
-                                                {p.categoria && (
-                                                    <span className="result-category">
-                                                        {p.categoria.nombre}
-                                                    </span>
-                                                )}
+                                                {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
                                             </div>
-
-                                            {p.descripcion && (
-                                                <p className="result-description">
-                                                    {p.descripcion}
-                                                </p>
-                                            )}
-
+                                            {p.descripcion && <p className="result-description">{p.descripcion}</p>}
                                             <div className="result-footer">
-                                                <span className="result-points">
-                                                    🏆 {p.puntosQueOtorga} pts
-                                                </span>
+                                                <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
                                             </div>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>
-                                    No se encontraron lugares.
-                                </p>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>No se encontraron lugares.</p>
                             )}
                         </div>
                     )}
@@ -294,18 +227,15 @@ function MapaView() {
             </main>
 
             <MiniCard
-            place={previewPlace}
-            onVerMas={() => {
-             setSelectedPlace(previewPlace);
-            setPreviewPlace(null);
-            }}
-            onClose={() => setPreviewPlace(null)}
+                place={previewPlace}
+                onVerMas={() => { setSelectedPlace(previewPlace); setPreviewPlace(null); }}
+                onClose={() => setPreviewPlace(null)}
             />
 
-    <PlaceModal
-            place={selectedPlace}
-            onClose={() => setSelectedPlace(null)}
-    />
+            <PlaceModal
+                place={selectedPlace}
+                onClose={() => setSelectedPlace(null)}
+            />
 
             <section className="about-section">
                 <h2 className="section-title">¿Sos dueño de un negocio?</h2>
@@ -322,30 +252,17 @@ function MapaView() {
     );
 }
 
-// ============================================================
-// App — Rutas de la aplicación
-// ============================================================
 function App() {
     return (
         <Routes>
-            {/* Rutas públicas */}
             <Route path="/login"         element={<Login />} />
             <Route path="/registro"      element={<Registro />} />
             <Route path="/noticias"      element={<PaginaNoticias />} />
             <Route path="/ferry"         element={<PaginaFerry />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-
-            {/* Rutas protegidas */}
-            <Route path="/" element={
-                <RutaProtegida><MapaView /></RutaProtegida>
-            } />
-            <Route path="/perfil" element={
-                <RutaProtegida><PaginaPerfil /></RutaProtegida>
-            } />
-            <Route path="/buses" element={
-                <RutaProtegida><PaginaBuses /></RutaProtegida>
-            } />
-
+            <Route path="/" element={<RutaProtegida><MapaView /></RutaProtegida>} />
+            <Route path="/perfil" element={<RutaProtegida><PaginaPerfil /></RutaProtegida>} />
+            <Route path="/buses" element={<RutaProtegida><PaginaBuses /></RutaProtegida>} />
             <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
     );
