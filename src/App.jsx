@@ -89,10 +89,19 @@ function MapaView() {
     }, []);
 
     // ── 3. Aplicar filtros ────────────────────────────────────
+    // ✅ CORREGIDO: Eliminé 'allPlaces' de las dependencias para evitar el bucle infinito
     useEffect(() => {
         if (!map || allPlaces.length === 0) return;
         applyFilters();
-    }, [searchQuery, activeChip, filterCat, map, allPlaces]);
+    }, [searchQuery, activeChip, filterCat, map]); // ← Ya no está 'allPlaces' aquí
+
+    // ── 3.5 Actualizar marcadores cuando cambian todos los lugares ──
+    // ✅ NUEVO: Este efecto maneja la actualización inicial de marcadores
+    useEffect(() => {
+        if (allPlaces.length > 0 && map) {
+            updateMarkers(allPlaces);
+        }
+    }, [allPlaces, map]);
 
     const applyFilters = () => {
         const list = allPlaces.filter(p => {
