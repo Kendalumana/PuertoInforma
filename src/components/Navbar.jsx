@@ -52,12 +52,11 @@ function Navbar({ onSearch, onToggleFilters, onOpenAbout }) {  // ← nueva prop
                                 ⛵ Ferry
                             </Link>
 
-                            {/* ✅ NUEVO: Acerca de - abre modal */}
                             <button
-                                className="dropdown-item"
+                                className="dropdown-item about-item"
                                 onClick={() => {
                                     setMenuAbierto(false);
-                                    onOpenAbout();  // ← abre el modal en App.jsx
+                                    onOpenAbout();
                                 }}
                             >
                                 📰 Acerca de

@@ -176,3 +176,15 @@
     height: 32px;
   }
 }
+
+/* ── Estilo especial para "Acerca de" en el menú ── */
+.dropdown-item.about-item {
+    color: var(--naranja) !important;
+    border-left: 3px solid var(--naranja);
+    background: rgba(232, 98, 26, 0.05);
+}
+
+.dropdown-item.about-item:hover {
+    background: rgba(232, 98, 26, 0.2);
+    color: var(--naranja) !important;
+}
