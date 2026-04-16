@@ -82,7 +82,18 @@ function MapaView() {
         return () => instance.remove();
     }, []);
 
-    // ── 3. Filtrar lugares con useMemo ──
+    // ── 3. Sugerencias de búsqueda (autocompletado) ──
+    const suggestions = useMemo(() => {
+        if (!searchQuery.trim() || allPlaces.length === 0) return [];
+        const queryLower = searchQuery.toLowerCase();
+        // Filtrar lugares que contengan el texto, limitar a 5
+        return allPlaces
+            .filter(p => p.nombre.toLowerCase().includes(queryLower))
+            .slice(0, 5)
+            .map(p => p.nombre);
+    }, [allPlaces, searchQuery]);
+
+    // ── 4. Filtrar lugares con useMemo ──
     const filteredPlaces = useMemo(() => {
         if (allPlaces.length === 0) return [];
         return allPlaces.filter(p => {
@@ -93,7 +104,7 @@ function MapaView() {
         });
     }, [allPlaces, searchQuery, activeChip, filterCat]);
 
-    // ── 4. Actualizar marcadores ──
+    // ── 5. Actualizar marcadores ──
     useEffect(() => {
         if (!map || filteredPlaces.length === 0) return;
         
@@ -122,7 +133,7 @@ function MapaView() {
         setMarkers(newMarkers);
     }, [map, filteredPlaces]);
 
-    // ── 5. Manejadores ──
+    // ── 6. Manejadores ──
     const handlePlaceClick = (p) => {
         if (map) {
             map.flyTo([p.latitud, p.longitud], 16);
@@ -144,12 +155,18 @@ function MapaView() {
         }
     };
 
+    const handleSuggestionClick = (suggestion) => {
+        setSearchQuery(suggestion);
+    };
+
     return (
         <div className="app-wrapper">
             <Navbar
                 onSearch={setSearchQuery}
                 onToggleFilters={() => setShowFilters(!showFilters)}
                 onOpenAbout={() => setShowAboutModal(true)}
+                suggestions={suggestions}
+                onSuggestionClick={handleSuggestionClick}
             />
 
             <FilterPanel
@@ -243,7 +260,7 @@ function MapaView() {
                 onClose={() => setSelectedPlace(null)}
             />
 
-            {/* ✅ MODAL ACERCA DE (único lugar con el formulario) */}
+            {/* MODAL ACERCA DE */}
             {showAboutModal && (
                 <div 
                     className="modal-overlay about-overlay" 

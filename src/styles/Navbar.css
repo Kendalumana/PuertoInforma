@@ -188,3 +188,35 @@
     background: rgba(232, 98, 26, 0.2);
     color: var(--naranja) !important;
 }
+
+/* ── Sugerencias de búsqueda (autocompletado) ── */
+.suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--gris-oscuro);
+    border: 1px solid var(--naranja);
+    border-radius: 12px;
+    margin-top: 4px;
+    z-index: 9999;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.suggestion-item {
+    padding: 0.75rem 1rem;
+    color: var(--blanco);
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.suggestion-item:hover {
+    background: rgba(232, 98, 26, 0.2);
+    color: var(--naranja);
+}
