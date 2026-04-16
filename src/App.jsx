@@ -45,14 +45,12 @@ function MapaView() {
     const [mapaVisible,    setMapaVisible   ] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
     
-    // ✅ NUEVO: Favoritos
     const [favorites,      setFavorites     ] = useState([]);
     const [showFavorites,  setShowFavorites ] = useState(false);
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
 
-    // Cargar favoritos desde localStorage al iniciar
     useEffect(() => {
         const saved = localStorage.getItem('favoritos');
         if (saved) {
@@ -62,12 +60,10 @@ function MapaView() {
         }
     }, []);
 
-    // Guardar favoritos en localStorage cada vez que cambien
     useEffect(() => {
         localStorage.setItem('favoritos', JSON.stringify(favorites));
     }, [favorites]);
 
-    // ── 1. Fetch lugares ──────────────────────────────────────
     useEffect(() => {
         api.get('/lugar')
             .then(res => {
@@ -87,7 +83,6 @@ function MapaView() {
             .finally(() => setLoading(false));
     }, []);
 
-    // ── 2. Inicializar mapa ──────────────────────────────────
     useEffect(() => {
         if (!mapRef.current) return;
         const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
@@ -101,7 +96,6 @@ function MapaView() {
         return () => instance.remove();
     }, []);
 
-    // ── 3. Sugerencias de búsqueda (autocompletado) ──
     const suggestions = useMemo(() => {
         if (!searchQuery.trim() || allPlaces.length === 0) return [];
         const queryLower = searchQuery.toLowerCase();
@@ -111,7 +105,6 @@ function MapaView() {
             .map(p => p.nombre);
     }, [allPlaces, searchQuery]);
 
-    // ── 4. Filtrar lugares (incluyendo favoritos) ──
     const filteredPlaces = useMemo(() => {
         if (allPlaces.length === 0) return [];
         let result = allPlaces.filter(p => {
@@ -120,14 +113,12 @@ function MapaView() {
             const matchesCat    = filterCat  ? p.categoria?.id === Number(filterCat) : true;
             return matchesSearch && matchesChip && matchesCat;
         });
-        // Si el filtro de favoritos está activo, quedarse solo con los que están en favorites
         if (showFavorites) {
             result = result.filter(p => favorites.includes(p.id));
         }
         return result;
     }, [allPlaces, searchQuery, activeChip, filterCat, favorites, showFavorites]);
 
-    // ── 5. Actualizar marcadores ──
     useEffect(() => {
         if (!map || filteredPlaces.length === 0) return;
         
@@ -156,7 +147,6 @@ function MapaView() {
         setMarkers(newMarkers);
     }, [map, filteredPlaces]);
 
-    // ── 6. Manejadores ──
     const handlePlaceClick = (p) => {
         if (map) {
             map.flyTo([p.latitud, p.longitud], 16);
@@ -168,7 +158,7 @@ function MapaView() {
     const handleClearFilters = () => {
         setFilterCat("");
         setActiveChip("");
-        setShowFavorites(false); // también limpiar filtro de favoritos
+        setShowFavorites(false);
     };
 
     const handleToggleMapa = () => {
@@ -183,9 +173,8 @@ function MapaView() {
         setSearchQuery(suggestion);
     };
 
-    // ✅ Función para agregar/quitar de favoritos
     const toggleFavorite = (placeId, e) => {
-        e.stopPropagation(); // Evita que se active el clic en la tarjeta
+        e.stopPropagation();
         setFavorites(prev => 
             prev.includes(placeId) 
                 ? prev.filter(id => id !== placeId)
@@ -213,7 +202,6 @@ function MapaView() {
                 onClose={() => setShowFilters(false)}
             />
 
-            {/* Chips de categorías + Favoritos */}
             <div className="categories-container">
                 {categories.map(c => (
                     <div
@@ -224,7 +212,6 @@ function MapaView() {
                         {c.nombre}
                     </div>
                 ))}
-                {/* Chip de favoritos */}
                 <div
                     className={`category-chip ${showFavorites ? 'active' : ''}`}
                     onClick={() => setShowFavorites(!showFavorites)}
@@ -267,25 +254,10 @@ function MapaView() {
                             {filteredPlaces.length > 0 ? (
                                 filteredPlaces.map(p => (
                                     <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                        {/* Ícono de favorito (corazón) */}
+                                        {/* Corazón con clases CSS (sin estilos inline) */}
                                         <div 
-                                            className="favorite-icon"
+                                            className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
                                             onClick={(e) => toggleFavorite(p.id, e)}
-                                            style={{
-                                                position: 'absolute',
-                                                top: '10px',
-                                                right: '10px',
-                                                fontSize: '1.5rem',
-                                                cursor: 'pointer',
-                                                zIndex: 2,
-                                                background: 'rgba(0,0,0,0.5)',
-                                                borderRadius: '50%',
-                                                width: '32px',
-                                                height: '32px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
                                         >
                                             {favorites.includes(p.id) ? '❤️' : '🤍'}
                                         </div>
@@ -325,7 +297,6 @@ function MapaView() {
                 onClose={() => setSelectedPlace(null)}
             />
 
-            {/* MODAL ACERCA DE */}
             {showAboutModal && (
                 <div 
                     className="modal-overlay about-overlay" 

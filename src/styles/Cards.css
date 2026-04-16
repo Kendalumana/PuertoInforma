@@ -47,12 +47,14 @@
   border-radius: 14px;
   padding: 0.85rem;
   display: flex;
-  flex-direction: row;        /* imagen izquierda, texto derecha */
+  flex-direction: row;
   gap: 0.85rem;
   align-items: flex-start;
   cursor: pointer;
   border: 1px solid rgba(232, 98, 26, 0.1);
   transition: border-color 0.2s ease, transform 0.2s ease;
+  position: relative;  /* ← referencia para el corazón absoluto */
+  overflow: visible;
 }
 
 .result-card:hover {
@@ -67,7 +69,7 @@
   object-fit: cover;
   border-radius: 10px;
   flex-shrink: 0;
-  background: var(--negro); /* placeholder si no hay imagen */
+  background: var(--negro);
 }
 
 /* Cuando no hay imagen — placeholder naranja */
@@ -86,7 +88,7 @@
 /* Contenido de texto a la derecha */
 .result-card-body {
   flex: 1;
-  min-width: 0; /* evita overflow del texto */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -124,7 +126,7 @@
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.55);
   display: -webkit-box;
-  -webkit-line-clamp: 2;     /* máximo 2 líneas */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;
@@ -157,6 +159,31 @@
   }
 }
 
-.result-card {
-    position: relative;  /* ← necesario para que el corazón absoluto se posicione respecto a la tarjeta */
+/* ── Corazón de favoritos dentro de la tarjeta ── */
+.result-card .favorite-icon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.result-card .favorite-icon:hover {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* Corazón activo (rojo) */
+.result-card .favorite-icon.active {
+    color: #ff4757;
 }
