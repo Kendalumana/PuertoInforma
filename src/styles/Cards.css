@@ -156,3 +156,7 @@
     border-radius: 10px;
   }
 }
+
+.result-card {
+    position: relative;  /* ← necesario para que el corazón absoluto se posicione respecto a la tarjeta */
+}
