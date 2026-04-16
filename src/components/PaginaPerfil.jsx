@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { axiosPrivate } from '../api/axios'; // ✅ Importamos la instancia privada
 import '../styles/Perfil.css';
 
 const AVATARES = [
@@ -35,28 +36,28 @@ function PaginaPerfil() {
   const [cargando,        setCargando       ] = useState(true);
   const [error,           setError          ] = useState(null);
 
-  // --- Session ---
+  // --- Session (solo para obtener el user_id, NO para el token de la API) ---
   const [session, setSession] = useState(null);
 
   useEffect(() => {
     async function cargarTodo() {
       try {
-        // 1. Obtener sesión de Supabase
+        // 1. Obtener sesión de Supabase (solo para saber el user_id)
         const { data: { session: s } } = await supabase.auth.getSession();
         if (!s) { navigate('/login'); return; }
         setSession(s);
-        const base = import.meta.env.VITE_API_URL ?? '';
-        const headers = { Authorization: `Bearer ${s.access_token}` };
+        
+        // 2. Obtener el token de localStorage (el que usa axiosPrivate)
+        //    axiosPrivate ya lo agrega automáticamente, no necesitamos hacer nada extra.
 
-        // 2. Cargar perfil base
-        const resPerfil = await fetch(`${base}/api/v1/perfil/usuario/${s.user.id}`, { headers });
-        if (!resPerfil.ok) throw new Error('No se pudo cargar el perfil');
-        const datosPerfil = await resPerfil.json();
+        // 3. Cargar perfil base usando axiosPrivate
+        const resPerfil = await axiosPrivate.get(`/perfil/usuario/${s.user.id}`);
+        const datosPerfil = resPerfil.data;
         setPerfil(datosPerfil);
 
         const perfilId = datosPerfil.id;
 
-        // 3. Cargar en paralelo — misiones, historial, sitios visitados, rangos
+        // 4. Cargar en paralelo — misiones, historial, sitios visitados, rangos
         const [
           resMisiones,
           resPerfilMisiones,
@@ -64,18 +65,18 @@ function PaginaPerfil() {
           resSitios,
           resRangos,
         ] = await Promise.all([
-          fetch(`${base}/api/v1/mision`,                       { headers }),
-          fetch(`${base}/api/v1/mision/perfil/${perfilId}`,    { headers }),
-          fetch(`${base}/api/v1/mision/historial/${perfilId}`, { headers }),
-          fetch(`${base}/api/v1/mision/visitados/${perfilId}`, { headers }),
-          fetch(`${base}/api/v1/rango`,                        { headers }),
+          axiosPrivate.get('/mision'),
+          axiosPrivate.get(`/mision/perfil/${perfilId}`),
+          axiosPrivate.get(`/mision/historial/${perfilId}`),
+          axiosPrivate.get(`/mision/visitados/${perfilId}`),
+          axiosPrivate.get('/rango'), // ✅ Ahora usa axiosPrivate con el token correcto
         ]);
 
-        if (resMisiones.ok)       setMisiones(await resMisiones.json());
-        if (resPerfilMisiones.ok) setPerfilMisiones(await resPerfilMisiones.json());
-        if (resHistorial.ok)      setHistorial(await resHistorial.json());
-        if (resSitios.ok)         setSitiosVisitados(await resSitios.json());
-        if (resRangos.ok)         setRangos(await resRangos.json());
+        setMisiones(resMisiones.data);
+        setPerfilMisiones(resPerfilMisiones.data);
+        setHistorial(resHistorial.data);
+        setSitiosVisitados(resSitios.data);
+        setRangos(resRangos.data);
 
       } catch (err) {
         console.error(err);
@@ -88,7 +89,7 @@ function PaginaPerfil() {
     cargarTodo();
   }, [navigate]);
 
-  // --- Helpers ---
+  // --- Helpers (sin cambios) ---
 
   // Verifica si una misión está completada por este perfil
   const estaCompletada = (misionId) =>
