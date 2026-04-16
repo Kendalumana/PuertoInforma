@@ -37,11 +37,9 @@ function PlaceModal({ place, onClose }) {
                                 src={place.urlImagen}
                                 className="modal-image"
                                 alt={`Vista de ${place.nombre}`}
-                                onError={(e) =>
-                                    e.target.src = 'https://via.placeholder.com/300x200?text=Sin+imagen'
-                                }
+                                // ✅ CORREGIDO: Eliminé el onError que cargaba via.placeholder.com
                               />
-                            : <div className="no-image">Sin fotos disponibles</div>
+                            : <div className="no-image-placeholder">🏖️</div>
                         }
                     </div>
 
