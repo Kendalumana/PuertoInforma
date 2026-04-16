@@ -44,9 +44,28 @@ function MapaView() {
     const [previewPlace,   setPreviewPlace  ] = useState(null);
     const [mapaVisible,    setMapaVisible   ] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
+    
+    // ✅ NUEVO: Favoritos
+    const [favorites,      setFavorites     ] = useState([]);
+    const [showFavorites,  setShowFavorites ] = useState(false);
 
     const mapRef       = useRef(null);
     const markersLayer = useRef(L.layerGroup());
+
+    // Cargar favoritos desde localStorage al iniciar
+    useEffect(() => {
+        const saved = localStorage.getItem('favoritos');
+        if (saved) {
+            try {
+                setFavorites(JSON.parse(saved));
+            } catch(e) { console.error(e); }
+        }
+    }, []);
+
+    // Guardar favoritos en localStorage cada vez que cambien
+    useEffect(() => {
+        localStorage.setItem('favoritos', JSON.stringify(favorites));
+    }, [favorites]);
 
     // ── 1. Fetch lugares ──────────────────────────────────────
     useEffect(() => {
@@ -86,23 +105,27 @@ function MapaView() {
     const suggestions = useMemo(() => {
         if (!searchQuery.trim() || allPlaces.length === 0) return [];
         const queryLower = searchQuery.toLowerCase();
-        // Filtrar lugares que contengan el texto, limitar a 5
         return allPlaces
             .filter(p => p.nombre.toLowerCase().includes(queryLower))
             .slice(0, 5)
             .map(p => p.nombre);
     }, [allPlaces, searchQuery]);
 
-    // ── 4. Filtrar lugares con useMemo ──
+    // ── 4. Filtrar lugares (incluyendo favoritos) ──
     const filteredPlaces = useMemo(() => {
         if (allPlaces.length === 0) return [];
-        return allPlaces.filter(p => {
+        let result = allPlaces.filter(p => {
             const matchesSearch = p.nombre.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesChip   = activeChip ? p.categoria?.id === activeChip : true;
             const matchesCat    = filterCat  ? p.categoria?.id === Number(filterCat) : true;
             return matchesSearch && matchesChip && matchesCat;
         });
-    }, [allPlaces, searchQuery, activeChip, filterCat]);
+        // Si el filtro de favoritos está activo, quedarse solo con los que están en favorites
+        if (showFavorites) {
+            result = result.filter(p => favorites.includes(p.id));
+        }
+        return result;
+    }, [allPlaces, searchQuery, activeChip, filterCat, favorites, showFavorites]);
 
     // ── 5. Actualizar marcadores ──
     useEffect(() => {
@@ -145,6 +168,7 @@ function MapaView() {
     const handleClearFilters = () => {
         setFilterCat("");
         setActiveChip("");
+        setShowFavorites(false); // también limpiar filtro de favoritos
     };
 
     const handleToggleMapa = () => {
@@ -157,6 +181,16 @@ function MapaView() {
 
     const handleSuggestionClick = (suggestion) => {
         setSearchQuery(suggestion);
+    };
+
+    // ✅ Función para agregar/quitar de favoritos
+    const toggleFavorite = (placeId, e) => {
+        e.stopPropagation(); // Evita que se active el clic en la tarjeta
+        setFavorites(prev => 
+            prev.includes(placeId) 
+                ? prev.filter(id => id !== placeId)
+                : [...prev, placeId]
+        );
     };
 
     return (
@@ -179,6 +213,7 @@ function MapaView() {
                 onClose={() => setShowFilters(false)}
             />
 
+            {/* Chips de categorías + Favoritos */}
             <div className="categories-container">
                 {categories.map(c => (
                     <div
@@ -189,6 +224,14 @@ function MapaView() {
                         {c.nombre}
                     </div>
                 ))}
+                {/* Chip de favoritos */}
+                <div
+                    className={`category-chip ${showFavorites ? 'active' : ''}`}
+                    onClick={() => setShowFavorites(!showFavorites)}
+                    style={{ background: showFavorites ? '#E8621A' : 'transparent' }}
+                >
+                    ❤️ Favoritos
+                </div>
             </div>
 
             <button
@@ -224,6 +267,28 @@ function MapaView() {
                             {filteredPlaces.length > 0 ? (
                                 filteredPlaces.map(p => (
                                     <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
+                                        {/* Ícono de favorito (corazón) */}
+                                        <div 
+                                            className="favorite-icon"
+                                            onClick={(e) => toggleFavorite(p.id, e)}
+                                            style={{
+                                                position: 'absolute',
+                                                top: '10px',
+                                                right: '10px',
+                                                fontSize: '1.5rem',
+                                                cursor: 'pointer',
+                                                zIndex: 2,
+                                                background: 'rgba(0,0,0,0.5)',
+                                                borderRadius: '50%',
+                                                width: '32px',
+                                                height: '32px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        >
+                                            {favorites.includes(p.id) ? '❤️' : '🤍'}
+                                        </div>
                                         {p.urlImagen ? (
                                             <img src={p.urlImagen} alt={p.nombre} className="result-card-img" />
                                         ) : (
