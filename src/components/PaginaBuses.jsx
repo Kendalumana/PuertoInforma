@@ -97,7 +97,7 @@ function PaginaBuses() {
     useEffect(() => {
         const cargarRutas = async () => {
             try {
-                const response = await axiosPrivate.get('/ruta-transporte');
+                const response = await axiosPrivate.get('/ruta-transporte/con-horarios');
                 setRutas(response.data);
             } catch (err) {
                 console.error(err);
