@@ -220,3 +220,29 @@
     background: rgba(232, 98, 26, 0.2);
     color: var(--naranja);
 }
+
+/* Asegurar que el botón de tres puntos siempre sea visible */
+.header-right {
+    min-width: 48px; /* espacio suficiente para el botón */
+}
+
+.three-dots-btn {
+    font-size: 1.6rem; /* ligeramente más grande en móviles */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 480px) {
+    .search-input {
+        font-size: 0.8rem;
+        padding: 0.55rem 0.85rem;
+    }
+    .three-dots-btn {
+        font-size: 1.4rem;
+        width: 36px;
+        height: 36px;
+    }
+}

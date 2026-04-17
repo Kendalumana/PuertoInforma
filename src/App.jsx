@@ -10,7 +10,6 @@ import api from './api/axios';
 // Componentes
 import MiniCard from './components/MiniCard';
 import Navbar         from './components/Navbar';
-import FilterPanel    from './components/FilterPanel';
 import PlaceModal     from './components/PlaceModal';
 import StarRating     from './components/StarRating';
 import PaginaPerfil   from './components/PaginaPerfil';
@@ -35,7 +34,6 @@ function MapaView() {
     const [allPlaces,      setAllPlaces     ] = useState([]);
     const [categories,     setCategories    ] = useState([]);
     const [selectedPlace,  setSelectedPlace ] = useState(null);
-    const [showFilters,    setShowFilters   ] = useState(false);
     const [activeChip,     setActiveChip    ] = useState("");
     const [searchQuery,    setSearchQuery   ] = useState("");
     const [filterCat,      setFilterCat     ] = useState("");
@@ -186,20 +184,9 @@ function MapaView() {
         <div className="app-wrapper">
             <Navbar
                 onSearch={setSearchQuery}
-                onToggleFilters={() => setShowFilters(!showFilters)}
                 onOpenAbout={() => setShowAboutModal(true)}
                 suggestions={suggestions}
                 onSuggestionClick={handleSuggestionClick}
-            />
-
-            <FilterPanel
-                visible={showFilters}
-                filterCat={filterCat}
-                filterRating={0}
-                onSetCat={setFilterCat}
-                onSetRating={() => {}}
-                onClear={handleClearFilters}
-                onClose={() => setShowFilters(false)}
             />
 
             <div className="categories-container">
@@ -254,7 +241,6 @@ function MapaView() {
                             {filteredPlaces.length > 0 ? (
                                 filteredPlaces.map(p => (
                                     <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                        {/* Corazón con clases CSS (sin estilos inline) */}
                                         <div 
                                             className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
                                             onClick={(e) => toggleFavorite(p.id, e)}
