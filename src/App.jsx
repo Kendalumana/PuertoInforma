@@ -22,6 +22,13 @@ import PaginaFerry    from './components/PaginaFerry';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
+// Cambio 1: categoryColors global
+const categoryColors = {
+    1: '#9C27B0', 2: '#4CAF50', 3: '#FFB300',
+    4: '#795548', 5: '#FF5722', 6: '#2196F3',
+    7: '#F44336', 8: '#b49e84',
+};
+
 function RutaProtegida({ children }) {
     const token = localStorage.getItem('token');
     if (!token) return <Navigate to="/login" replace />;
@@ -121,27 +128,17 @@ function MapaView() {
         if (!map || filteredPlaces.length === 0) return;
         
         markersLayer.current.clearLayers();
-        const categoryColors = {
-    1: '#9C27B0',
-    2: '#4CAF50',
-    3: '#FFB300',
-    4: '#795548',
-    5: '#FF5722',
-    6: '#2196F3',
-    7: '#F44336',
-    8: '#00BCD4 ',
-};
-
-                        const newMarkers = {};
-                        filteredPlaces.forEach(p => {
-                        const color = categoryColors[p.categoria?.id] || '#E8621A';
-                        const icon = L.divIcon({
-                        className: '',
-                        html: `<div style="width:28px;height:28px;background:${color};border:3px solid #ffffff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px ${color}99;"></div>`,
-                        iconSize: [28, 28],
-                        iconAnchor: [14, 28],
-                        popupAnchor: [0, -32]
-                         });
+        // Cambio 3: se eliminó la declaración local de categoryColors
+        const newMarkers = {};
+        filteredPlaces.forEach(p => {
+            const color = categoryColors[p.categoria?.id] || '#E8621A';
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="width:28px;height:28px;background:${color};border:3px solid #ffffff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px ${color}99;"></div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 28],
+                popupAnchor: [0, -32]
+            });
             const m = L.marker([p.latitud, p.longitud], { icon })
                        .bindPopup(`<b>${p.nombre}</b>`);
             m.addTo(markersLayer.current);
@@ -207,6 +204,8 @@ function MapaView() {
                         className={`category-chip ${activeChip === c.id ? 'active' : ''}`}
                         onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
                     >
+                        {/* Cambio 2: chip-dot con color dinámico */}
+                        <span className="chip-dot" style={{ background: categoryColors[c.id] || '#E8621A' }}></span>
                         {c.nombre}
                     </div>
                 ))}
