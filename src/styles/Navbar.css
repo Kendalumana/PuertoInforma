@@ -246,3 +246,49 @@
         height: 36px;
     }
 }
+
+/* ── Fix móvil: evitar que Filtros aplaste el menú ── */
+@media (max-width: 480px) {
+  .navbar-header {
+    padding: 0.5rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .search-container {
+    margin: 0 0.3rem;
+    min-width: 0;
+  }
+
+  .filters-btn {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .three-dots-btn {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .logo-navbar {
+    height: 30px;
+  }
+}
+
+@media (max-width: 360px) {
+  /* En pantallas muy pequeñas, ocultar texto del botón Filtros */
+  .filters-btn {
+    padding: 0.45rem 0.5rem;
+    font-size: 0;        /* oculta el texto */
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+  }
+
+  .filters-btn::before {
+    content: '⚙️';
+    font-size: 1rem;
+  }
+}

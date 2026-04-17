@@ -72,7 +72,7 @@ function Navbar({ onSearch, onToggleFilters, onOpenAbout, suggestions = [], onSu
                 )}
             </div>
 
-            <div className="header-right">
+            <div className="header-right" style={{flexShrink: 0}}>
                 <button className="filters-btn" onClick={onToggleFilters}>
                     ⚙️ Filtros
                 </button>
