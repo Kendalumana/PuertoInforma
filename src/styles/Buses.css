@@ -493,3 +493,115 @@
 .buses-tipo-servicio.indirecto {
     color: #ff9800;
 }
+
+/* Pestañas de detalle */
+.buses-detalle-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: var(--naranja);
+    color: white;
+}
+
+.tab-cerrar {
+    margin-left: auto;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Panel de pestaña */
+.tab-panel {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tabla de horarios */
+.horarios-tabla {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.horarios-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--naranja);
+    font-weight: bold;
+    color: var(--naranja);
+    font-size: 0.8rem;
+}
+
+.horarios-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr;
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+    font-size: 0.85rem;
+}
+
+.horarios-fila .hora {
+    font-weight: 600;
+    color: var(--blanco);
+}
+
+.horarios-fila .dias {
+    color: rgba(255,255,255,0.7);
+}
+
+.horarios-fila .tipo.directo {
+    color: #4caf50;
+}
+
+.horarios-fila .tipo.indirecto {
+    color: #ff9800;
+}
+
+/* Ajustes del mapa dentro del panel */
+.buses-detalle-info {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+}
+
+.buses-detalle-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--naranja);
+}
+
+.buses-detalle-info p {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+}

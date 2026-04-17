@@ -90,6 +90,7 @@ function PaginaBuses() {
     const [busqueda, setBusqueda] = useState('');
     const [destinoActivo, setDestinoActivo] = useState('Todas');
     const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
+    const [tabActiva, setTabActiva] = useState('detalles'); // 'detalles' o 'horarios'
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -97,7 +98,7 @@ function PaginaBuses() {
     useEffect(() => {
         const cargarRutas = async () => {
             try {
-                const response = await axiosPrivate.get('/ruta-transporte/con-horarios');
+                const response = await axiosPrivate.get('/ruta-transporte');
                 setRutas(response.data);
             } catch (err) {
                 console.error(err);
@@ -132,6 +133,7 @@ function PaginaBuses() {
 
     // Formatear rango de días (ej: "LUNES" -> "LUN", "LUNES-VIERNES" -> "LUN-VIE")
     const formatearRangoDias = (inicio, fin) => {
+        if (!inicio) return '—';
         const abrev = (dia) => dia.substring(0, 3).toUpperCase();
         if (inicio === fin) return abrev(inicio);
         return `${abrev(inicio)}-${abrev(fin)}`;
@@ -196,16 +198,71 @@ function PaginaBuses() {
                 ))}
             </div>
 
-            {/* ── Mini mapa SVG — se muestra al seleccionar una ruta ── */}
+            {/* ── Mini mapa SVG y detalles de la ruta seleccionada ── */}
             {rutaSeleccionada && (
                 <div className="buses-mini-mapa-container">
-                    <MiniMapaSVG ruta={rutaSeleccionada} />
-                    <button
-                        className="minimapa-cerrar-btn"
-                        onClick={() => setRutaSeleccionada(null)}
-                    >
-                        ✕ Cerrar mapa
-                    </button>
+                    {/* Pestañas */}
+                    <div className="buses-detalle-tabs">
+                        <button
+                            className={`tab-btn ${tabActiva === 'detalles' ? 'active' : ''}`}
+                            onClick={() => setTabActiva('detalles')}
+                        >
+                            📍 Detalles
+                        </button>
+                        <button
+                            className={`tab-btn ${tabActiva === 'horarios' ? 'active' : ''}`}
+                            onClick={() => setTabActiva('horarios')}
+                        >
+                            🕐 Horarios
+                        </button>
+                        <button
+                            className="tab-cerrar"
+                            onClick={() => setRutaSeleccionada(null)}
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Contenido de la pestaña Detalles */}
+                    {tabActiva === 'detalles' && (
+                        <div className="tab-panel">
+                            <MiniMapaSVG ruta={rutaSeleccionada} />
+                            <div className="buses-detalle-info">
+                                <h3>{rutaSeleccionada.nombre}</h3>
+                                <p><strong>Operador:</strong> {rutaSeleccionada.operador?.nombre || '—'}</p>
+                                <p><strong>Duración:</strong> {rutaSeleccionada.duracion || '—'}</p>
+                                <p><strong>Frecuencia:</strong> {rutaSeleccionada.frecuencia || '—'}</p>
+                                <p><strong>Próxima salida:</strong> {rutaSeleccionada.proxima || '—'}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Contenido de la pestaña Horarios */}
+                    {tabActiva === 'horarios' && (
+                        <div className="tab-panel horarios-panel">
+                            <h3>Horarios de {rutaSeleccionada.nombre}</h3>
+                            {rutaSeleccionada.horarios && rutaSeleccionada.horarios.length > 0 ? (
+                                <div className="horarios-tabla">
+                                    <div className="horarios-header">
+                                        <span>Hora salida</span>
+                                        <span>Días</span>
+                                        <span>Tipo</span>
+                                    </div>
+                                    {rutaSeleccionada.horarios.map((h, idx) => (
+                                        <div key={idx} className="horarios-fila">
+                                            <span className="hora">{h.horaSalida?.substring(0, 5) || '--:--'}</span>
+                                            <span className="dias">{formatearRangoDias(h.diaInicio, h.diaFin)}</span>
+                                            <span className={`tipo ${h.tipo?.toLowerCase() === 'directo' ? 'directo' : 'indirecto'}`}>
+                                                {h.tipo === 'DIRECTO' ? '🚌 Directo' : '🔄 Indirecto'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>No hay horarios registrados para esta ruta.</p>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -227,18 +284,18 @@ function PaginaBuses() {
                 </div>
             )}
 
-            {/* ── Lista de rutas ── */}
+            {/* ── Lista de rutas (tarjetas) ── */}
             <div className="buses-lista">
                 {rutasFiltradas.length > 0 ? (
                     rutasFiltradas.map(ruta => (
                         <div
                             key={ruta.id}
                             className={`buses-card ${rutaSeleccionada?.id === ruta.id ? 'seleccionada' : ''}`}
-                            onClick={() => setRutaSeleccionada(
-                                rutaSeleccionada?.id === ruta.id ? null : ruta
-                            )}
+                            onClick={() => {
+                                setRutaSeleccionada(rutaSeleccionada?.id === ruta.id ? null : ruta);
+                                setTabActiva('detalles'); // Reiniciar a detalles al abrir
+                            }}
                         >
-                            {/* Fila superior */}
                             <div className="buses-card-header">
                                 <div className="buses-card-left">
                                     <span className={`buses-badge ${ruta.tipo?.toLowerCase() === 'expreso' ? 'expreso' : 'normal'}`}>
@@ -255,34 +312,6 @@ function PaginaBuses() {
                                 </div>
                                 <span className="buses-proxima">{ruta.proxima || '—'} ↗</span>
                             </div>
-
-                            {/* ── SUB‑APARTADO DE HORARIOS (mejorado) ── */}
-                            <div className="buses-horarios">
-                                {ruta.horarios && ruta.horarios.length > 0 ? (
-                                    ruta.horarios.slice(0, 6).map((h, i) => (
-                                        <div key={i} className="buses-horario-item">
-                                            <span className="buses-hora">
-                                                {h.horaSalida?.substring(0, 5) || h.horaSalida || '--:--'}
-                                            </span>
-                                            <span className="buses-hora-rango">
-                                                {formatearRangoDias(h.diaInicio, h.diaFin)}
-                                            </span>
-                                            <span className={`buses-tipo-servicio ${h.tipo?.toLowerCase() === 'directo' ? 'directo' : 'indirecto'}`}>
-                                                {h.tipo === 'DIRECTO' ? '🚌 Directo' : '🔄 Indirecto'}
-                                            </span>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <span className="buses-hora">Sin horarios registrados</span>
-                                )}
-                                {ruta.horarios?.length > 6 && (
-                                    <span className="buses-hora-mas">
-                                        +{ruta.horarios.length - 6} más
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Meta info */}
                             <div className="buses-card-meta">
                                 <span className="buses-meta-item">🕐 {ruta.frecuencia || '—'}</span>
                                 <span className="buses-meta-item">⏱ {ruta.duracion || '—'}</span>
