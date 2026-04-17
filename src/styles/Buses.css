@@ -454,3 +454,42 @@
   border-color: var(--naranja);
   color: var(--naranja);
 }
+
+/* Estilos para el sub‑apartado de horarios */
+.buses-horario-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+    font-size: 0.8rem;
+}
+
+.buses-hora {
+    font-weight: 600;
+    color: var(--naranja);
+    min-width: 55px;
+}
+
+.buses-hora-rango {
+    background: rgba(255,255,255,0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.8);
+}
+
+.buses-tipo-servicio {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+}
+
+.buses-tipo-servicio.directo {
+    color: #4caf50;
+}
+
+.buses-tipo-servicio.indirecto {
+    color: #ff9800;
+}

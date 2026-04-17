@@ -1,105 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { axiosPrivate } from '../api/axios';
 import '../styles/Buses.css';
-
-const RUTAS = [
-    {
-        id: 1,
-        numero: 'Ruta 150',
-        destino: 'San José',
-        origen: 'Puntarenas',
-        empresa: 'Transportes Puntarenas',
-        duracion: '2h 30m',
-        frecuencia: 'Cada 30 min',
-        proxima: '05:30',
-        horarios: ['05:30', '06:00', '06:30', '07:00', '07:30', '08:00', '09:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
-        paradas: ['Terminal', 'Barranca', 'Esparta', 'Orotina', 'San José'],
-        tipo: 'normal',
-    },
-    {
-        id: 2,
-        numero: 'Ruta 155',
-        destino: 'San José',
-        origen: 'Puntarenas',
-        empresa: 'TUAN',
-        duracion: '2h',
-        frecuencia: 'Expreso',
-        proxima: '07:00',
-        horarios: ['07:00', '11:00', '15:00', '18:00'],
-        paradas: ['Terminal', 'San José'],
-        tipo: 'expreso',
-    },
-    {
-        id: 3,
-        numero: 'Ruta 160',
-        destino: 'Liberia',
-        origen: 'Puntarenas',
-        empresa: 'Transportes Liberia',
-        duracion: '3h',
-        frecuencia: 'Cada hora',
-        proxima: '06:00',
-        horarios: ['06:00', '08:00', '10:00', '13:00', '16:00'],
-        paradas: ['Terminal', 'Cañas', 'Liberia'],
-        tipo: 'normal',
-    },
-    {
-        id: 4,
-        numero: 'Ruta 170',
-        destino: 'Jacó',
-        origen: 'Puntarenas',
-        empresa: 'Transportes Jacó',
-        duracion: '1h 30m',
-        frecuencia: 'Cada 2h',
-        proxima: '08:00',
-        horarios: ['08:00', '10:00', '13:00', '16:00', '18:00'],
-        paradas: ['Terminal', 'Jacó Centro'],
-        tipo: 'normal',
-    },
-    {
-        id: 5,
-        numero: 'Ruta 180',
-        destino: 'Nicoya',
-        origen: 'Puntarenas',
-        empresa: 'Empresa Alfaro',
-        duracion: '2h 45m',
-        frecuencia: 'Cada 3h',
-        proxima: '06:30',
-        horarios: ['06:30', '09:30', '12:30', '15:30'],
-        paradas: ['Terminal', 'Ferry', 'Nicoya'],
-        tipo: 'normal',
-    },
-];
-
-const DESTINOS = ['Todas', ...new Set(RUTAS.map(r => r.destino))];
 
 // -------------------------------------------------------
 // Mini mapa SVG — dibuja la ruta con curvas y paradas
 // -------------------------------------------------------
 function MiniMapaSVG({ ruta }) {
-    const paradas = ruta.paradas;
-    const total   = paradas.length;
+    let paradas = [];
+    if (ruta.paradas) {
+        try {
+            paradas = typeof ruta.paradas === 'string' ? JSON.parse(ruta.paradas) : ruta.paradas;
+        } catch(e) {
+            paradas = [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
+        }
+    } else {
+        paradas = [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
+    }
 
-    // Distribución horizontal de los nodos
+    const total = paradas.length;
     const W = 320;
     const H = 80;
     const margen = 40;
-    const paso   = (W - margen * 2) / (total - 1);
+    const paso = (W - margen * 2) / (total - 1);
 
-    // Posición X e Y de cada parada
-    // Y alterna ligeramente para dar sensación de curva orgánica
     const puntos = paradas.map((_, i) => ({
         x: margen + i * paso,
         y: i % 2 === 0 ? H / 2 - 10 : H / 2 + 10,
     }));
 
-    // Construye un path SVG con curvas suaves entre puntos
     const buildPath = () => {
         if (puntos.length < 2) return '';
         let d = `M ${puntos[0].x} ${puntos[0].y}`;
         for (let i = 1; i < puntos.length; i++) {
             const prev = puntos[i - 1];
             const curr = puntos[i];
-            const cx   = (prev.x + curr.x) / 2;
+            const cx = (prev.x + curr.x) / 2;
             d += ` C ${cx} ${prev.y}, ${cx} ${curr.y}, ${curr.x} ${curr.y}`;
         }
         return d;
@@ -107,81 +43,38 @@ function MiniMapaSVG({ ruta }) {
 
     return (
         <div className="minimapa-svg-wrapper">
-
-            {/* Badge de la ruta arriba a la izquierda */}
             <div className="minimapa-badge-ruta">
-                <span className={`buses-badge ${ruta.tipo}`}>{ruta.numero}</span>
+                <span className={`buses-badge ${ruta.tipo?.toLowerCase() === 'expreso' ? 'expreso' : 'normal'}`}>
+                    {ruta.nombre}
+                </span>
                 <span className="minimapa-titulo-ruta">
-                    {ruta.origen} → {ruta.destino}
+                    {ruta.lugarOrigen?.nombre || '?'} → {ruta.lugarDestino?.nombre || '?'}
                 </span>
             </div>
-
-            {/* SVG del mapa */}
-            <svg
-                viewBox={`0 0 ${W} ${H}`}
-                className="minimapa-svg"
-                preserveAspectRatio="xMidYMid meet"
-            >
-                {/* Línea de fondo gris (sombra de ruta) */}
-                <path
-                    d={buildPath()}
-                    fill="none"
-                    stroke="rgba(255,255,255,0.08)"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                />
-
-                {/* Línea principal de la ruta — naranja */}
-                <path
-                    d={buildPath()}
-                    fill="none"
-                    stroke="#E8621A"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeDasharray="0"
-                    opacity="0.85"
-                />
-
-                {/* Nodos de cada parada */}
+            <svg viewBox={`0 0 ${W} ${H}`} className="minimapa-svg" preserveAspectRatio="xMidYMid meet">
+                <path d={buildPath()} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" strokeLinecap="round" />
+                <path d={buildPath()} fill="none" stroke="#E8621A" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
                 {puntos.map((p, i) => (
                     <g key={i}>
-                        {/* Círculo exterior */}
-                        <circle
-                            cx={p.x}
-                            cy={p.y}
-                            r={i === 0 || i === total - 1 ? 7 : 5}
-                            fill={i === 0 ? '#E8621A' : i === total - 1 ? '#aaaaaa' : '#2D2D2D'}
-                            stroke={i === 0 ? '#E8621A' : '#ffffff'}
-                            strokeWidth="1.5"
-                        />
-                        {/* Punto interior blanco */}
-                        {(i === 0 || i === total - 1) && (
-                            <circle cx={p.x} cy={p.y} r="3" fill="#fff" />
-                        )}
+                        <circle cx={p.x} cy={p.y} r={i === 0 || i === total - 1 ? 7 : 5}
+                                fill={i === 0 ? '#E8621A' : i === total - 1 ? '#aaaaaa' : '#2D2D2D'}
+                                stroke={i === 0 ? '#E8621A' : '#ffffff'} strokeWidth="1.5" />
+                        {(i === 0 || i === total - 1) && <circle cx={p.x} cy={p.y} r="3" fill="#fff" />}
                     </g>
                 ))}
-
-                {/* Etiquetas de las paradas */}
                 {puntos.map((p, i) => (
-                    <text
-                        key={`label-${i}`}
-                        x={p.x}
-                        y={i % 2 === 0 ? p.y - 14 : p.y + 20}
-                        textAnchor="middle"
-                        fontSize="8"
-                        fill={i === 0 ? '#E8621A' : 'rgba(255,255,255,0.7)'}
-                        fontWeight={i === 0 || i === total - 1 ? '700' : '400'}
-                    >
+                    <text key={`label-${i}`} x={p.x} y={i % 2 === 0 ? p.y - 14 : p.y + 20}
+                          textAnchor="middle" fontSize="8"
+                          fill={i === 0 ? '#E8621A' : 'rgba(255,255,255,0.7)'}
+                          fontWeight={i === 0 || i === total - 1 ? '700' : '400'}>
                         {paradas[i]}
                     </text>
                 ))}
             </svg>
-
-            {/* Info rápida debajo del mapa */}
             <div className="minimapa-info-rapida">
-                <span>⏱ {ruta.duracion}</span>
-                <span>🕐 {ruta.frecuencia}</span>
-                <span>🚌 {ruta.empresa}</span>
+                <span>⏱ {ruta.duracion || '—'}</span>
+                <span>🕐 {ruta.frecuencia || '—'}</span>
+                <span>🚌 {ruta.operador?.nombre || '—'}</span>
             </div>
         </div>
     );
@@ -193,26 +86,79 @@ function MiniMapaSVG({ ruta }) {
 function PaginaBuses() {
     const navigate = useNavigate();
 
-    const [busqueda,         setBusqueda        ] = useState('');
-    const [destinoActivo,    setDestinoActivo   ] = useState('Todas');
+    const [rutas, setRutas] = useState([]);
+    const [busqueda, setBusqueda] = useState('');
+    const [destinoActivo, setDestinoActivo] = useState('Todas');
     const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const rutasFiltradas = RUTAS.filter(r => {
-        const matchBusqueda = r.destino.toLowerCase().includes(busqueda.toLowerCase()) ||
-                              r.numero.toLowerCase().includes(busqueda.toLowerCase()) ||
-                              r.empresa.toLowerCase().includes(busqueda.toLowerCase());
-        const matchDestino  = destinoActivo === 'Todas' || r.destino === destinoActivo;
+    // Cargar rutas desde el backend
+    useEffect(() => {
+        const cargarRutas = async () => {
+            try {
+                const response = await axiosPrivate.get('/ruta-transporte');
+                setRutas(response.data);
+            } catch (err) {
+                console.error(err);
+                setError('No se pudieron cargar las rutas. Intentá de nuevo.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        cargarRutas();
+    }, []);
+
+    // Destinos únicos (para los chips)
+    const destinosUnicos = ['Todas', ...new Set(rutas.map(r => r.lugarDestino?.nombre).filter(Boolean))];
+
+    // Filtrar rutas según búsqueda y destino
+    const rutasFiltradas = rutas.filter(r => {
+        const destinoNombre = r.lugarDestino?.nombre || '';
+        const origenNombre = r.lugarOrigen?.nombre || '';
+        const matchBusqueda = destinoNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                              origenNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                              r.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                              (r.operador?.nombre || '').toLowerCase().includes(busqueda.toLowerCase());
+        const matchDestino = destinoActivo === 'Todas' || destinoNombre === destinoActivo;
         return matchBusqueda && matchDestino;
     });
 
-    const rutasPorDestino = DESTINOS.filter(d => d !== 'Todas').reduce((acc, dest) => {
-        acc[dest] = RUTAS.filter(r => r.destino === dest);
+    // Agrupar rutas por destino (para las tabs cuando no hay búsqueda)
+    const rutasPorDestino = destinosUnicos.filter(d => d !== 'Todas').reduce((acc, dest) => {
+        acc[dest] = rutas.filter(r => r.lugarDestino?.nombre === dest);
         return acc;
     }, {});
 
+    // Formatear rango de días (ej: "LUNES" -> "LUN", "LUNES-VIERNES" -> "LUN-VIE")
+    const formatearRangoDias = (inicio, fin) => {
+        const abrev = (dia) => dia.substring(0, 3).toUpperCase();
+        if (inicio === fin) return abrev(inicio);
+        return `${abrev(inicio)}-${abrev(fin)}`;
+    };
+
+    // Estados de carga y error
+    if (loading) {
+        return (
+            <div className="buses-page" style={{ textAlign: 'center', padding: '2rem' }}>
+                <p>Cargando rutas...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="buses-page" style={{ textAlign: 'center', padding: '2rem', color: '#ef5350' }}>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#E8621A', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer' }}>
+                    Reintentar
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="buses-page">
-
             {/* ── Header ── */}
             <header className="buses-header">
                 <button className="buses-back-btn" onClick={() => navigate('/')}>⬅️</button>
@@ -229,20 +175,20 @@ function PaginaBuses() {
                     value={busqueda}
                     onChange={(e) => {
                         setBusqueda(e.target.value);
-                        setRutaSeleccionada(null); // FIX: limpia el mapa al buscar
+                        setRutaSeleccionada(null);
                     }}
                 />
             </div>
 
             {/* ── Chips de destino ── */}
             <div className="buses-chips-container">
-                {DESTINOS.map(dest => (
+                {destinosUnicos.map(dest => (
                     <button
                         key={dest}
                         className={`buses-chip ${destinoActivo === dest ? 'active' : ''}`}
                         onClick={() => {
                             setDestinoActivo(dest);
-                            setRutaSeleccionada(null); // FIX: limpia el mapa al cambiar chip
+                            setRutaSeleccionada(null);
                         }}
                     >
                         {dest}
@@ -263,7 +209,7 @@ function PaginaBuses() {
                 </div>
             )}
 
-            {/* ── Tabs por destino ── */}
+            {/* ── Tabs por destino (solo cuando no hay búsqueda y el chip es "Todas") ── */}
             {destinoActivo === 'Todas' && !busqueda && (
                 <div className="buses-tabs-destino">
                     {Object.keys(rutasPorDestino).map(dest => (
@@ -272,7 +218,7 @@ function PaginaBuses() {
                             className="buses-tab-destino"
                             onClick={() => {
                                 setDestinoActivo(dest);
-                                setRutaSeleccionada(null); // FIX: limpia el mapa al cambiar tab
+                                setRutaSeleccionada(null);
                             }}
                         >
                             {dest}
@@ -295,43 +241,52 @@ function PaginaBuses() {
                             {/* Fila superior */}
                             <div className="buses-card-header">
                                 <div className="buses-card-left">
-                                    <span className={`buses-badge ${ruta.tipo}`}>
-                                        {ruta.numero}
+                                    <span className={`buses-badge ${ruta.tipo?.toLowerCase() === 'expreso' ? 'expreso' : 'normal'}`}>
+                                        {ruta.nombre}
                                     </span>
                                     <div className="buses-card-info">
                                         <span className="buses-card-ruta">
-                                            {ruta.origen} → {ruta.destino}
+                                            {ruta.lugarOrigen?.nombre || '?'} → {ruta.lugarDestino?.nombre || '?'}
                                         </span>
-                                        {ruta.tipo === 'expreso' && (
+                                        {ruta.tipo?.toLowerCase() === 'expreso' && (
                                             <span className="buses-expreso-tag">Expreso</span>
                                         )}
                                     </div>
                                 </div>
-                                <span className="buses-proxima">{ruta.proxima} ↗</span>
+                                <span className="buses-proxima">{ruta.proxima || '—'} ↗</span>
                             </div>
 
-                            {/* Horarios */}
+                            {/* ── SUB‑APARTADO DE HORARIOS (mejorado) ── */}
                             <div className="buses-horarios">
-                                {ruta.horarios.slice(0, 5).map((h, i) => (
-                                    <span
-                                        key={i}
-                                        className={`buses-hora ${i === 0 ? 'proxima-hora' : ''}`}
-                                    >
-                                        {h}
-                                    </span>
-                                ))}
-                                {ruta.horarios.length > 5 && (
+                                {ruta.horarios && ruta.horarios.length > 0 ? (
+                                    ruta.horarios.slice(0, 6).map((h, i) => (
+                                        <div key={i} className="buses-horario-item">
+                                            <span className="buses-hora">
+                                                {h.horaSalida?.substring(0, 5) || h.horaSalida || '--:--'}
+                                            </span>
+                                            <span className="buses-hora-rango">
+                                                {formatearRangoDias(h.diaInicio, h.diaFin)}
+                                            </span>
+                                            <span className={`buses-tipo-servicio ${h.tipo?.toLowerCase() === 'directo' ? 'directo' : 'indirecto'}`}>
+                                                {h.tipo === 'DIRECTO' ? '🚌 Directo' : '🔄 Indirecto'}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <span className="buses-hora">Sin horarios registrados</span>
+                                )}
+                                {ruta.horarios?.length > 6 && (
                                     <span className="buses-hora-mas">
-                                        +{ruta.horarios.length - 5} más
+                                        +{ruta.horarios.length - 6} más
                                     </span>
                                 )}
                             </div>
 
                             {/* Meta info */}
                             <div className="buses-card-meta">
-                                <span className="buses-meta-item">🕐 {ruta.frecuencia}</span>
-                                <span className="buses-meta-item">⏱ {ruta.duracion}</span>
-                                <span className="buses-meta-item">🚌 {ruta.empresa}</span>
+                                <span className="buses-meta-item">🕐 {ruta.frecuencia || '—'}</span>
+                                <span className="buses-meta-item">⏱ {ruta.duracion || '—'}</span>
+                                <span className="buses-meta-item">🚌 {ruta.operador?.nombre || '—'}</span>
                             </div>
                         </div>
                     ))
