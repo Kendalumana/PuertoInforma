@@ -15,7 +15,7 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
-// ✅ Función para guardar avatar en el backend (SOLO EMOJIS, imágenes se manejan aparte)
+// ✅ Función para guardar avatar en el backend (SOLO EMOJIS)
 async function guardarAvatar(tipo, valor) {
   try {
     await axiosPrivate.put('/perfil/avatar', { tipo, valor });
@@ -24,11 +24,6 @@ async function guardarAvatar(tipo, valor) {
     throw new Error('No se pudo guardar el avatar');
   }
 }
-
-// 🚧 FUNCIÓN DE SUBIDA DE IMAGEN DESACTIVADA (Próximamente)
-// Ya no se usa la subida real a Supabase Storage.
-// Se reemplazó por un mensaje de advertencia.
-// async function subirImagen(archivo, userId) { ... }
 
 function PaginaPerfil() {
   const navigate = useNavigate();
@@ -40,6 +35,7 @@ function PaginaPerfil() {
   const [mostrarSelector,    setMostrarSelector   ] = useState(false);
   const [tabActiva,          setTabActiva         ] = useState('misiones');
   const [guardandoAvatar,    setGuardandoAvatar   ] = useState(false);
+  const [avatarError,        setAvatarError       ] = useState(null); // 🆕 Cambio 1
 
   // --- Datos de BD ---
   const [perfil,          setPerfil         ] = useState(null);
@@ -51,7 +47,7 @@ function PaginaPerfil() {
   const [cargando,        setCargando       ] = useState(true);
   const [error,           setError          ] = useState(null);
 
-  // --- Session (solo para obtener el user_id, NO para el token de la API) ---
+  // --- Session ---
   const [session, setSession] = useState(null);
 
   useEffect(() => {
@@ -65,7 +61,6 @@ function PaginaPerfil() {
         const datosPerfil = resPerfil.data;
         setPerfil(datosPerfil);
 
-        // ✅ Cargar avatar guardado (si existe en el backend)
         if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
           if (datosPerfil.avatarTipo === 'emoji') {
             const emojiId = parseInt(datosPerfil.avatarValor, 10);
@@ -131,21 +126,20 @@ function PaginaPerfil() {
     setAvatarTipo('prediseñado');
     setMostrarSelector(false);
     setGuardandoAvatar(true);
+    setAvatarError(null); // Limpiar error anterior al reintentar
     try {
       await guardarAvatar('emoji', id.toString());
     } catch (err) {
-      setError('No se pudo guardar el avatar. Reintentá.');
+      setAvatarError('No se pudo guardar el avatar. Reintentá.'); // 🆕 Cambio 2
     } finally {
       setGuardandoAvatar(false);
     }
   };
 
-  // 🚧 SUBIDA DE IMAGEN DESACTIVADA (Próximamente)
-  // Solo muestra un mensaje informativo y no intenta guardar nada.
+  // 🚧 SUBIDA DE IMAGEN DESACTIVADA
   const handleSubirImagen = (e) => {
     e.preventDefault();
     setError("🚧 Subida de imágenes: Próximamente disponible 🚧");
-    // Limpiar el input para que no quede el archivo seleccionado
     e.target.value = '';
   };
 
@@ -193,6 +187,13 @@ function PaginaPerfil() {
               <div className="avatar-edit-badge">✏️</div>
             </div>
 
+            {/* 🆕 Cambio 3: Mensaje de error específico del avatar */}
+            {avatarError && (
+              <p style={{ color: '#ef5350', fontSize: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                {avatarError}
+              </p>
+            )}
+
             {mostrarSelector && (
               <div className="avatar-selector">
                 <p className="avatar-selector-titulo">Elegí tu avatar</p>
@@ -208,7 +209,6 @@ function PaginaPerfil() {
                   ))}
                 </div>
                 <div className="avatar-divider">— o subí tu foto —</div>
-                {/* 🚧 Botón de subida de imagen deshabilitado visualmente y con título informativo */}
                 <label 
                   className="btn-subir-foto" 
                   htmlFor="input-foto"
@@ -223,13 +223,13 @@ function PaginaPerfil() {
                   accept="image/*" 
                   onChange={handleSubirImagen} 
                   style={{ display: 'none' }} 
-                  disabled  // 🚧 Input deshabilitado para evitar intentos de subida real
+                  disabled
                 />
               </div>
             )}
           </div>
 
-          {/* Info básica — datos reales de BD */}
+          {/* Resto del componente igual... */}
           <div className="profile-info-basica">
             <h2 className="profile-nombre">{perfil?.nombreUsuario ?? '—'}</h2>
             <span className="profile-rango">{rangoActual?.urlIcono && <img src={rangoActual.urlIcono} alt="icono" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle', objectFit: 'contain' }} />} {rangoActual?.nombre ?? '—'}</span>
@@ -238,7 +238,6 @@ function PaginaPerfil() {
             </div>
           </div>
 
-          {/* Barra XP — usa experienciaXp real */}
           <div className="xp-container">
             <div className="xp-labels">
               <span>{xpActual} XP</span>
@@ -252,7 +251,6 @@ function PaginaPerfil() {
             </p>
           </div>
 
-          {/* Navegación de tabs */}
           <nav className="profile-nav-vertical">
             <button className={`nav-btn ${tabActiva === 'misiones'  ? 'activo' : ''}`} onClick={() => setTabActiva('misiones')}>
               🎯 Misiones
@@ -269,10 +267,8 @@ function PaginaPerfil() {
           </nav>
         </aside>
 
-        {/* ── CONTENIDO PRINCIPAL ── */}
+        {/* ── CONTENIDO PRINCIPAL (sin cambios) ── */}
         <main className="profile-main-content">
-
-          {/* MISIONES — vienen de BD, estado real por perfil */}
           {tabActiva === 'misiones' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">🎯 Misiones Disponibles</h3>
@@ -307,7 +303,6 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* AVANCE — historial real de BD */}
           {tabActiva === 'avance' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">📈 Tu Historial</h3>
@@ -333,7 +328,6 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* RANGO — rangos reales de BD */}
           {tabActiva === 'rango' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">🏅 Progreso de Rango</h3>
@@ -360,7 +354,6 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* SITIOS VISITADOS — reales de BD */}
           {tabActiva === 'visitados' && (
             <div className="tab-section fade-in">
               <h3 className="tab-titulo">📍 Tus Sitios Explorados</h3>
@@ -381,7 +374,6 @@ function PaginaPerfil() {
               </div>
             </div>
           )}
-
         </main>
       </div>
     </div>
