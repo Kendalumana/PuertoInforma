@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { axiosPrivate } from '../api/axios'; // ✅ Importamos la instancia privada
+import { axiosPrivate } from '../api/axios';
 import '../styles/Perfil.css';
 
 const AVATARES = [
@@ -13,8 +13,31 @@ const AVATARES = [
   { id: 6, emoji: '🦀', label: 'Cangrejo' },
 ];
 
-// XP necesaria para subir de nivel — se puede ajustar después
 const XP_SIGUIENTE_NIVEL = 500;
+
+// ✅ Función para guardar avatar en el backend
+async function guardarAvatar(tipo, valor) {
+  try {
+    await axiosPrivate.put('/perfil/avatar', { tipo, valor });
+  } catch (error) {
+    console.error('Error al guardar avatar:', error);
+    throw new Error('No se pudo guardar el avatar');
+  }
+}
+
+// ✅ Función para subir imagen a Supabase Storage y obtener URL pública
+async function subirImagen(archivo, userId) {
+  const fileExt = archivo.name.split('.').pop();
+  const fileName = `${userId}/avatar.${fileExt}`;
+  const { data, error } = await supabase.storage
+    .from('avatars')
+    .upload(fileName, archivo, { upsert: true });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(fileName);
+  return publicUrl;
+}
 
 function PaginaPerfil() {
   const navigate = useNavigate();
@@ -25,6 +48,7 @@ function PaginaPerfil() {
   const [avatarImagen,       setAvatarImagen      ] = useState(null);
   const [mostrarSelector,    setMostrarSelector   ] = useState(false);
   const [tabActiva,          setTabActiva         ] = useState('misiones');
+  const [guardandoAvatar,    setGuardandoAvatar   ] = useState(false);
 
   // --- Datos de BD ---
   const [perfil,          setPerfil         ] = useState(null);
@@ -42,22 +66,30 @@ function PaginaPerfil() {
   useEffect(() => {
     async function cargarTodo() {
       try {
-        // 1. Obtener sesión de Supabase (solo para saber el user_id)
         const { data: { session: s } } = await supabase.auth.getSession();
         if (!s) { navigate('/login'); return; }
         setSession(s);
         
-        // 2. Obtener el token de localStorage (el que usa axiosPrivate)
-        //    axiosPrivate ya lo agrega automáticamente, no necesitamos hacer nada extra.
-
-        // 3. Cargar perfil base usando axiosPrivate
         const resPerfil = await axiosPrivate.get(`/perfil/usuario/${s.user.id}`);
         const datosPerfil = resPerfil.data;
         setPerfil(datosPerfil);
 
+        // ✅ Cargar avatar guardado (si existe en el backend)
+        if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
+          if (datosPerfil.avatarTipo === 'emoji') {
+            const emojiId = parseInt(datosPerfil.avatarValor, 10);
+            if (!isNaN(emojiId)) {
+              setAvatarTipo('prediseñado');
+              setAvatarSeleccionado(emojiId);
+            }
+          } else if (datosPerfil.avatarTipo === 'imagen') {
+            setAvatarTipo('subido');
+            setAvatarImagen(datosPerfil.avatarValor);
+          }
+        }
+
         const perfilId = datosPerfil.id;
 
-        // 4. Cargar en paralelo — misiones, historial, sitios visitados, rangos
         const [
           resMisiones,
           resPerfilMisiones,
@@ -69,7 +101,7 @@ function PaginaPerfil() {
           axiosPrivate.get(`/mision/perfil/${perfilId}`),
           axiosPrivate.get(`/mision/historial/${perfilId}`),
           axiosPrivate.get(`/mision/visitados/${perfilId}`),
-          axiosPrivate.get('/rango'), // ✅ Ahora usa axiosPrivate con el token correcto
+          axiosPrivate.get('/rango'),
         ]);
 
         setMisiones(resMisiones.data);
@@ -89,33 +121,57 @@ function PaginaPerfil() {
     cargarTodo();
   }, [navigate]);
 
-  // --- Helpers (sin cambios) ---
-
-  // Verifica si una misión está completada por este perfil
   const estaCompletada = (misionId) =>
     perfilMisiones.some(pm => pm.mision?.id === misionId && pm.completada);
 
-  // Calcula el % de XP para la barra
   const calcularPorcentajeXP = () => {
     const xp = perfil?.experienciaXp ?? 0;
     return Math.min(Math.round((xp / XP_SIGUIENTE_NIVEL) * 100), 100);
   };
 
-  // Marca el rango actual comparando XP
   const xpActual = perfil?.experienciaXp ?? 0;
   const rangoActual = [...rangos]
     .filter(r => xpActual >= r.puntosRequeridos)
     .sort((a, b) => b.puntosRequeridos - a.puntosRequeridos)[0];
 
-  const handleSubirImagen = (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    setAvatarImagen(URL.createObjectURL(archivo));
-    setAvatarTipo('subido');
+  // ✅ Manejar selección de avatar emoji (guardar automáticamente)
+  const handleSeleccionarEmoji = async (id) => {
+    setAvatarSeleccionado(id);
+    setAvatarTipo('prediseñado');
     setMostrarSelector(false);
+    setGuardandoAvatar(true);
+    try {
+      await guardarAvatar('emoji', id.toString());
+    } catch (err) {
+      setError('No se pudo guardar el avatar. Reintentá.');
+    } finally {
+      setGuardandoAvatar(false);
+    }
   };
 
-  // Formatea fecha ISO a texto legible
+  // ✅ Manejar subida de imagen (guardar automáticamente)
+  const handleSubirImagen = async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    if (!session?.user?.id) {
+      setError('Usuario no identificado');
+      return;
+    }
+    setGuardandoAvatar(true);
+    try {
+      const publicUrl = await subirImagen(archivo, session.user.id);
+      await guardarAvatar('imagen', publicUrl);
+      setAvatarImagen(publicUrl);
+      setAvatarTipo('subido');
+      setMostrarSelector(false);
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo subir la imagen. Reintentá.');
+    } finally {
+      setGuardandoAvatar(false);
+    }
+  };
+
   const formatearFecha = (isoString) => {
     if (!isoString) return '—';
     return new Date(isoString).toLocaleDateString('es-CR', {
@@ -123,7 +179,6 @@ function PaginaPerfil() {
     });
   };
 
-  // --- Estados de carga y error ---
   if (cargando) return (
     <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>
       Cargando perfil...
@@ -149,7 +204,9 @@ function PaginaPerfil() {
           {/* Avatar */}
           <div className="avatar-wrapper">
             <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
-              {avatarTipo === 'subido' && avatarImagen ? (
+              {guardandoAvatar ? (
+                <span className="avatar-emoji">⏳</span>
+              ) : avatarTipo === 'subido' && avatarImagen ? (
                 <img src={avatarImagen} alt="Avatar" className="avatar-img" />
               ) : (
                 <span className="avatar-emoji">
@@ -167,11 +224,7 @@ function PaginaPerfil() {
                     <div
                       key={av.id}
                       className={`avatar-opcion ${avatarSeleccionado === av.id && avatarTipo === 'prediseñado' ? 'activo' : ''}`}
-                      onClick={() => {
-                        setAvatarSeleccionado(av.id);
-                        setAvatarTipo('prediseñado');
-                        setMostrarSelector(false);
-                      }}
+                      onClick={() => handleSeleccionarEmoji(av.id)}
                     >
                       {av.emoji}
                     </div>
