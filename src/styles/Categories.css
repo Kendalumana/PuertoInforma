@@ -46,3 +46,14 @@
   margin-right: 0.4rem;
   flex-shrink: 0;
 }
+
+.chip-clear {
+    border-color: #ef5350 !important;
+    color: #ef5350 !important;
+    background-color: transparent !important;
+}
+.chip-clear:hover {
+    background-color: #ef5350 !important;
+    color: var(--blanco) !important;
+    border-color: #ef5350 !important;
+}

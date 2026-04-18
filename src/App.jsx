@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -7,22 +7,20 @@ import './styles/Index.css';
 // API
 import api from './api/axios';
 
-// Componentes
+// Componentes (StarRating eliminado)
 import MiniCard from './components/MiniCard';
-import Navbar         from './components/Navbar';
-import PlaceModal     from './components/PlaceModal';
-import StarRating     from './components/StarRating';
-import PaginaPerfil   from './components/PaginaPerfil';
-import Login          from './components/Login';
-import Registro       from './components/Registro';
-import PaginaBuses    from './components/PaginaBuses';
-import AuthCallback   from './components/AuthCallback';
+import Navbar from './components/Navbar';
+import PlaceModal from './components/PlaceModal';
+import PaginaPerfil from './components/PaginaPerfil';
+import Login from './components/Login';
+import Registro from './components/Registro';
+import PaginaBuses from './components/PaginaBuses';
+import AuthCallback from './components/AuthCallback';
 import PaginaNoticias from './components/PaginaNoticias';
-import PaginaFerry    from './components/PaginaFerry';
+import PaginaFerry from './components/PaginaFerry';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
-// Cambio 1: categoryColors global
 const categoryColors = {
     1: '#9C27B0', 2: '#4CAF50', 3: '#FFB300',
     4: '#795548', 5: '#FF5722', 6: '#2196F3',
@@ -36,24 +34,23 @@ function RutaProtegida({ children }) {
 }
 
 function MapaView() {
-    const [map,            setMap           ] = useState(null);
-    const [markers,        setMarkers       ] = useState({});
-    const [allPlaces,      setAllPlaces     ] = useState([]);
-    const [categories,     setCategories    ] = useState([]);
-    const [selectedPlace,  setSelectedPlace ] = useState(null);
-    const [activeChip,     setActiveChip    ] = useState("");
-    const [searchQuery,    setSearchQuery   ] = useState("");
-    const [filterCat,      setFilterCat     ] = useState("");
-    const [loading,        setLoading       ] = useState(true);
-    const [error,          setError         ] = useState(null);
-    const [previewPlace,   setPreviewPlace  ] = useState(null);
-    const [mapaVisible,    setMapaVisible   ] = useState(false);
+    const [map, setMap] = useState(null);
+    const [markers, setMarkers] = useState({});
+    const [allPlaces, setAllPlaces] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const [activeChip, setActiveChip] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filterCat, setFilterCat] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [previewPlace, setPreviewPlace] = useState(null);
+    const [mapaVisible, setMapaVisible] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
-    
-    const [favorites,      setFavorites     ] = useState([]);
-    const [showFavorites,  setShowFavorites ] = useState(false);
+    const [favorites, setFavorites] = useState([]);
+    const [showFavorites, setShowFavorites] = useState(false);
 
-    const mapRef       = useRef(null);
+    const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
 
     useEffect(() => {
@@ -61,7 +58,7 @@ function MapaView() {
         if (saved) {
             try {
                 setFavorites(JSON.parse(saved));
-            } catch(e) { console.error(e); }
+            } catch (e) { console.error(e); }
         }
     }, []);
 
@@ -114,8 +111,8 @@ function MapaView() {
         if (allPlaces.length === 0) return [];
         let result = allPlaces.filter(p => {
             const matchesSearch = p.nombre.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesChip   = activeChip ? p.categoria?.id === activeChip : true;
-            const matchesCat    = filterCat  ? p.categoria?.id === Number(filterCat) : true;
+            const matchesChip = activeChip ? p.categoria?.id === activeChip : true;
+            const matchesCat = filterCat ? p.categoria?.id === Number(filterCat) : true;
             return matchesSearch && matchesChip && matchesCat;
         });
         if (showFavorites) {
@@ -126,9 +123,7 @@ function MapaView() {
 
     useEffect(() => {
         if (!map || filteredPlaces.length === 0) return;
-        
         markersLayer.current.clearLayers();
-        // Cambio 3: se eliminó la declaración local de categoryColors
         const newMarkers = {};
         filteredPlaces.forEach(p => {
             const color = categoryColors[p.categoria?.id] || '#E8621A';
@@ -140,7 +135,7 @@ function MapaView() {
                 popupAnchor: [0, -32]
             });
             const m = L.marker([p.latitud, p.longitud], { icon })
-                       .bindPopup(`<b>${p.nombre}</b>`);
+                .bindPopup(`<b>${p.nombre}</b>`);
             m.addTo(markersLayer.current);
             m.on('click', () => {
                 map.flyTo([p.latitud, p.longitud], 16);
@@ -165,6 +160,7 @@ function MapaView() {
         setFilterCat("");
         setActiveChip("");
         setShowFavorites(false);
+        setSearchQuery("");
     };
 
     const handleToggleMapa = () => {
@@ -181,8 +177,8 @@ function MapaView() {
 
     const toggleFavorite = (placeId, e) => {
         e.stopPropagation();
-        setFavorites(prev => 
-            prev.includes(placeId) 
+        setFavorites(prev =>
+            prev.includes(placeId)
                 ? prev.filter(id => id !== placeId)
                 : [...prev, placeId]
         );
@@ -204,7 +200,6 @@ function MapaView() {
                         className={`category-chip ${activeChip === c.id ? 'active' : ''}`}
                         onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
                     >
-                        {/* Cambio 2: chip-dot con color dinámico */}
                         <span className="chip-dot" style={{ background: categoryColors[c.id] || '#E8621A' }}></span>
                         {c.nombre}
                     </div>
@@ -216,6 +211,13 @@ function MapaView() {
                 >
                     ❤️ Favoritos
                 </div>
+
+                {/* Botón Limpiar filtros */}
+                {(activeChip || showFavorites || searchQuery) && (
+                    <div className="category-chip chip-clear" onClick={handleClearFilters}>
+                        ✕ Limpiar
+                    </div>
+                )}
             </div>
 
             <button
@@ -244,21 +246,38 @@ function MapaView() {
                     </div>
 
                     {loading && <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>Cargando lugares...</p>}
-                    {error && <p style={{ color: '#ef5350', textAlign: 'center', marginTop: '2rem' }}>{error}</p>}
+                    
+                    {/* ✅ Reintentar carga de lugares */}
+                    {error && (
+                        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                            <p style={{ color: '#ef5350', marginBottom: '0.75rem' }}>{error}</p>
+                            <button 
+                                onClick={() => window.location.reload()}
+                                style={{ background: '#ef5350', color: '#fff', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '20px', cursor: 'pointer', fontWeight: '600' }}
+                            >
+                                🔄 Reintentar
+                            </button>
+                        </div>
+                    )}
 
                     {!loading && !error && (
                         <div className="results-list">
                             {filteredPlaces.length > 0 ? (
                                 filteredPlaces.map(p => (
                                     <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                        <div 
+                                        <div
                                             className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
                                             onClick={(e) => toggleFavorite(p.id, e)}
                                         >
                                             {favorites.includes(p.id) ? '❤️' : '🤍'}
                                         </div>
                                         {p.urlImagen ? (
-                                            <img src={p.urlImagen} alt={p.nombre} className="result-card-img" />
+                                            <img
+                                                src={p.urlImagen}
+                                                alt={p.nombre}
+                                                className="result-card-img"
+                                                loading="lazy"
+                                            />
                                         ) : (
                                             <div className="result-card-img-placeholder">🏖️</div>
                                         )}
@@ -294,8 +313,8 @@ function MapaView() {
             />
 
             {showAboutModal && (
-                <div 
-                    className="modal-overlay about-overlay" 
+                <div
+                    className="modal-overlay about-overlay"
                     onClick={() => setShowAboutModal(false)}
                     style={{ display: 'flex' }}
                 >
@@ -328,10 +347,10 @@ function MapaView() {
 function App() {
     return (
         <Routes>
-            <Route path="/login"         element={<Login />} />
-            <Route path="/registro"      element={<Registro />} />
-            <Route path="/noticias"      element={<PaginaNoticias />} />
-            <Route path="/ferry"         element={<PaginaFerry />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/noticias" element={<PaginaNoticias />} />
+            <Route path="/ferry" element={<PaginaFerry />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<RutaProtegida><MapaView /></RutaProtegida>} />
             <Route path="/perfil" element={<RutaProtegida><PaginaPerfil /></RutaProtegida>} />
