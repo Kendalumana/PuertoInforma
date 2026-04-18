@@ -15,7 +15,7 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
-// ✅ Función para guardar avatar en el backend
+// ✅ Función para guardar avatar en el backend (SOLO EMOJIS, imágenes se manejan aparte)
 async function guardarAvatar(tipo, valor) {
   try {
     await axiosPrivate.put('/perfil/avatar', { tipo, valor });
@@ -25,19 +25,10 @@ async function guardarAvatar(tipo, valor) {
   }
 }
 
-// ✅ Función para subir imagen a Supabase Storage y obtener URL pública
-async function subirImagen(archivo, userId) {
-  const fileExt = archivo.name.split('.').pop();
-  const fileName = `${userId}/avatar.${fileExt}`;
-  const { data, error } = await supabase.storage
-    .from('avatars')
-    .upload(fileName, archivo, { upsert: true });
-  if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(fileName);
-  return publicUrl;
-}
+// 🚧 FUNCIÓN DE SUBIDA DE IMAGEN DESACTIVADA (Próximamente)
+// Ya no se usa la subida real a Supabase Storage.
+// Se reemplazó por un mensaje de advertencia.
+// async function subirImagen(archivo, userId) { ... }
 
 function PaginaPerfil() {
   const navigate = useNavigate();
@@ -134,7 +125,7 @@ function PaginaPerfil() {
     .filter(r => xpActual >= r.puntosRequeridos)
     .sort((a, b) => b.puntosRequeridos - a.puntosRequeridos)[0];
 
-  // ✅ Manejar selección de avatar emoji (guardar automáticamente)
+  // ✅ Manejar selección de avatar emoji (guarda automáticamente)
   const handleSeleccionarEmoji = async (id) => {
     setAvatarSeleccionado(id);
     setAvatarTipo('prediseñado');
@@ -149,27 +140,13 @@ function PaginaPerfil() {
     }
   };
 
-  // ✅ Manejar subida de imagen (guardar automáticamente)
-  const handleSubirImagen = async (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    if (!session?.user?.id) {
-      setError('Usuario no identificado');
-      return;
-    }
-    setGuardandoAvatar(true);
-    try {
-      const publicUrl = await subirImagen(archivo, session.user.id);
-      await guardarAvatar('imagen', publicUrl);
-      setAvatarImagen(publicUrl);
-      setAvatarTipo('subido');
-      setMostrarSelector(false);
-    } catch (err) {
-      console.error(err);
-      setError('No se pudo subir la imagen. Reintentá.');
-    } finally {
-      setGuardandoAvatar(false);
-    }
+  // 🚧 SUBIDA DE IMAGEN DESACTIVADA (Próximamente)
+  // Solo muestra un mensaje informativo y no intenta guardar nada.
+  const handleSubirImagen = (e) => {
+    e.preventDefault();
+    setError("🚧 Subida de imágenes: Próximamente disponible 🚧");
+    // Limpiar el input para que no quede el archivo seleccionado
+    e.target.value = '';
   };
 
   const formatearFecha = (isoString) => {
@@ -231,8 +208,23 @@ function PaginaPerfil() {
                   ))}
                 </div>
                 <div className="avatar-divider">— o subí tu foto —</div>
-                <label className="btn-subir-foto" htmlFor="input-foto">📷 Subir foto</label>
-                <input id="input-foto" type="file" accept="image/*" onChange={handleSubirImagen} style={{ display: 'none' }} />
+                {/* 🚧 Botón de subida de imagen deshabilitado visualmente y con título informativo */}
+                <label 
+                  className="btn-subir-foto" 
+                  htmlFor="input-foto"
+                  title="Próximamente disponible"
+                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
+                >
+                  📷 Subir foto (próximamente)
+                </label>
+                <input 
+                  id="input-foto" 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleSubirImagen} 
+                  style={{ display: 'none' }} 
+                  disabled  // 🚧 Input deshabilitado para evitar intentos de subida real
+                />
               </div>
             )}
           </div>
