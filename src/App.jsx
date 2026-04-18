@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';                 // ✅ nuevo
+import { jwtDecode } from 'jwt-decode';                 
 import { supabase } from '../lib/supabase';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Perfil.css';
@@ -25,16 +25,31 @@ async function guardarAvatar(tipo, valor) {
   }
 }
 
+// ✅ Usa el bucket 'avatars' que ya existe en tu Supabase
 async function subirImagen(archivo, userId) {
   const fileExt = archivo.name.split('.').pop();
   const fileName = `${userId}/avatar.${fileExt}`;
+  
   const { data, error } = await supabase.storage
     .from('avatars')
     .upload(fileName, archivo, { upsert: true });
-  if (error) throw error;
+    
+  if (error) {
+    console.error('Error detallado de Supabase Storage:', error);
+    // Mensajes específicos según el error
+    if (error.message.includes('row-level security')) {
+      throw new Error('Error de permisos: revisá las políticas del bucket "avatars" en Supabase.');
+    }
+    if (error.message.includes('bucket not found')) {
+      throw new Error('El bucket "avatars" no existe. Verificá en Supabase.');
+    }
+    throw new Error(`No se pudo subir la imagen: ${error.message}`);
+  }
+  
   const { data: { publicUrl } } = supabase.storage
     .from('avatars')
     .getPublicUrl(fileName);
+    
   return publicUrl;
 }
 
@@ -60,7 +75,6 @@ function PaginaPerfil() {
   useEffect(() => {
     async function cargarTodo() {
       try {
-        // ✅ Obtener token del backend y decodificarlo
         const token = localStorage.getItem('token');
         if (!token) {
           navigate('/login');
@@ -70,7 +84,6 @@ function PaginaPerfil() {
         let userId;
         try {
           const decoded = jwtDecode(token);
-          // El backend usa el campo "sub" para el UUID del usuario
           userId = decoded.sub;
           if (!userId) throw new Error('Token no contiene sub');
         } catch (err) {
@@ -80,12 +93,10 @@ function PaginaPerfil() {
           return;
         }
 
-        // ✅ Llamar al endpoint con el userId obtenido del token
         const resPerfil = await axiosPrivate.get(`/perfil/usuario/${userId}`);
         const datosPerfil = resPerfil.data;
         setPerfil(datosPerfil);
 
-        // Cargar avatar guardado (si existe)
         if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
           if (datosPerfil.avatarTipo === 'emoji') {
             const emojiId = parseInt(datosPerfil.avatarValor, 10);
@@ -159,7 +170,6 @@ function PaginaPerfil() {
     }
   };
 
-  // ✅ handleSubirImagen actualizado: obtiene userId del token
   const handleSubirImagen = async (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
@@ -191,7 +201,7 @@ function PaginaPerfil() {
       setMostrarSelector(false);
     } catch (err) {
       console.error(err);
-      setError('No se pudo subir la imagen. Reintentá.');
+      setError(err.message || 'No se pudo subir la imagen. Reintentá.');
     } finally {
       setGuardandoAvatar(false);
     }
