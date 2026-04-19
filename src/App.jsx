@@ -1,421 +1,340 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';                 
-import { supabase } from '../lib/supabase';
-import { axiosPrivate } from '../api/axios';
-import '../styles/Perfil.css';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import './styles/Index.css';
 
-const AVATARES = [
-  { id: 1, emoji: '🧑‍✈️', label: 'Capitán' },
-  { id: 2, emoji: '🏄', label: 'Surfista' },
-  { id: 3, emoji: '🎣', label: 'Pescador' },
-  { id: 4, emoji: '🌴', label: 'Explorador' },
-  { id: 5, emoji: '⚓', label: 'Marinero' },
-  { id: 6, emoji: '🦀', label: 'Cangrejo' },
-];
+import api from './api/axios';
 
-const XP_SIGUIENTE_NIVEL = 500;
+import MiniCard from './components/MiniCard';
+import Navbar from './components/Navbar';
+import PlaceModal from './components/PlaceModal';
+import PaginaPerfil from './components/PaginaPerfil';
+import Login from './components/Login';
+import Registro from './components/Registro';
+import PaginaBuses from './components/PaginaBuses';
+import AuthCallback from './components/AuthCallback';
+import PaginaNoticias from './components/PaginaNoticias';
+import PaginaFerry from './components/PaginaFerry';
 
-async function guardarAvatar(tipo, valor) {
-  try {
-    await axiosPrivate.put('/perfil/avatar', { tipo, valor });
-  } catch (error) {
-    console.error('Error al guardar avatar:', error);
-    throw new Error('No se pudo guardar el avatar');
-  }
-}
+const CENTER = { lat: 9.976, lng: -84.833 };
 
-// ✅ Usa el bucket 'avatars' que ya existe en tu Supabase
-async function subirImagen(archivo, userId) {
-  const fileExt = archivo.name.split('.').pop();
-  const fileName = `${userId}/avatar.${fileExt}`;
-  
-  const { data, error } = await supabase.storage
-    .from('avatars')
-    .upload(fileName, archivo, { upsert: true });
-    
-  if (error) {
-    console.error('Error detallado de Supabase Storage:', error);
-    // Mensajes específicos según el error
-    if (error.message.includes('row-level security')) {
-      throw new Error('Error de permisos: revisá las políticas del bucket "avatars" en Supabase.');
-    }
-    if (error.message.includes('bucket not found')) {
-      throw new Error('El bucket "avatars" no existe. Verificá en Supabase.');
-    }
-    throw new Error(`No se pudo subir la imagen: ${error.message}`);
-  }
-  
-  const { data: { publicUrl } } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(fileName);
-    
-  return publicUrl;
-}
+const categoryColors = {
+    1: '#9C27B0', 2: '#4CAF50', 3: '#FFB300',
+    4: '#795548', 5: '#FF5722', 6: '#2196F3',
+    7: '#F44336', 8: '#b49e84',
+};
 
-function PaginaPerfil() {
-  const navigate = useNavigate();
-
-  const [avatarTipo,         setAvatarTipo        ] = useState('prediseñado');
-  const [avatarSeleccionado, setAvatarSeleccionado] = useState(1);
-  const [avatarImagen,       setAvatarImagen      ] = useState(null);
-  const [mostrarSelector,    setMostrarSelector   ] = useState(false);
-  const [tabActiva,          setTabActiva         ] = useState('misiones');
-  const [guardandoAvatar,    setGuardandoAvatar   ] = useState(false);
-
-  const [perfil,          setPerfil         ] = useState(null);
-  const [misiones,        setMisiones       ] = useState([]);
-  const [perfilMisiones,  setPerfilMisiones ] = useState([]);
-  const [historial,       setHistorial      ] = useState([]);
-  const [rangos,          setRangos         ] = useState([]);
-  const [sitiosVisitados, setSitiosVisitados] = useState([]);
-  const [cargando,        setCargando       ] = useState(true);
-  const [error,           setError          ] = useState(null);
-
-  useEffect(() => {
-    async function cargarTodo() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        let userId;
-        try {
-          const decoded = jwtDecode(token);
-          userId = decoded.sub;
-          if (!userId) throw new Error('Token no contiene sub');
-        } catch (err) {
-          console.error('Error decodificando token:', err);
-          localStorage.removeItem('token');
-          navigate('/login');
-          return;
-        }
-
-        const resPerfil = await axiosPrivate.get(`/perfil/usuario/${userId}`);
-        const datosPerfil = resPerfil.data;
-        setPerfil(datosPerfil);
-
-        if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
-          if (datosPerfil.avatarTipo === 'emoji') {
-            const emojiId = parseInt(datosPerfil.avatarValor, 10);
-            if (!isNaN(emojiId)) {
-              setAvatarTipo('prediseñado');
-              setAvatarSeleccionado(emojiId);
-            }
-          } else if (datosPerfil.avatarTipo === 'imagen') {
-            setAvatarTipo('subido');
-            setAvatarImagen(datosPerfil.avatarValor);
-          }
-        }
-
-        const perfilId = datosPerfil.id;
-
-        const [
-          resMisiones,
-          resPerfilMisiones,
-          resHistorial,
-          resSitios,
-          resRangos,
-        ] = await Promise.all([
-          axiosPrivate.get('/mision'),
-          axiosPrivate.get(`/mision/perfil/${perfilId}`),
-          axiosPrivate.get(`/mision/historial/${perfilId}`),
-          axiosPrivate.get(`/mision/visitados/${perfilId}`),
-          axiosPrivate.get('/rango'),
-        ]);
-
-        setMisiones(resMisiones.data);
-        setPerfilMisiones(resPerfilMisiones.data);
-        setHistorial(resHistorial.data);
-        setSitiosVisitados(resSitios.data);
-        setRangos(resRangos.data);
-
-      } catch (err) {
-        console.error(err);
-        setError('No se pudo cargar el perfil. Intentá de nuevo.');
-      } finally {
-        setCargando(false);
-      }
-    }
-
-    cargarTodo();
-  }, [navigate]);
-
-  const estaCompletada = (misionId) =>
-    perfilMisiones.some(pm => pm.mision?.id === misionId && pm.completada);
-
-  const calcularPorcentajeXP = () => {
-    const xp = perfil?.experienciaXp ?? 0;
-    return Math.min(Math.round((xp / XP_SIGUIENTE_NIVEL) * 100), 100);
-  };
-
-  const xpActual = perfil?.experienciaXp ?? 0;
-  const rangoActual = [...rangos]
-    .filter(r => xpActual >= r.puntosRequeridos)
-    .sort((a, b) => b.puntosRequeridos - a.puntosRequeridos)[0];
-
-  const handleSeleccionarEmoji = async (id) => {
-    setAvatarSeleccionado(id);
-    setAvatarTipo('prediseñado');
-    setMostrarSelector(false);
-    setGuardandoAvatar(true);
-    try {
-      await guardarAvatar('emoji', id.toString());
-    } catch (err) {
-      setError('No se pudo guardar el avatar. Reintentá.');
-    } finally {
-      setGuardandoAvatar(false);
-    }
-  };
-
-  const handleSubirImagen = async (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-
+function RutaProtegida({ children }) {
     const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Sesión no válida. Iniciá sesión nuevamente.');
-      navigate('/login');
-      return;
-    }
-
-    let userId;
-    try {
-      const decoded = jwtDecode(token);
-      userId = decoded.sub;
-      if (!userId) throw new Error();
-    } catch (err) {
-      setError('Token inválido. Iniciá sesión nuevamente.');
-      navigate('/login');
-      return;
-    }
-
-    setGuardandoAvatar(true);
-    try {
-      const publicUrl = await subirImagen(archivo, userId);
-      await guardarAvatar('imagen', publicUrl);
-      setAvatarImagen(publicUrl);
-      setAvatarTipo('subido');
-      setMostrarSelector(false);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || 'No se pudo subir la imagen. Reintentá.');
-    } finally {
-      setGuardandoAvatar(false);
-    }
-  };
-
-  const formatearFecha = (isoString) => {
-    if (!isoString) return '—';
-    return new Date(isoString).toLocaleDateString('es-CR', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
-  };
-
-  if (cargando) return (
-    <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>
-      Cargando perfil...
-    </div>
-  );
-
-  if (error) return (
-    <div className="profile-page" style={{ color: '#ef5350', textAlign: 'center', paddingTop: '4rem' }}>
-      {error}
-    </div>
-  );
-
-  return (
-    <div className="profile-page">
-      <div className="profile-layout">
-        <aside className="profile-sidebar">
-          <button className="btn-back" onClick={() => navigate('/')}>
-            ⬅️ Volver al Inicio
-          </button>
-
-          <div className="avatar-wrapper">
-            <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
-              {guardandoAvatar ? (
-                <span className="avatar-emoji">⏳</span>
-              ) : avatarTipo === 'subido' && avatarImagen ? (
-                <img src={avatarImagen} alt="Avatar" className="avatar-img" />
-              ) : (
-                <span className="avatar-emoji">
-                  {AVATARES.find(a => a.id === avatarSeleccionado)?.emoji}
-                </span>
-              )}
-              <div className="avatar-edit-badge">✏️</div>
-            </div>
-
-            {mostrarSelector && (
-              <div className="avatar-selector">
-                <p className="avatar-selector-titulo">Elegí tu avatar</p>
-                <div className="avatares-grid">
-                  {AVATARES.map(av => (
-                    <div
-                      key={av.id}
-                      className={`avatar-opcion ${avatarSeleccionado === av.id && avatarTipo === 'prediseñado' ? 'activo' : ''}`}
-                      onClick={() => handleSeleccionarEmoji(av.id)}
-                    >
-                      {av.emoji}
-                    </div>
-                  ))}
-                </div>
-                <div className="avatar-divider">— o subí tu foto —</div>
-                <label className="btn-subir-foto" htmlFor="input-foto">📷 Subir foto</label>
-                <input id="input-foto" type="file" accept="image/*" onChange={handleSubirImagen} style={{ display: 'none' }} />
-              </div>
-            )}
-          </div>
-
-          <div className="profile-info-basica">
-            <h2 className="profile-nombre">{perfil?.nombreUsuario ?? '—'}</h2>
-            <span className="profile-rango">{rangoActual?.urlIcono && <img src={rangoActual.urlIcono} alt="icono" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle', objectFit: 'contain' }} />} {rangoActual?.nombre ?? '—'}</span>
-            <div className="profile-puntos-mini">
-              <strong>{perfil?.puntosTotales ?? 0}</strong> puntos canjeables
-            </div>
-          </div>
-
-          <div className="xp-container">
-            <div className="xp-labels">
-              <span>{xpActual} XP</span>
-              <span>{XP_SIGUIENTE_NIVEL} XP</span>
-            </div>
-            <div className="xp-barra">
-              <div className="xp-relleno" style={{ width: `${calcularPorcentajeXP()}%` }}></div>
-            </div>
-            <p className="xp-texto">
-              Faltan {Math.max(XP_SIGUIENTE_NIVEL - xpActual, 0)} XP para subir
-            </p>
-          </div>
-
-          <nav className="profile-nav-vertical">
-            <button className={`nav-btn ${tabActiva === 'misiones'  ? 'activo' : ''}`} onClick={() => setTabActiva('misiones')}>
-              🎯 Misiones
-            </button>
-            <button className={`nav-btn ${tabActiva === 'avance'    ? 'activo' : ''}`} onClick={() => setTabActiva('avance')}>
-              📈 Mi Avance
-            </button>
-            <button className={`nav-btn ${tabActiva === 'rango'     ? 'activo' : ''}`} onClick={() => setTabActiva('rango')}>
-              🏅 Rango
-            </button>
-            <button className={`nav-btn ${tabActiva === 'visitados' ? 'activo' : ''}`} onClick={() => setTabActiva('visitados')}>
-              📍 Sitios Visitados
-            </button>
-          </nav>
-        </aside>
-
-        <main className="profile-main-content">
-          {tabActiva === 'misiones' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">🎯 Misiones Disponibles</h3>
-              <p className="tab-desc">Completá estas tareas para ganar XP y puntos.</p>
-              <div className="misiones-lista">
-                {misiones.length === 0 && (
-                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>No hay misiones disponibles.</p>
-                )}
-                {misiones.map(mision => {
-                  const completada = estaCompletada(mision.id);
-                  return (
-                    <div key={mision.id} className={`mision-card ${completada ? 'completada' : ''}`}>
-                      <div className="mision-info">
-                        <h4>{mision.titulo}</h4>
-                        {mision.descripcion && (
-                          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{mision.descripcion}</p>
-                        )}
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                          <span className="mision-xp">+{mision.xpRecompensa} XP</span>
-                          <span className="mision-xp" style={{ background: '#E8621A' }}>
-                            +{mision.puntosRecompensa} pts
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mision-estado">
-                        {completada ? '✅ Lista' : '⏳ Pendiente'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {tabActiva === 'avance' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">📈 Tu Historial</h3>
-              <p className="tab-desc">Todo lo que has hecho recientemente en PuertoInforma.</p>
-              <div className="avance-timeline">
-                {historial.length === 0 && (
-                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>Aún no tenés actividad registrada.</p>
-                )}
-                {historial.map(item => (
-                  <div key={item.id} className="timeline-item">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content">
-                      <span className="timeline-fecha">{formatearFecha(item.fecha)}</span>
-                      <p className="timeline-accion">{item.descripcion}</p>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {item.xp   > 0 && <span className="timeline-xp">+{item.xp} XP</span>}
-                        {item.puntos > 0 && <span className="timeline-xp" style={{ background: '#E8621A' }}>+{item.puntos} pts</span>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {tabActiva === 'rango' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">🏅 Progreso de Rango</h3>
-              <p className="tab-desc">Ganás XP para desbloquear nuevos títulos.</p>
-              <div className="rangos-lista">
-                {rangos
-                  .sort((a, b) => a.puntosRequeridos - b.puntosRequeridos)
-                  .map((rango, index) => {
-                    const esActual   = rangoActual?.id === rango.id;
-                    const desbloqueado = xpActual >= rango.puntosRequeridos;
-                    return (
-                      <div
-                        key={rango.id}
-                        className={`rango-card ${esActual ? 'rango-actual' : ''} ${desbloqueado ? 'desbloqueado' : 'bloqueado'}`}
-                      >
-                        <div className="rango-nivel">Nivel {index + 1}</div>
-                        <div className="rango-nombre">{rango.urlIcono && <img src={rango.urlIcono} alt="icono" style={{ width: '80px', height: '80px', display: 'block', margin: '0 auto 0.5rem auto', objectFit: 'contain' }} />}{rango.nombre}</div>
-                        <div className="rango-req">{rango.puntosRequeridos} XP requeridos</div>
-                        {esActual && <div className="rango-badge">Tú estás aquí</div>}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {tabActiva === 'visitados' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">📍 Tus Sitios Explorados</h3>
-              <p className="tab-desc">Lugares en los que has marcado asistencia.</p>
-              <div className="sitios-grid">
-                {sitiosVisitados.length === 0 && (
-                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>Aún no has visitado ningún lugar.</p>
-                )}
-                {sitiosVisitados.map(sitio => (
-                  <div key={sitio.id} className="sitio-card">
-                    <div className="sitio-icono">📍</div>
-                    <div className="sitio-info">
-                      <h4>{sitio.lugar?.nombre ?? '—'}</h4>
-                      <span>Visitado el: {formatearFecha(sitio.fecha)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
+    if (!token) return <Navigate to="/login" replace />;
+    return children;
 }
 
-export default PaginaPerfil;
+function MapaView() {
+    const [map, setMap] = useState(null);
+    const [markers, setMarkers] = useState({});
+    const [allPlaces, setAllPlaces] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const [activeChip, setActiveChip] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [previewPlace, setPreviewPlace] = useState(null);
+    const [mapaVisible, setMapaVisible] = useState(false);
+    const [showAboutModal, setShowAboutModal] = useState(false);
+    const [favorites, setFavorites] = useState([]);
+    const [showFavorites, setShowFavorites] = useState(false);
+
+    const mapRef = useRef(null);
+    const markersLayer = useRef(L.layerGroup());
+
+    useEffect(() => {
+        const saved = localStorage.getItem('favoritos');
+        if (saved) {
+            try { setFavorites(JSON.parse(saved)); }
+            catch (e) { console.error(e); }
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('favoritos', JSON.stringify(favorites));
+    }, [favorites]);
+
+    useEffect(() => {
+        api.get('/lugar')
+            .then(res => {
+                const lugares = res.data;
+                setAllPlaces(lugares);
+                const validIds = new Set(lugares.map(l => l.id));
+                setFavorites(prev => prev.filter(id => validIds.has(id)));
+                const cats = [];
+                const seen = new Set();
+                lugares.forEach(l => {
+                    if (l.categoria && !seen.has(l.categoria.id)) {
+                        seen.add(l.categoria.id);
+                        cats.push(l.categoria);
+                    }
+                });
+                setCategories(cats);
+            })
+            .catch(() => setError('No se pudieron cargar los lugares. Intentá de nuevo.'))
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        if (!mapRef.current) return;
+        const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(instance);
+        markersLayer.current.addTo(instance);
+        setMap(instance);
+        return () => instance.remove();
+    }, []);
+
+    const suggestions = useMemo(() => {
+        if (!searchQuery.trim() || allPlaces.length === 0) return [];
+        const queryLower = searchQuery.toLowerCase();
+        return allPlaces
+            .filter(p => p.nombre.toLowerCase().includes(queryLower))
+            .slice(0, 5)
+            .map(p => p.nombre);
+    }, [allPlaces, searchQuery]);
+
+    const filteredPlaces = useMemo(() => {
+        if (allPlaces.length === 0) return [];
+        let result = allPlaces.filter(p => {
+            const matchesSearch = p.nombre.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesChip = activeChip ? p.categoria?.id === activeChip : true;
+            return matchesSearch && matchesChip;
+        });
+        if (showFavorites) {
+            result = result.filter(p => favorites.includes(p.id));
+        }
+        return result;
+    }, [allPlaces, searchQuery, activeChip, favorites, showFavorites]);
+
+    useEffect(() => {
+        if (!map || filteredPlaces.length === 0) return;
+        markersLayer.current.clearLayers();
+        const newMarkers = {};
+        filteredPlaces.forEach(p => {
+            const color = categoryColors[p.categoria?.id] || '#E8621A';
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="width:28px;height:28px;background:${color};border:3px solid #ffffff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px ${color}99;"></div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 28],
+                popupAnchor: [0, -32]
+            });
+            const m = L.marker([p.latitud, p.longitud], { icon })
+                .bindPopup(`<b>${p.nombre}</b>`);
+            m.addTo(markersLayer.current);
+            m.on('click', () => {
+                map.flyTo([p.latitud, p.longitud], 16);
+                m.openPopup();
+                setPreviewPlace(p);
+                setSelectedPlace(null);
+            });
+            newMarkers[p.id] = m;
+        });
+        setMarkers(newMarkers);
+    }, [map, filteredPlaces]);
+
+    const handlePlaceClick = (p) => {
+        if (map) {
+            map.flyTo([p.latitud, p.longitud], 16);
+            markers[p.id]?.openPopup();
+        }
+        setSelectedPlace(p);
+    };
+
+    const handleClearFilters = () => {
+        setActiveChip("");
+        setShowFavorites(false);
+        setSearchQuery("");
+    };
+
+    const handleToggleMapa = () => {
+        const nuevoEstado = !mapaVisible;
+        setMapaVisible(nuevoEstado);
+        if (nuevoEstado) setTimeout(() => map?.invalidateSize(), 350);
+    };
+
+    const handleSuggestionClick = (suggestion) => setSearchQuery(suggestion);
+
+    const toggleFavorite = (placeId, e) => {
+        e.stopPropagation();
+        setFavorites(prev =>
+            prev.includes(placeId)
+                ? prev.filter(id => id !== placeId)
+                : [...prev, placeId]
+        );
+    };
+
+    return (
+        <div className="app-wrapper">
+            <Navbar
+                onSearch={setSearchQuery}
+                onOpenAbout={() => setShowAboutModal(true)}
+                suggestions={suggestions}
+                onSuggestionClick={handleSuggestionClick}
+            />
+
+            <div className="categories-container">
+                {categories.map(c => (
+                    <div
+                        key={c.id}
+                        className={`category-chip ${activeChip === c.id ? 'active' : ''}`}
+                        onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
+                    >
+                        <span className="chip-dot" style={{ background: categoryColors[c.id] || '#E8621A' }}></span>
+                        {c.nombre}
+                    </div>
+                ))}
+                <div
+                    className={`category-chip ${showFavorites ? 'active' : ''}`}
+                    onClick={() => setShowFavorites(!showFavorites)}
+                    style={{ background: showFavorites ? '#E8621A' : 'transparent' }}
+                >
+                    ❤️ Favoritos
+                </div>
+                {(activeChip || showFavorites || searchQuery) && (
+                    <div className="category-chip chip-clear" onClick={handleClearFilters}>
+                        ✕ Limpiar
+                    </div>
+                )}
+            </div>
+
+            <button
+                className={`map-toggle-btn ${mapaVisible ? 'map-abierto' : ''}`}
+                onClick={handleToggleMapa}
+            >
+                🗺️ {mapaVisible ? 'Ocultar mapa' : 'Ver mapa'}
+                <span>▼</span>
+            </button>
+
+            <main className="main-container">
+                <div className={`map-container ${mapaVisible ? 'map-visible' : ''}`}>
+                    <div id="map" ref={mapRef}></div>
+                    <button className="recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
+                        📍 Centrar
+                    </button>
+                </div>
+
+                <aside className="results-container">
+                    <div className="results-header">
+                        <h2 className="results-title">Comercios encontrados</h2>
+                        <span className="results-count">{filteredPlaces.length}</span>
+                    </div>
+
+                    {loading && <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>Cargando lugares...</p>}
+
+                    {error && (
+                        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                            <p style={{ color: '#ef5350', marginBottom: '0.75rem' }}>{error}</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                style={{ background: '#ef5350', color: '#fff', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '20px', cursor: 'pointer', fontWeight: '600' }}
+                            >
+                                🔄 Reintentar
+                            </button>
+                        </div>
+                    )}
+
+                    {!loading && !error && (
+                        <div className="results-list">
+                            {filteredPlaces.length > 0 ? (
+                                filteredPlaces.map(p => (
+                                    <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
+                                        <div
+                                            className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
+                                            onClick={(e) => toggleFavorite(p.id, e)}
+                                        >
+                                            {favorites.includes(p.id) ? '❤️' : '🤍'}
+                                        </div>
+                                        {p.urlImagen ? (
+                                            <img src={p.urlImagen} alt={p.nombre} className="result-card-img" loading="lazy" />
+                                        ) : (
+                                            <div className="result-card-img-placeholder">🏖️</div>
+                                        )}
+                                        <div className="result-card-body">
+                                            <div className="result-card-top">
+                                                <span className="result-name">{p.nombre}</span>
+                                                {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
+                                            </div>
+                                            {p.descripcion && <p className="result-description">{p.descripcion}</p>}
+                                            <div className="result-footer">
+                                                <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>No se encontraron lugares.</p>
+                            )}
+                        </div>
+                    )}
+                </aside>
+            </main>
+
+            <MiniCard
+                place={previewPlace}
+                onVerMas={() => { setSelectedPlace(previewPlace); setPreviewPlace(null); }}
+                onClose={() => setPreviewPlace(null)}
+            />
+
+            <PlaceModal
+                place={selectedPlace}
+                onClose={() => setSelectedPlace(null)}
+            />
+
+            {showAboutModal && (
+                <div className="modal-overlay about-overlay" onClick={() => setShowAboutModal(false)} style={{ display: 'flex' }}>
+                    <div className="modal-content about-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">📰 Acerca de PuertoInforma</h2>
+                            <button className="close-modal" onClick={() => setShowAboutModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{ marginBottom: '1rem' }}>
+                                PuertoInforma es un directorio interactivo de comercios, lugares culturales y servicios de Puntarenas, Costa Rica.
+                            </p>
+                            <h3 style={{ color: 'var(--naranja)', marginBottom: '0.5rem' }}>¿Sos dueño de un negocio?</h3>
+                            <p>Contactanos para aparecer en nuestra plataforma.</p>
+                            <div className="contact-form">
+                                <div className="form-group">
+                                    <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
+                                    <input type="text" className="form-input" placeholder="Tu número de contacto" />
+                                </div>
+                                <button className="submit-btn">Enviar Información</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function App() {
+    return (
+        <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/noticias" element={<PaginaNoticias />} />
+            <Route path="/ferry" element={<PaginaFerry />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/" element={<RutaProtegida><MapaView /></RutaProtegida>} />
+            <Route path="/perfil" element={<RutaProtegida><PaginaPerfil /></RutaProtegida>} />
+            <Route path="/buses" element={<RutaProtegida><PaginaBuses /></RutaProtegida>} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+    );
+}
+
+export default App;
