@@ -15,12 +15,18 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
+// Reemplaza la función guardarAvatar por esta:
 async function guardarAvatar(tipo, valor) {
   try {
+    // Obtener token de Supabase
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
-    
-    const response = await fetch('https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar', {
+    if (!token) throw new Error('No hay token de autenticación');
+
+    const url = 'https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar';
+    console.log('📡 Enviando a:', url);
+
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -28,11 +34,15 @@ async function guardarAvatar(tipo, valor) {
       },
       body: JSON.stringify({ tipo, valor })
     });
-    
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
     console.log('✅ Avatar guardado correctamente');
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Error en fetch:', error);
     throw new Error('No se pudo guardar el avatar');
   }
 }
