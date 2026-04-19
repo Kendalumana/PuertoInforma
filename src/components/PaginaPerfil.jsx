@@ -17,9 +17,22 @@ const XP_SIGUIENTE_NIVEL = 500;
 
 async function guardarAvatar(tipo, valor) {
   try {
-    await axiosPrivate.put('/perfil/avatar', { tipo, valor });
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
+    const response = await fetch('https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ tipo, valor })
+    });
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    console.log('✅ Avatar guardado correctamente');
   } catch (error) {
-    console.error('Error al guardar avatar:', error);
+    console.error('❌ Error:', error);
     throw new Error('No se pudo guardar el avatar');
   }
 }
