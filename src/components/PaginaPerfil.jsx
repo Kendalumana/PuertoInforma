@@ -15,37 +15,29 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
-// Reemplaza la función guardarAvatar por esta:
-async function guardarAvatar(tipo, valor) {
+//  Función para guardar avatar (con usuarioId explícito)
+async function guardarAvatar(tipo, valor, usuarioId) {
   try {
-    // Obtener token de Supabase
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error('No hay token de autenticación');
-
     const url = 'https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar';
-    console.log('📡 Enviando a:', url);
-
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
       },
-      body: JSON.stringify({ tipo, valor })
+      body: JSON.stringify({ tipo, valor, usuarioId })
     });
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
-
-    console.log('✅ Avatar guardado correctamente');
   } catch (error) {
-    console.error('❌ Error en fetch:', error);
+    console.error('Error al guardar avatar:', error);
     throw new Error('No se pudo guardar el avatar');
   }
 }
+
+
 
 function PaginaPerfil() {
   const navigate = useNavigate();
@@ -146,7 +138,7 @@ function PaginaPerfil() {
     setGuardandoAvatar(true);
     setAvatarError(null);
     try {
-      await guardarAvatar('emoji', id.toString());
+      await guardarAvatar('emoji', id.toString(),session.user.id);
     } catch (err) {
       setAvatarError('No se pudo guardar el avatar. Reintentá.');
     } finally {
