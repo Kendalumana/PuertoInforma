@@ -85,7 +85,7 @@ function MapaView() {
 
     useEffect(() => {
         if (!mapRef.current) return;
-        const instance = L.map(mapRef.current).setView([CENTER.lat, CENTER.lng], 14);
+        const instance = L.map(mapRef.current, { zoomControl: false }).setView([CENTER.lat, CENTER.lng], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap contributors © CARTO',
             subdomains: 'abcd',
@@ -137,8 +137,7 @@ function MapaView() {
             m.on('click', () => {
                 map.flyTo([p.latitud, p.longitud], 16);
                 m.openPopup();
-                setPreviewPlace(p);
-                setSelectedPlace(null);
+                setSelectedPlace(p);
             });
             newMarkers[p.id] = m;
         });
@@ -177,122 +176,120 @@ function MapaView() {
     };
 
     return (
-        <div className="app-wrapper">
-            <Navbar
-                onSearch={setSearchQuery}
-                onOpenAbout={() => setShowAboutModal(true)}
-                suggestions={suggestions}
-                onSuggestionClick={handleSuggestionClick}
-            />
+        <div className="app-wrapper immersive-layout">
+            {/* [MODIFICACIÓN] El mapa ocupa todo el fondo ahora */}
+            <div className="immersive-map-bg">
+                <div id="map" ref={mapRef}></div>
+            </div>
 
-            <div className="categories-container">
-                {categories.map(c => (
-                    <div
-                        key={c.id}
-                        className={`category-chip ${activeChip === c.id ? 'active' : ''}`}
-                        onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
-                    >
-                        <span className="chip-dot" style={{ background: categoryColors[c.id] || '#E8621A' }}></span>
-                        {c.nombre}
-                    </div>
-                ))}
-                <div
-                    className={`category-chip ${showFavorites ? 'active' : ''}`}
-                    onClick={() => setShowFavorites(!showFavorites)}
-                    style={{ background: showFavorites ? '#E8621A' : 'transparent' }}
-                >
-                    ❤️ Favoritos
+            <Navbar onOpenAbout={() => setShowAboutModal(true)} />
+
+            {/* [MODIFICACIÓN] Panel Izquierdo: Buscador y Filtros Flotantes */}
+            <div className="immersive-left-panel">
+                <div className="immersive-search-wrapper">
+                    <span className="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Busca destinos, cultura o experiencias..."
+                        className="immersive-search-input"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <button className="immersive-search-btn">Explorar</button>
+                    
+                    {/* Sugerencias flotantes */}
+                    {searchQuery.trim().length > 0 && suggestions.length > 0 && (
+                        <div className="immersive-suggestions">
+                            {suggestions.map((s, idx) => (
+                                <div key={idx} className="suggestion-item" onClick={() => handleSuggestionClick(s)}>
+                                    🔍 {s}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-                {(activeChip || showFavorites || searchQuery) && (
-                    <div className="category-chip chip-clear" onClick={handleClearFilters}>
-                        ✕ Limpiar
+
+                <div className="immersive-categories">
+                    <button 
+                        className={`immersive-chip ${!activeChip ? 'active' : ''}`}
+                        onClick={handleClearFilters}
+                    >
+                        Todos
+                    </button>
+                    {categories.map(c => (
+                        <button
+                            key={c.id}
+                            className={`immersive-chip ${activeChip === c.id ? 'active' : ''}`}
+                            onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
+                        >
+                            {c.nombre}
+                        </button>
+                    ))}
+                    <button
+                        className={`immersive-chip ${showFavorites ? 'active' : ''}`}
+                        onClick={() => setShowFavorites(!showFavorites)}
+                    >
+                        Favoritos
+                    </button>
+                </div>
+
+                {/* Lista de resultados flotante (visible si hay búsqueda/filtros y NO hay un lugar seleccionado) */}
+                {(searchQuery || activeChip || showFavorites) && !selectedPlace && (
+                    <div className="immersive-results-panel">
+                        <div className="results-header">
+                            <h2 className="results-title">Comercios encontrados</h2>
+                            <span className="results-count">{filteredPlaces.length}</span>
+                        </div>
+                        {loading && <p style={{ color: 'rgba(255,255,255,0.6)', padding: '1rem' }}>Cargando lugares...</p>}
+                        {!loading && !error && (
+                            <div className="results-list">
+                                {filteredPlaces.length > 0 ? (
+                                    filteredPlaces.map(p => (
+                                        <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
+                                            <div
+                                                className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
+                                                onClick={(e) => toggleFavorite(p.id, e)}
+                                            >
+                                                {favorites.includes(p.id) ? '❤️' : '🤍'}
+                                            </div>
+                                            {p.urlImagen ? (
+                                                <img src={p.urlImagen} alt={p.nombre} className="result-card-img" loading="lazy" />
+                                            ) : (
+                                                <div className="result-card-img-placeholder">🏖️</div>
+                                            )}
+                                            <div className="result-card-body">
+                                                <div className="result-card-top">
+                                                    <span className="result-name">{p.nombre}</span>
+                                                    {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
+                                                </div>
+                                                {p.descripcion && <p className="result-description">{p.descripcion}</p>}
+                                                <div className="result-footer">
+                                                    <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p style={{ color: 'rgba(255,255,255,0.5)', padding: '1rem' }}>No se encontraron lugares.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
-            <button
-                className={`map-toggle-btn ${mapaVisible ? 'map-abierto' : ''}`}
-                onClick={handleToggleMapa}
-            >
-                🗺️ {mapaVisible ? 'Ocultar mapa' : 'Ver mapa'}
-                <span>▼</span>
+            {/* [MODIFICACIÓN] Botón de centrar mapa (ahora flotante abajo a la derecha) */}
+            <button className="immersive-recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
+                📍
             </button>
 
-            <main className="main-container">
-                <div className={`map-container ${mapaVisible ? 'map-visible' : ''}`}>
-                    <div id="map" ref={mapRef}></div>
-                    <button className="recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
-                        📍 Centrar
-                    </button>
-                </div>
-
-                <aside className="results-container">
-                    <div className="results-header">
-                        <h2 className="results-title">Comercios encontrados</h2>
-                        <span className="results-count">{filteredPlaces.length}</span>
-                    </div>
-
-                    {loading && <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: '2rem' }}>Cargando lugares...</p>}
-
-                    {error && (
-                        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                            <p style={{ color: '#ef5350', marginBottom: '0.75rem' }}>{error}</p>
-                            <button
-                                onClick={() => window.location.reload()}
-                                style={{ background: '#ef5350', color: '#fff', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '20px', cursor: 'pointer', fontWeight: '600' }}
-                            >
-                                🔄 Reintentar
-                            </button>
-                        </div>
-                    )}
-
-                    {!loading && !error && (
-                        <div className="results-list">
-                            {filteredPlaces.length > 0 ? (
-                                filteredPlaces.map(p => (
-                                    <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                        <div
-                                            className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
-                                            onClick={(e) => toggleFavorite(p.id, e)}
-                                        >
-                                            {favorites.includes(p.id) ? '❤️' : '🤍'}
-                                        </div>
-                                        {p.urlImagen ? (
-                                            <img src={p.urlImagen} alt={p.nombre} className="result-card-img" loading="lazy" />
-                                        ) : (
-                                            <div className="result-card-img-placeholder">🏖️</div>
-                                        )}
-                                        <div className="result-card-body">
-                                            <div className="result-card-top">
-                                                <span className="result-name">{p.nombre}</span>
-                                                {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
-                                            </div>
-                                            {p.descripcion && <p className="result-description">{p.descripcion}</p>}
-                                            <div className="result-footer">
-                                                <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '2rem' }}>No se encontraron lugares.</p>
-                            )}
-                        </div>
-                    )}
-                </aside>
-            </main>
-
-            <MiniCard
-                place={previewPlace}
-                onVerMas={() => { setSelectedPlace(previewPlace); setPreviewPlace(null); }}
-                onClose={() => setPreviewPlace(null)}
-            />
-
+            {/* Panel lateral de detalles del lugar */}
             <PlaceModal
                 place={selectedPlace}
                 onClose={() => setSelectedPlace(null)}
             />
 
+            {/* Modal "Acerca de" (se mantiene la estructura original) */}
             {showAboutModal && (
                 <div className="modal-overlay about-overlay" onClick={() => setShowAboutModal(false)} style={{ display: 'flex' }}>
                     <div className="modal-content about-modal" onClick={(e) => e.stopPropagation()}>

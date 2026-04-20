@@ -1,0 +1,717 @@
+/* ============================================================
+   Immersive.css — Estilos para el nuevo diseño del mapa
+   ============================================================ */
+
+/* ── LAYOUT PRINCIPAL ────────────────────────────────────── */
+.immersive-layout {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #111;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── MAPA EN EL FONDO ────────────────────────────────────── */
+.immersive-map-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.immersive-map-bg #map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Filtro oscuro opcional para el mapa (estilo dark-mode) */
+.leaflet-layer,
+.leaflet-control-zoom-pane,
+.leaflet-control-attribution {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+/* ── NAVBAR INMERSIVO ────────────────────────────────────── */
+.immersive-navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(17, 17, 17, 0.9) 0%, transparent 100%);
+  pointer-events: none; /* Deja pasar clicks al mapa donde no hay elementos */
+}
+.immersive-navbar > * {
+  pointer-events: auto; /* Reactiva clicks en los elementos de la navbar */
+}
+
+.navbar-logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.logo-brand {
+  color: #E8621A;
+  font-style: italic;
+}
+.logo-sub {
+  color: #E8621A;
+}
+
+.navbar-links {
+  display: none;
+  gap: 2rem;
+  margin-left: 3rem;
+}
+@media (min-width: 768px) {
+  .navbar-links {
+    display: flex;
+  }
+}
+.nav-link {
+  color: #FFF;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.nav-link:hover, .nav-link.active {
+  opacity: 1;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #E8621A;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.notification-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background: #E8621A;
+  border-radius: 50%;
+  border: 2px solid #111;
+}
+.header-right {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .mobile-only-menu {
+    display: none;
+  }
+}
+
+/* ── PANEL IZQUIERDO FLOTANTE (BUSCADOR Y CHIPS) ─────────── */
+.immersive-left-panel {
+  position: absolute;
+  top: 90px;
+  left: 2rem;
+  width: 400px;
+  max-width: calc(100vw - 4rem);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  pointer-events: none;
+}
+.immersive-left-panel > * {
+  pointer-events: auto;
+}
+
+.immersive-search-wrapper {
+  display: flex;
+  align-items: center;
+  background: #2D2D2D;
+  border-radius: 12px;
+  padding: 0.4rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+.search-icon {
+  margin: 0 0.75rem;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.immersive-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #FFF;
+  font-size: 0.95rem;
+  outline: none;
+}
+.immersive-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.immersive-search-btn {
+  background: #E8621A;
+  color: #FFF;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.immersive-search-btn:hover {
+  background: #cf5516;
+}
+
+.immersive-suggestions {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #2D2D2D;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.immersive-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.immersive-chip {
+  background: rgba(45, 45, 45, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #FFF;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.immersive-chip:hover {
+  background: rgba(60, 60, 60, 0.9);
+}
+.immersive-chip.active {
+  background: #E8621A;
+  border-color: #E8621A;
+}
+
+/* ── RESULTADOS FLOTANTES ────────────────────────────────── */
+.immersive-results-panel {
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  max-height: 50vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ── PANEL LATERAL DERECHO (DETALLES) ────────────────────── */
+.immersive-side-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: #1A1A1A;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+.immersive-side-panel.open {
+  transform: translateX(0);
+}
+
+.side-panel-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: #FFF;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
+}
+.side-panel-close:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.side-panel-hero {
+  width: 100%;
+  height: 240px;
+  background: #2D2D2D;
+}
+.side-panel-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.side-panel-no-img {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+}
+
+.side-panel-body {
+  padding: 2rem;
+  flex: 1;
+}
+
+.side-panel-category {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #E8621A;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.side-panel-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+  color: #FFF;
+}
+
+.side-panel-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.stars {
+  display: flex;
+  gap: 2px;
+}
+.rating-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.side-panel-quote {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.side-panel-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.metric-card {
+  background: #252525;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.metric-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.metric-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFF;
+}
+.status-open {
+  color: #E8621A;
+}
+
+.side-panel-pulse {
+  margin-top: 2rem;
+}
+.pulse-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #FFF;
+}
+.pulse-item {
+  background: #252525;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.pulse-item:hover {
+  background: #2D2D2D;
+}
+.pulse-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(232, 98, 26, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pulse-info {
+  flex: 1;
+}
+.pulse-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  color: #FFF;
+}
+.pulse-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.side-panel-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.side-panel-primary-btn {
+  width: 100%;
+  background: linear-gradient(to right, #FF9B6A, #E85D04);
+  color: #FFF;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.side-panel-primary-btn:hover {
+  transform: translateY(-2px);
+}
+
+.immersive-recenter-btn {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 90;
+  background: #2D2D2D;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: background 0.2s;
+}
+.immersive-recenter-btn:hover {
+  background: #3A3A3A;
+}
+
+/* ── RESPONSIVE MOBILE ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .immersive-left-panel {
+    top: 70px;
+    left: 1rem;
+    width: calc(100% - 2rem);
+  }
+  
+  .immersive-navbar {
+    padding: 0 1rem;
+  }
+  
+  .immersive-side-panel {
+    width: 100%;
+    /* En móvil, el panel lateral cubrirá toda la pantalla */
+  }
+
+  .immersive-recenter-btn {
+    bottom: 1rem;
+    right: 1rem;
+  }
+}
+
+/* ── AESTHETIC MODAL (SIDE PANEL ON PC, MINICARD ON MOBILE) ── */
+.aesthetic-modal-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  z-index: 1000;
+  pointer-events: none; /* Deja pasar clicks al mapa en PC */
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.aesthetic-modal {
+  display: flex;
+  flex-direction: column; /* Apilado en PC (como side panel) */
+  width: 100%;
+  height: 100vh;
+  background: #1A1A1A;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  transform: translateX(100%);
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes slideInRight {
+  to { transform: translateX(0); }
+}
+@keyframes modalPopIn {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.aesthetic-modal-left {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  background: #2D2D2D;
+  flex-shrink: 0;
+}
+.aesthetic-modal-left img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.aesthetic-no-img {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+}
+.aesthetic-back-btn {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 10;
+}
+.aesthetic-back-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.aesthetic-modal-right {
+  width: 100%;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto; /* Permite scroll del contenido abajo de la imagen */
+}
+
+.aesthetic-modal-content {
+  flex: 1;
+}
+
+.aesthetic-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.aesthetic-category-badge {
+  background: rgba(232, 98, 26, 0.15);
+  color: #E8621A;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.aesthetic-xp-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(232, 98, 26, 0.1);
+  padding: 0.5rem;
+  border-radius: 12px;
+  color: #E8621A;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.aesthetic-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #FFF;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.aesthetic-description {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.aesthetic-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #FFF;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.info-item.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.info-item.clickable:hover {
+  opacity: 0.8;
+  color: #E8621A;
+}
+
+.aesthetic-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.aesthetic-btn-primary {
+  flex: 1;
+  background: linear-gradient(to right, #FF9B6A, #E85D04);
+  color: #FFF;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aesthetic-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 93, 4, 0.4);
+}
+
+.aesthetic-btn-secondary {
+  width: 56px;
+  height: 56px;
+  background: #2D2D2D;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.aesthetic-btn-secondary:hover {
+  background: #3A3A3A;
+  color: #FFF;
+}
+
+/* ── RESPONSIVE MOBILE PARA MINICARD ─────────────────────── */
+@media (max-width: 768px) {
+  /* En móviles se convierte en la minicard centrada con fondo oscuro */
+  .aesthetic-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    pointer-events: auto; /* Ahora sí atrapa clicks en el fondo */
+  }
+
+  .aesthetic-modal {
+    max-width: 100%;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 24px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  
+  .aesthetic-modal-left {
+    min-height: 200px;
+  }
+  
+  .aesthetic-modal-right {
+    padding: 1.5rem;
+  }
+
+  .aesthetic-title {
+    font-size: 1.8rem;
+  }
+
+  .aesthetic-info-grid {
+    grid-template-columns: 1fr;
+  }
+}

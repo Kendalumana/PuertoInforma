@@ -10,14 +10,16 @@ import axios from '../api/axios';          // instancia base con baseURL
 import { supabase } from '../lib/supabase'; // ← agregado para Google OAuth
 import logoIcon from '../Resources/logoFinal.ico';
 import '../styles/Login.css';
+import { LogIn, Eye, EyeOff } from 'lucide-react';
 
 function Login() {
 
     // ── Estado del formulario ──────────────────────────────
-    const [email, setEmail]       = useState('');       // valor del campo email
+    const [email, setEmail] = useState('');       // valor del campo email
     const [password, setPassword] = useState('');       // valor del campo contraseña
-    const [error, setError]       = useState('');       // mensaje de error visible
+    const [error, setError] = useState('');       // mensaje de error visible
     const [cargando, setCargando] = useState(false);    // deshabilita el botón mientras espera
+    const [showPassword, setShowPassword] = useState(false); // [MODIFICACIÓN] Estado para mostrar contraseña
 
     const navigate = useNavigate(); // hook para redirigir después del login
 
@@ -61,7 +63,8 @@ function Login() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-            redirectTo: `${window.location.origin}/auth/callback`            }
+                redirectTo: `${window.location.origin}/auth/callback`
+            }
         });
         if (error) setError('No se pudo iniciar sesión con Google.');
     };
@@ -78,7 +81,8 @@ function Login() {
 
                 {/* Título y subtítulo */}
                 <h1 className="login-titulo">Bienvenido</h1>
-                <p className="login-subtitulo">Iniciá sesión para continuar</p>
+                {/* [MODIFICACIÓN] Subtítulo actualizado según el nuevo diseño */}
+                <p className="login-subtitulo">Accedé a la guía definitiva de la ciudad</p>
 
                 {/* Formulario — onSubmit llama a handleLogin */}
                 <form className="login-form" onSubmit={handleLogin}>
@@ -88,11 +92,12 @@ function Login() {
                         <label className="login-label" htmlFor="email">
                             Correo electrónico
                         </label>
+                        {/* [MODIFICACIÓN] Placeholder actualizado */}
                         <input
                             id="email"
                             type="email"
                             className="login-input"
-                            placeholder="tucorreo@gmail.com"
+                            placeholder="tu@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required   // el navegador valida que no esté vacío
@@ -102,19 +107,33 @@ function Login() {
 
                     {/* Campo contraseña */}
                     <div className="login-campo">
-                        <label className="login-label" htmlFor="password">
-                            Contraseña
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            className="login-input"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            autoComplete="current-password"
-                        />
+                        {/* [MODIFICACIÓN] Fila flex para etiqueta de contraseña y enlace de olvido */}
+                        <div className="login-label-row">
+                            <label className="login-label" htmlFor="password">
+                                Contraseña
+                            </label>
+                            <span className="login-forgot-link">¿Olvidaste tu clave?</span>
+                        </div>
+                        {/* [MODIFICACIÓN] Wrapper para añadir el ícono del ojito */}
+                        <div className="input-icon-wrapper">
+                            <input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                className="login-input with-icon-right"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                autoComplete="current-password"
+                            />
+                            <button
+                                type="button"
+                                className="input-icon-right-btn"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Mensaje de error — solo se muestra si hay un error */}
@@ -130,8 +149,12 @@ function Login() {
                         className="login-btn"
                         disabled={cargando}  // evita doble clic mientras carga
                     >
-                        {/* Cambia el texto según si está cargando o no */}
-                        {cargando ? 'Ingresando...' : 'Ingresar'}
+                        {/* [MODIFICACIÓN] Texto con ícono de flecha integrado */}
+                        {cargando ? 'Ingresando...' : (
+                            <>
+                                Ingresar <LogIn size={18} className="login-btn-icon" />
+                            </>
+                        )}
                     </button>
 
                 </form>

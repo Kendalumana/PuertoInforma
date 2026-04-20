@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import logoIcon from '../Resources/logoFinal.ico';
 import '../styles/Login.css';
+// [MODIFICACIÓN] Importación de íconos para el formulario y decoración
+import { User, Mail, Lock, Eye, EyeOff, BadgeCent, Sailboat } from 'lucide-react';
 
 function Registro() {
 
@@ -20,6 +22,8 @@ function Registro() {
     const [rol,           setRol          ] = useState('TURISTA');
     const [error,         setError        ] = useState('');
     const [cargando,      setCargando     ] = useState(false);
+    // [MODIFICACIÓN] Estados para mostrar contraseñas
+    const [showPassword,  setShowPassword ] = useState(false);
 
     const navigate = useNavigate();
 
@@ -67,33 +71,41 @@ function Registro() {
     };
 
     return (
+        // [MODIFICACIÓN] Envoltura adicional para las dos columnas
         <div className="login-page">
-            <div className="login-card">
+            <div className="registro-layout">
+                {/* Formulario (Columna Izquierda) */}
+                <div className="login-card">
 
-                <div className="login-logo">
-                    <img src={logoIcon} alt="Puerto Informa" className="login-logo-img" />
-                </div>
+                    <div className="login-logo">
+                        <img src={logoIcon} alt="Puerto Informa" className="login-logo-img" />
+                    </div>
 
-                <h1 className="login-titulo">Crear cuenta</h1>
-                <p className="login-subtitulo">Completá los datos para registrarte</p>
+                    <h1 className="login-titulo">Crear cuenta</h1>
+                    {/* [MODIFICACIÓN] Subtítulo actualizado */}
+                    <p className="login-subtitulo">Unite a la comunidad digital del puerto</p>
 
-                <form className="login-form" onSubmit={handleRegistro}>
+                    <form className="login-form" onSubmit={handleRegistro}>
 
                     {/* Nombre de usuario */}
                     <div className="login-campo">
                         <label className="login-label" htmlFor="nombreUsuario">
                             Nombre de usuario
                         </label>
-                        <input
-                            id="nombreUsuario"
-                            type="text"
-                            className="login-input"
-                            placeholder="ej: juan_puntarenas"
-                            value={nombreUsuario}
-                            onChange={(e) => setNombreUsuario(e.target.value)}
-                            required
-                            autoComplete="username"
-                        />
+                        {/* [MODIFICACIÓN] Input con ícono integrado */}
+                        <div className="input-icon-wrapper">
+                            <User size={18} className="input-icon" />
+                            <input
+                                id="nombreUsuario"
+                                type="text"
+                                className="login-input with-icon"
+                                placeholder="Tu apodo"
+                                value={nombreUsuario}
+                                onChange={(e) => setNombreUsuario(e.target.value)}
+                                required
+                                autoComplete="username"
+                            />
+                        </div>
                     </div>
 
                     {/* Email */}
@@ -101,16 +113,20 @@ function Registro() {
                         <label className="login-label" htmlFor="email">
                             Correo electrónico
                         </label>
-                        <input
-                            id="email"
-                            type="email"
-                            className="login-input"
-                            placeholder="tucorreo@ejemplo.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            autoComplete="email"
-                        />
+                        {/* [MODIFICACIÓN] Input con ícono integrado */}
+                        <div className="input-icon-wrapper">
+                            <Mail size={18} className="input-icon" />
+                            <input
+                                id="email"
+                                type="email"
+                                className="login-input with-icon"
+                                placeholder="ejemplo@correo.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                autoComplete="email"
+                            />
+                        </div>
                     </div>
 
                     {/* Contraseña */}
@@ -118,16 +134,27 @@ function Registro() {
                         <label className="login-label" htmlFor="password">
                             Contraseña
                         </label>
-                        <input
-                            id="password"
-                            type="password"
-                            className="login-input"
-                            placeholder="Mínimo 6 caracteres"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            autoComplete="new-password"
-                        />
+                        {/* [MODIFICACIÓN] Input con ícono y botón para ver contraseña */}
+                        <div className="input-icon-wrapper">
+                            <Lock size={18} className="input-icon" />
+                            <input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                className="login-input with-icon with-icon-right"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                autoComplete="new-password"
+                            />
+                            <button 
+                                type="button" 
+                                className="input-icon-right-btn"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Confirmar contraseña */}
@@ -135,16 +162,19 @@ function Registro() {
                         <label className="login-label" htmlFor="confirmar">
                             Confirmá tu contraseña
                         </label>
-                        <input
-                            id="confirmar"
-                            type="password"
-                            className="login-input"
-                            placeholder="Repetí la contraseña"
-                            value={confirmar}
-                            onChange={(e) => setConfirmar(e.target.value)}
-                            required
-                            autoComplete="new-password"
-                        />
+                        <div className="input-icon-wrapper">
+                            <Lock size={18} className="input-icon" />
+                            <input
+                                id="confirmar"
+                                type="password"
+                                className="login-input with-icon"
+                                placeholder="••••••••"
+                                value={confirmar}
+                                onChange={(e) => setConfirmar(e.target.value)}
+                                required
+                                autoComplete="new-password"
+                            />
+                        </div>
                     </div>
 
                     {/* Rol */}
@@ -152,16 +182,19 @@ function Registro() {
                         <label className="login-label" htmlFor="rol">
                             ¿Cómo vas a usar la app?
                         </label>
-                        <select
-                            id="rol"
-                            className="login-input"
-                            value={rol}
-                            onChange={(e) => setRol(e.target.value)}
-                            required
-                        >
-                            <option value="TURISTA">🧳 Turista — estoy de visita</option>
-                            <option value="LOCAL">🏠 Local — soy de Puntarenas</option>
-                        </select>
+                        <div className="input-icon-wrapper">
+                            <BadgeCent size={18} className="input-icon" />
+                            <select
+                                id="rol"
+                                className="login-input with-icon"
+                                value={rol}
+                                onChange={(e) => setRol(e.target.value)}
+                                required
+                            >
+                                <option value="TURISTA">Turista</option>
+                                <option value="LOCAL">Local</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Error */}
@@ -188,6 +221,18 @@ function Registro() {
                     </span>
                 </p>
 
+                {/* Fin de login-card */}
+                </div>
+
+                {/* [MODIFICACIÓN] Tarjeta Decorativa (Columna Derecha) */}
+                <div className="registro-side-card">
+                    <div className="registro-side-content">
+                        <Sailboat size={64} className="registro-side-icon" strokeWidth={1.5} color="#E8621A" />
+                        <h2 className="registro-side-title">PUERTO</h2>
+                        <p className="registro-side-subtitle">LIVE THE SCENE</p>
+                    </div>
+                </div>
+            {/* Fin de registro-layout */}
             </div>
         </div>
     );

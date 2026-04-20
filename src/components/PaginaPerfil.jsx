@@ -69,10 +69,32 @@ function PaginaPerfil() {
     async function cargarTodo() {
       try {
         const { data: { session: s } } = await supabase.auth.getSession();
-        if (!s) { navigate('/login'); return; }
-        setSession(s);
+        const localToken = localStorage.getItem('token');
+        
+        let userId = null;
 
-        const resPerfil = await axiosPrivate.get(`/perfil/usuario/${s.user.id}`);
+        if (s) {
+            userId = s.user.id;
+            setSession(s);
+        } else if (localToken) {
+            try {
+                // Decodificar JWT para obtener el ID de usuario
+                const payload = JSON.parse(atob(localToken.split('.')[1]));
+                console.log("=== JWT PAYLOAD ===", payload); // Para depurar
+
+                userId = payload.id || payload.sub || payload.usuarioId || payload.userId;
+                console.log("=== USER ID EXTRACTED ===", userId);
+            } catch (e) {
+                console.error("Error decodificando token local", e);
+            }
+        }
+
+        if (!userId) { 
+            navigate('/login'); 
+            return; 
+        }
+
+        const resPerfil = await axiosPrivate.get(`/perfil/usuario/${userId}`);
         const datosPerfil = resPerfil.data;
         setPerfil(datosPerfil);
 

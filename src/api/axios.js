@@ -19,11 +19,17 @@ export const axiosPrivate = axios.create({
 axiosPrivate.interceptors.request.use(
     async (config) => {
         const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        let token = session?.access_token;
+        
+        // Si no hay sesión de Supabase (por ej, login normal), usar el token de localStorage
+        if (!token) {
+            token = localStorage.getItem('token');
+        }
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         } else {
-            console.warn('No hay token de Supabase');
+            console.warn('No hay token de Supabase ni de localStorage');
         }
         return config;
     },

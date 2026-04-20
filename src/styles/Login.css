@@ -8,7 +8,8 @@
    ============================================================ */
 .login-page {
   min-height: 100vh;               /* ocupa toda la pantalla */
-  background-color: #1A1A1A;       /* --negro */
+  /* [MODIFICACIÓN] Fondo de la página con degradado radial simulando el brillo cálido */
+  background: radial-gradient(circle at 50% 50%, #2A1A10 0%, #0D0D0D 80%);
   display: flex;
   justify-content: center;         /* centra horizontalmente */
   align-items: center;             /* centra verticalmente */
@@ -122,19 +123,21 @@
 .login-btn {
   width: 100%;
   padding: 0.85rem;                /* ← cambiar tamaño del botón aquí */
-  background: #E8621A;             /* --naranja */
+  /* [MODIFICACIÓN] Fondo del botón modificado a degradado naranja/salmón */
+  background: linear-gradient(to right, #FF9B6A, #E85D04);
   color: #FFFFFF;
   border: none;
   border-radius: 10px;
   font-size: 1rem;                 /* ← cambiar tamaño del texto del botón aquí */
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
   margin-top: 0.5rem;
 }
 
 .login-btn:hover {
-  background: #cf5516;             /* naranja más oscuro al hover */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232, 98, 26, 0.4);
 }
 
 /* Botón desactivado mientras carga */
@@ -196,6 +199,7 @@
 
 /* ── BOTÓN GOOGLE ────────────────────────────────────────────
    ============================================================ */
+/* [MODIFICACIÓN] Estilo del botón de Google actualizado al tema oscuro */
 .login-btn-google {
   width: 100%;
   display: flex;
@@ -203,39 +207,177 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 0.8rem 1rem;
-  background: #ffffff;
-  color: #1A1A1A;
-  border: none;
+  background: #2D2D2D; /* Fondo oscuro en lugar de blanco */
+  color: #FFFFFF; /* Texto blanco */
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   font-family: "Montserrat", sans-serif;
   cursor: pointer;
   letter-spacing: 0.01em;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
   transition:
     transform 0.15s ease,
-    box-shadow 0.15s ease,
     background 0.15s ease;
 }
 
 .login-btn-google:hover {
-  background: #f0f0f0;
+  background: #3a3a3a; /* Hover gris ligeramente más claro */
   transform: translateY(-1px);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .login-btn-google:active {
   transform: translateY(0px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .login-google-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* ── NUEVOS ESTILOS PARA LAYOUT E ÍCONOS (MODIFICACIÓN) ──────
+   ============================================================ */
+
+/* Ícono en el botón de login */
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.login-btn-icon {
+  margin-top: 2px;
+}
+
+/* Fila para el label de contraseña y el link "¿Olvidaste tu clave?" */
+.login-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.login-forgot-link {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.login-forgot-link:hover {
+  color: #E8621A;
+}
+
+/* Wrapper para inputs con ícono */
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none; /* Para que el clic pase al input */
+}
+
+.login-input.with-icon {
+  padding-left: 2.75rem; /* Espacio para el ícono a la izquierda */
+}
+
+.login-input.with-icon-right {
+  padding-right: 2.75rem; /* Espacio para el ícono a la derecha */
+}
+
+.input-icon-right-btn {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.input-icon-right-btn:hover {
+  color: #FFFFFF;
+}
+
+/* ── LAYOUT DE REGISTRO A DOS COLUMNAS ───────────────────────
+   ============================================================ */
+.registro-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* En pantallas más grandes, pasamos a dos columnas */
+@media (min-width: 850px) {
+  .registro-layout {
+    flex-direction: row;
+    max-width: 900px;
+    align-items: stretch;
+  }
+  
+  .registro-layout .login-card {
+    flex: 1;
+    max-width: none;
+  }
+}
+
+/* Tarjeta decorativa del barco */
+.registro-side-card {
+  display: none; /* Oculto en móviles por defecto */
+}
+
+@media (min-width: 850px) {
+  .registro-side-card {
+    display: flex;
+    flex: 0.8;
+    background-color: #2D2D2D;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .registro-side-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0.6; /* Efecto sutil */
+  }
+
+  .registro-side-icon {
+    margin-bottom: 0.5rem;
+  }
+
+  .registro-side-title {
+    font-family: "Montserrat", sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 0;
+    letter-spacing: 0.05em;
+  }
+
+  .registro-side-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
 }
