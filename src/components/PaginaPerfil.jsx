@@ -50,7 +50,7 @@ function PaginaPerfil() {
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(1);
   const [avatarImagen,       setAvatarImagen      ] = useState(null);
   const [mostrarSelector,    setMostrarSelector   ] = useState(false);
-  const [tabActiva,          setTabActiva         ] = useState('misiones');
+  const [tabActiva,          setTabActiva         ] = useState('todas');
   const [guardandoAvatar,    setGuardandoAvatar   ] = useState(false);
   const [avatarError,        setAvatarError       ] = useState(null);
 
@@ -200,194 +200,170 @@ function PaginaPerfil() {
   return (
     <div className="profile-page">
       <div className="profile-layout">
-
+        
+        {/* SIDEBAR */}
         <aside className="profile-sidebar">
-          <button className="btn-back" onClick={() => navigate('/')}>
-            ⬅️ Volver al Inicio
-          </button>
-
-          <div className="avatar-wrapper">
-            <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
-              {guardandoAvatar ? (
-                <span className="avatar-emoji">⏳</span>
-              ) : avatarTipo === 'subido' && avatarImagen ? (
-                <img src={avatarImagen} alt="Avatar" className="avatar-img" />
-              ) : (
-                <span className="avatar-emoji">
-                  {AVATARES.find(a => a.id === avatarSeleccionado)?.emoji}
-                </span>
-              )}
-              <div className="avatar-edit-badge">✏️</div>
-            </div>
-
-            {avatarError && (
-              <p style={{ color: '#ef5350', fontSize: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
-                {avatarError}
-              </p>
-            )}
-
-            {mostrarSelector && (
-              <div className="avatar-selector">
-                <p className="avatar-selector-titulo">Elegí tu avatar</p>
-                <div className="avatares-grid">
-                  {AVATARES.map(av => (
-                    <div
-                      key={av.id}
-                      className={`avatar-opcion ${avatarSeleccionado === av.id && avatarTipo === 'prediseñado' ? 'activo' : ''}`}
-                      onClick={() => handleSeleccionarEmoji(av.id)}
-                    >
-                      {av.emoji}
-                    </div>
-                  ))}
-                </div>
-                <div className="avatar-divider">— o subí tu foto —</div>
-                <label
-                  className="btn-subir-foto"
-                  htmlFor="input-foto"
-                  title="Próximamente disponible"
-                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                >
-                  📷 Subir foto (próximamente)
-                </label>
-                <input
-                  id="input-foto"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleSubirImagen}
-                  style={{ display: 'none' }}
-                  disabled
-                />
+          {/* Tarjeta Principal de Usuario */}
+          <div className="profile-card">
+            <div className="avatar-wrapper">
+              <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
+                {guardandoAvatar ? (
+                  <span className="avatar-emoji">⏳</span>
+                ) : avatarTipo === 'subido' && avatarImagen ? (
+                  <img src={avatarImagen} alt="Avatar" className="avatar-img" />
+                ) : (
+                  <span className="avatar-emoji">
+                    {AVATARES.find(a => a.id === avatarSeleccionado)?.emoji || '🧑‍✈️'}
+                  </span>
+                )}
               </div>
-            )}
-          </div>
 
-          <div className="profile-info-basica">
-            <h2 className="profile-nombre">{perfil?.nombreUsuario ?? '—'}</h2>
-            <span className="profile-rango">
-              {rangoActual?.urlIcono && <img src={rangoActual.urlIcono} alt="icono" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'middle', objectFit: 'contain' }} />}
-              {rangoActual?.nombre ?? '—'}
-            </span>
-            <div className="profile-puntos-mini">
-              <strong>{perfil?.puntosTotales ?? 0}</strong> puntos canjeables
+              {mostrarSelector && (
+                <div className="avatar-selector" style={{ top: '130px' }}>
+                  <p className="avatar-selector-titulo">Elegí tu avatar</p>
+                  <div className="avatares-grid">
+                    {AVATARES.map(av => (
+                      <div
+                        key={av.id}
+                        className={`avatar-opcion ${avatarSeleccionado === av.id && avatarTipo === 'prediseñado' ? 'activo' : ''}`}
+                        onClick={() => handleSeleccionarEmoji(av.id)}
+                      >
+                        {av.emoji}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <h2 className="profile-name">{perfil?.nombreUsuario ?? 'Usuario'}</h2>
+            <div className="profile-rank-badge">
+              {rangoActual?.nombre?.toUpperCase() ?? 'RECIEN LLEGADO'}
+            </div>
+
+            <div className="profile-stats-grid">
+              <div className="stat-box">
+                <span className="stat-label">PUNTOS</span>
+                <span className="stat-value">{perfil?.puntosTotales ?? 0}</span>
+              </div>
+              <div className="stat-box">
+                <span className="stat-label">RANGO</span>
+                <span className="stat-value light">#{rangoActual?.id ?? 1}</span>
+              </div>
+            </div>
+
+            <div className="xp-container">
+              <div className="xp-header">
+                <span className="xp-title">Progreso de Nivel</span>
+                <span className="xp-numbers">{xpActual} / {XP_SIGUIENTE_NIVEL} XP</span>
+              </div>
+              <div className="xp-barra">
+                <div className="xp-relleno" style={{ width: `${calcularPorcentajeXP()}%` }}></div>
+              </div>
             </div>
           </div>
 
-          <div className="xp-container">
-            <div className="xp-labels">
-              <span>{xpActual} XP</span>
-              <span>{XP_SIGUIENTE_NIVEL} XP</span>
+          {/* Tarjeta de Insignias */}
+          <div className="badges-card">
+            <h3 className="badges-title">🏆 Insignias Recientes</h3>
+            <div className="badges-grid">
+              {rangos.slice(0, 3).map((r, i) => (
+                <div key={i} className="badge-icon" title={r.nombre}>
+                  {i === 0 ? '🍴' : i === 1 ? '🗺️' : '📸'}
+                </div>
+              ))}
             </div>
-            <div className="xp-barra">
-              <div className="xp-relleno" style={{ width: `${calcularPorcentajeXP()}%` }}></div>
-            </div>
-            <p className="xp-texto">
-              Faltan {Math.max(XP_SIGUIENTE_NIVEL - xpActual, 0)} XP para subir
-            </p>
           </div>
-
-          <nav className="profile-nav-vertical">
-            <button className={`nav-btn ${tabActiva === 'misiones'  ? 'activo' : ''}`} onClick={() => setTabActiva('misiones')}>🎯 Misiones</button>
-            <button className={`nav-btn ${tabActiva === 'avance'    ? 'activo' : ''}`} onClick={() => setTabActiva('avance')}>📈 Mi Avance</button>
-            <button className={`nav-btn ${tabActiva === 'rango'     ? 'activo' : ''}`} onClick={() => setTabActiva('rango')}>🏅 Rango</button>
-            <button className={`nav-btn ${tabActiva === 'visitados' ? 'activo' : ''}`} onClick={() => setTabActiva('visitados')}>📍 Sitios Visitados</button>
-          </nav>
         </aside>
 
+        {/* MAIN CONTENT */}
         <main className="profile-main-content">
-
-          {tabActiva === 'misiones' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">🎯 Misiones Disponibles</h3>
-              <p className="tab-desc">Completá estas tareas para ganar XP y puntos.</p>
-              <div className="misiones-lista">
-                {misiones.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)' }}>No hay misiones disponibles.</p>}
-                {misiones.map(mision => {
-                  const completada = estaCompletada(mision.id);
-                  return (
-                    <div key={mision.id} className={`mision-card ${completada ? 'completada' : ''}`}>
-                      <div className="mision-info">
-                        <h4>{mision.titulo}</h4>
-                        {mision.descripcion && <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{mision.descripcion}</p>}
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                          <span className="mision-xp">+{mision.xpRecompensa} XP</span>
-                          <span className="mision-xp" style={{ background: '#E8621A' }}>+{mision.puntosRecompensa} pts</span>
-                        </div>
-                      </div>
-                      <div className="mision-estado">{completada ? '✅ Lista' : '⏳ Pendiente'}</div>
-                    </div>
-                  );
-                })}
-              </div>
+          <div className="main-header">
+            <div className="main-title">
+              <h2>Misiones Disponibles</h2>
+              <p>Explora la ciudad, completa desafíos y sube de nivel.</p>
             </div>
-          )}
+            <div className="main-filters">
+              <button 
+                className={`filter-btn ${tabActiva === 'todas' ? 'active' : ''}`}
+                onClick={() => setTabActiva('todas')}
+              >
+                Todas
+              </button>
+              <button 
+                className={`filter-btn ${tabActiva === 'pendientes' ? 'active' : ''}`}
+                onClick={() => setTabActiva('pendientes')}
+              >
+                Pendientes
+              </button>
+            </div>
+          </div>
 
-          {tabActiva === 'avance' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">📈 Tu Historial</h3>
-              <p className="tab-desc">Todo lo que has hecho recientemente en PuertoInforma.</p>
-              <div className="avance-timeline">
-                {historial.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)' }}>Aún no tenés actividad registrada.</p>}
-                {historial.map(item => (
-                  <div key={item.id} className="timeline-item">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content">
-                      <span className="timeline-fecha">{formatearFecha(item.fecha)}</span>
-                      <p className="timeline-accion">{item.descripcion}</p>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {item.xp > 0 && <span className="timeline-xp">+{item.xp} XP</span>}
-                        {item.puntos > 0 && <span className="timeline-xp" style={{ background: '#E8621A' }}>+{item.puntos} pts</span>}
+          <div className="missions-grid">
+            {/* Las dos misiones normales */}
+            {misiones.slice(0, 2).map((mision, i) => {
+              const completada = estaCompletada(mision.id);
+              // Si estamos filtrando pendientes y ya está completada, no mostrar (ejemplo simple)
+              if (tabActiva === 'pendientes' && completada) return null;
+
+              return (
+                <div key={mision.id} className="mission-card">
+                  <div className="mission-img" style={{ background: i === 0 ? 'linear-gradient(45deg, #2D2D2D, #4a5568)' : 'linear-gradient(45deg, #2D2D2D, #2b6cb0)' }}>
+                    <div className="xp-pill">+{mision.xpRecompensa} XP</div>
+                  </div>
+                  <div className="mission-content">
+                    <div className="mission-header">
+                      <h3 className="mission-title">{mision.titulo}</h3>
+                      <span className={`status-badge ${completada ? 'completed' : ''}`}>
+                        {completada ? 'COMPLETADO' : 'PENDIENTE'}
+                      </span>
+                    </div>
+                    <p className="mission-desc">
+                      {mision.descripcion || 'Completa esta misión para ganar recompensas.'}
+                    </p>
+                    <div className="mission-progress-container">
+                      <div className="mission-progress-header">
+                        <span>Progreso</span>
+                        <span>{completada ? '1/1' : '0/1'}</span>
+                      </div>
+                      <div className="xp-barra">
+                        <div className="xp-relleno" style={{ width: completada ? '100%' : '0%' }}></div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              );
+            })}
 
-          {tabActiva === 'rango' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">🏅 Progreso de Rango</h3>
-              <p className="tab-desc">Ganás XP para desbloquear nuevos títulos.</p>
-              <div className="rangos-lista">
-                {rangos.sort((a, b) => a.puntosRequeridos - b.puntosRequeridos).map((rango, index) => {
-                  const esActual = rangoActual?.id === rango.id;
-                  const desbloqueado = xpActual >= rango.puntosRequeridos;
-                  return (
-                    <div key={rango.id} className={`rango-card ${esActual ? 'rango-actual' : ''} ${desbloqueado ? 'desbloqueado' : 'bloqueado'}`}>
-                      <div className="rango-nivel">Nivel {index + 1}</div>
-                      <div className="rango-nombre">
-                        {rango.urlIcono && <img src={rango.urlIcono} alt="icono" style={{ width: '80px', height: '80px', display: 'block', margin: '0 auto 0.5rem auto', objectFit: 'contain' }} />}
-                        {rango.nombre}
-                      </div>
-                      <div className="rango-req">{rango.puntosRequeridos} XP requeridos</div>
-                      {esActual && <div className="rango-badge">Tú estás aquí</div>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {tabActiva === 'visitados' && (
-            <div className="tab-section fade-in">
-              <h3 className="tab-titulo">📍 Tus Sitios Explorados</h3>
-              <p className="tab-desc">Lugares en los que has marcado asistencia.</p>
-              <div className="sitios-grid">
-                {sitiosVisitados.length === 0 && <p style={{ color: 'rgba(255,255,255,0.5)' }}>Aún no has visitado ningún lugar.</p>}
-                {sitiosVisitados.map(sitio => (
-                  <div key={sitio.id} className="sitio-card">
-                    <div className="sitio-icono">📍</div>
-                    <div className="sitio-info">
-                      <h4>{sitio.lugar?.nombre ?? '—'}</h4>
-                      <span>Visitado el: {formatearFecha(sitio.fecha)}</span>
-                    </div>
+            {/* Misión especial ancha */}
+            {misiones.length > 2 && (
+              <div className="mission-card full-width">
+                <div className="mission-img" style={{ background: 'linear-gradient(90deg, #1A202C, #2D3748)' }}>
+                  {/* Aquí iría la imagen de fondo de la tarjeta ancha */}
+                </div>
+                <div className="mission-content">
+                  <div className="xp-pill" style={{ top: 'auto', right: 'auto', position: 'relative', display: 'inline-block', marginBottom: '1rem', alignSelf: 'flex-start' }}>
+                    +{misiones[2].xpRecompensa} XP
                   </div>
-                ))}
+                  <span className="status-badge completed" style={{ alignSelf: 'flex-start', marginBottom: '0.5rem' }}>
+                    COMPLETADO
+                  </span>
+                  <h3 className="mission-title" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>
+                    {misiones[2].titulo}
+                  </h3>
+                  <p className="mission-desc" style={{ maxWidth: '600px' }}>
+                    {misiones[2].descripcion || 'Escribe reseñas detalladas sobre los mejores lugares.'}
+                  </p>
+                  <button className="btn-action">Ver Reseñas</button>
+                </div>
               </div>
-            </div>
-          )}
-
+            )}
+            {misiones.length === 0 && (
+               <p style={{ color: 'rgba(255,255,255,0.5)' }}>No hay misiones disponibles.</p>
+            )}
+          </div>
         </main>
+
       </div>
     </div>
   );
