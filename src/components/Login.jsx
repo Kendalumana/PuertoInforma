@@ -5,7 +5,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from '../api/axios';          // instancia base con baseURL
 import { supabase } from '../lib/supabase'; // ← agregado para Google OAuth
 import logoIcon from '../Resources/logoFinal.ico';
@@ -177,9 +177,9 @@ function Login() {
                 {/* Link para registro */}
                 <p className="login-registro">
                     ¿No tenés cuenta?{' '}
-                    <span className="login-link" onClick={() => navigate('/registro')}>
+                    <Link to="/registro" className="login-link">
                         Registrate
-                    </span>
+                    </Link>
                 </p>
 
             </div>

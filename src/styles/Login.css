@@ -161,6 +161,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s ease;
+  text-decoration: none;
 }
 
 .login-link:hover {
