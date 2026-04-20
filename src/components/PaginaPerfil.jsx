@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { axiosPrivate } from '../api/axios';
+import Navbar from './Navbar';
 import '../styles/Perfil.css';
 
 const AVATARES = [
@@ -208,10 +209,16 @@ function PaginaPerfil() {
 
   return (
     <div className="profile-page">
+      {/* NAVBAR SUPERIOR */}
+      <Navbar />
+
       <div className="profile-layout">
 
         {/* SIDEBAR */}
         <aside className="profile-sidebar">
+          {/* Botón volver */}
+          <Link to="/" className="btn-back">← Volver al Mapa</Link>
+
           {/* Tarjeta Principal de Usuario */}
           <div className="profile-card">
             <div className="avatar-wrapper">
@@ -255,9 +262,14 @@ function PaginaPerfil() {
                 <span className="stat-label">PUNTOS</span>
                 <span className="stat-value">{perfil?.puntosTotales ?? 0}</span>
               </div>
-              <div className="stat-box">
+              <div className="stat-box rango-box">
                 <span className="stat-label">RANGO</span>
-                <span className="stat-value light">#{rangoActual?.id ?? 1}</span>
+                {rangoActual?.urlIcono ? (
+                  <img src={rangoActual.urlIcono} alt={rangoActual.nombre} className="rango-stat-icon" />
+                ) : (
+                  <span className="stat-value light">🏅</span>
+                )}
+                <span className="rango-stat-name">{rangoActual?.nombre?.split('(')[0]?.trim() ?? 'Nivel 1'}</span>
               </div>
             </div>
 

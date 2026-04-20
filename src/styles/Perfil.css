@@ -2,18 +2,53 @@
   min-height: 100vh;
   background-color: #111;
   display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
+  flex-direction: column;
   font-family: 'Inter', system-ui, sans-serif;
   color: #fff;
+}
+
+.profile-page .navbar-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #111;
+  border-bottom: 1px solid rgba(232, 98, 26, 0.2);
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-back:hover {
+  background: rgba(232, 98, 26, 0.1);
+  border-color: #E8621A;
+  color: #E8621A;
 }
 
 .profile-layout {
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
+  flex: 1;
 }
 
 @media (min-width: 900px) {
@@ -116,6 +151,23 @@
 }
 .stat-value.light {
   color: #fff;
+}
+
+.rango-box {
+  align-items: center;
+}
+
+.rango-stat-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.rango-stat-name {
+  font-size: 0.7rem;
+  color: #E8621A;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .xp-container {
