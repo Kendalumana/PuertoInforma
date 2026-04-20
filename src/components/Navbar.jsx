@@ -21,17 +21,13 @@ function Navbar({ onOpenAbout }) {
             </div>
 
             <div className="header-right">
-                <button className="icon-btn" aria-label="Notificaciones">
-                    <Bell size={20} />
-                    <span className="notification-dot"></span>
-                </button>
-                
-                <div className="menu-container mobile-only-menu">
+                <div className="menu-container">
                     <button 
                         className="icon-btn profile-btn"
                         onClick={() => setMenuAbierto(!menuAbierto)}
+                        style={{ padding: '4px' }}
                     >
-                        <MoreVertical size={20} color="#E8621A" />
+                        <MoreVertical size={24} color="#E8621A" />
                     </button>
 
                     {menuAbierto && (

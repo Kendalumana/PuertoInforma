@@ -196,7 +196,7 @@ function MapaView() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     <button className="immersive-search-btn">Explorar</button>
-                    
+
                     {/* Sugerencias flotantes */}
                     {searchQuery.trim().length > 0 && suggestions.length > 0 && (
                         <div className="immersive-suggestions">
@@ -210,7 +210,7 @@ function MapaView() {
                 </div>
 
                 <div className="immersive-categories">
-                    <button 
+                    <button
                         className={`immersive-chip ${!activeChip ? 'active' : ''}`}
                         onClick={handleClearFilters}
                     >
@@ -221,7 +221,19 @@ function MapaView() {
                             key={c.id}
                             className={`immersive-chip ${activeChip === c.id ? 'active' : ''}`}
                             onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
+                            style={{ display: 'inline-flex', alignItems: 'center' }}
                         >
+                            <span
+                                style={{
+                                    display: 'inline-block',
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '50%',
+                                    backgroundColor: categoryColors[c.id] || '#ccc',
+                                    marginRight: '6px',
+                                    boxShadow: '0 0 4px rgba(0,0,0,0.3)'
+                                }}
+                            />
                             {c.nombre}
                         </button>
                     ))}
