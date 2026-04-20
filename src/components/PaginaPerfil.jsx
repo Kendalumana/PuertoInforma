@@ -46,22 +46,22 @@ async function guardarAvatar(tipo, valor, usuarioId) {
 function PaginaPerfil() {
   const navigate = useNavigate();
 
-  const [avatarTipo,         setAvatarTipo        ] = useState('prediseñado');
+  const [avatarTipo, setAvatarTipo] = useState('prediseñado');
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(1);
-  const [avatarImagen,       setAvatarImagen      ] = useState(null);
-  const [mostrarSelector,    setMostrarSelector   ] = useState(false);
-  const [tabActiva,          setTabActiva         ] = useState('todas');
-  const [guardandoAvatar,    setGuardandoAvatar   ] = useState(false);
-  const [avatarError,        setAvatarError       ] = useState(null);
+  const [avatarImagen, setAvatarImagen] = useState(null);
+  const [mostrarSelector, setMostrarSelector] = useState(false);
+  const [tabActiva, setTabActiva] = useState('todas');
+  const [guardandoAvatar, setGuardandoAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState(null);
 
-  const [perfil,          setPerfil         ] = useState(null);
-  const [misiones,        setMisiones       ] = useState([]);
-  const [perfilMisiones,  setPerfilMisiones ] = useState([]);
-  const [historial,       setHistorial      ] = useState([]);
-  const [rangos,          setRangos         ] = useState([]);
+  const [perfil, setPerfil] = useState(null);
+  const [misiones, setMisiones] = useState([]);
+  const [perfilMisiones, setPerfilMisiones] = useState([]);
+  const [historial, setHistorial] = useState([]);
+  const [rangos, setRangos] = useState([]);
   const [sitiosVisitados, setSitiosVisitados] = useState([]);
-  const [cargando,        setCargando       ] = useState(true);
-  const [error,           setError          ] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
   const [session, setSession] = useState(null);
 
@@ -70,68 +70,77 @@ function PaginaPerfil() {
       try {
         const { data: { session: s } } = await supabase.auth.getSession();
         const localToken = localStorage.getItem('token');
-        
+
         let userId = null;
 
         if (s) {
-            userId = s.user.id;
-            setSession(s);
+          userId = s.user.id;
+          setSession(s);
         } else if (localToken) {
-            try {
-                // Decodificar JWT para obtener el ID de usuario
-                const payload = JSON.parse(atob(localToken.split('.')[1]));
-                console.log("=== JWT PAYLOAD ===", payload); // Para depurar
-
-                userId = payload.id || payload.sub || payload.usuarioId || payload.userId;
-                console.log("=== USER ID EXTRACTED ===", userId);
-            } catch (e) {
-                console.error("Error decodificando token local", e);
-            }
-        }
-
-        if (!userId) { 
-            navigate('/login'); 
-            return; 
-        }
-
-        const resPerfil = await axiosPrivate.get(`/perfil/usuario/${userId}`);
-        const datosPerfil = resPerfil.data;
-        setPerfil(datosPerfil);
-
-        if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
-          if (datosPerfil.avatarTipo === 'emoji') {
-            const emojiId = parseInt(datosPerfil.avatarValor, 10);
-            if (!isNaN(emojiId)) {
-              setAvatarTipo('prediseñado');
-              setAvatarSeleccionado(emojiId);
-            }
-          } else if (datosPerfil.avatarTipo === 'imagen') {
-            setAvatarTipo('subido');
-            setAvatarImagen(datosPerfil.avatarValor);
+          try {
+            const payload = JSON.parse(atob(localToken.split('.')[1]));
+            userId = payload.id || payload.sub || payload.usuarioId || payload.userId;
+          } catch (e) {
+            console.error("Error decodificando token local", e);
           }
         }
 
-        const perfilId = datosPerfil.id;
+        if (!userId) {
+          navigate('/login');
+          return;
+        }
 
-        const [
-          resMisiones,
-          resPerfilMisiones,
-          resHistorial,
-          resSitios,
-          resRangos,
-        ] = await Promise.all([
-          axiosPrivate.get('/mision'),
-          axiosPrivate.get(`/mision/perfil/${perfilId}`),
-          axiosPrivate.get(`/mision/historial/${perfilId}`),
-          axiosPrivate.get(`/mision/visitados/${perfilId}`),
-          axiosPrivate.get('/rango'),
-        ]);
+        // ── Cargar perfil (puede fallar si el usuario aún no tiene perfil) ──
+        let perfilId = null;
+        try {
+          const resPerfil = await axiosPrivate.get(`/perfil/usuario/${userId}`);
+          const datosPerfil = resPerfil.data;
+          setPerfil(datosPerfil);
+          perfilId = datosPerfil.id;
 
-        setMisiones(resMisiones.data);
-        setPerfilMisiones(resPerfilMisiones.data);
-        setHistorial(resHistorial.data);
-        setSitiosVisitados(resSitios.data);
-        setRangos(resRangos.data);
+          if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
+            if (datosPerfil.avatarTipo === 'emoji') {
+              const emojiId = parseInt(datosPerfil.avatarValor, 10);
+              if (!isNaN(emojiId)) {
+                setAvatarTipo('prediseñado');
+                setAvatarSeleccionado(emojiId);
+              }
+            } else if (datosPerfil.avatarTipo === 'imagen') {
+              setAvatarTipo('subido');
+              setAvatarImagen(datosPerfil.avatarValor);
+            }
+          }
+        } catch (perfilErr) {
+          console.warn('⚠️ No se pudo cargar perfil (puede no existir aún):', perfilErr.message);
+          // Crear un perfil temporal para que la UI no se rompa
+          setPerfil({ nombreUsuario: 'Explorador', puntosTotales: 0, experienciaXp: 0 });
+        }
+
+        // ── Cargar rangos y misiones (independientes del perfil) ──
+        const promesas = [
+          axiosPrivate.get('/mision').catch(() => ({ data: [] })),
+          axiosPrivate.get('/rango').catch(() => ({ data: [] })),
+        ];
+
+        // Si tenemos perfilId, cargar datos asociados al perfil
+        if (perfilId) {
+          promesas.push(
+            axiosPrivate.get(`/mision/perfil/${perfilId}`).catch(() => ({ data: [] })),
+            axiosPrivate.get(`/mision/historial/${perfilId}`).catch(() => ({ data: [] })),
+            axiosPrivate.get(`/mision/visitados/${perfilId}`).catch(() => ({ data: [] })),
+          );
+        }
+
+        const resultados = await Promise.all(promesas);
+
+        setMisiones(resultados[0].data);
+        setRangos(resultados[1].data);
+
+        if (perfilId) {
+          setPerfilMisiones(resultados[2].data);
+          setHistorial(resultados[3].data);
+          setSitiosVisitados(resultados[4].data);
+        }
 
       } catch (err) {
         console.error(err);
@@ -200,7 +209,7 @@ function PaginaPerfil() {
   return (
     <div className="profile-page">
       <div className="profile-layout">
-        
+
         {/* SIDEBAR */}
         <aside className="profile-sidebar">
           {/* Tarjeta Principal de Usuario */}
@@ -263,15 +272,26 @@ function PaginaPerfil() {
             </div>
           </div>
 
-          {/* Tarjeta de Insignias */}
+          {/* Tarjeta de Pines / Rangos */}
           <div className="badges-card">
-            <h3 className="badges-title">🏆 Insignias Recientes</h3>
+            <h3 className="badges-title">🏆 Tu Progreso de Rango</h3>
             <div className="badges-grid">
-              {rangos.slice(0, 3).map((r, i) => (
-                <div key={i} className="badge-icon" title={r.nombre}>
-                  {i === 0 ? '🍴' : i === 1 ? '🗺️' : '📸'}
-                </div>
-              ))}
+              {rangos.sort((a, b) => a.puntosRequeridos - b.puntosRequeridos).map((r) => {
+                const isUnlocked = xpActual >= r.puntosRequeridos;
+                return (
+                  <div
+                    key={r.id}
+                    className={`badge-icon ${isUnlocked ? 'unlocked' : 'locked'}`}
+                    title={`${r.nombre} (${r.puntosRequeridos} XP)`}
+                  >
+                    {r.urlIcono ? (
+                      <img src={r.urlIcono} alt={r.nombre} />
+                    ) : (
+                      '🏅'
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </aside>
@@ -284,13 +304,13 @@ function PaginaPerfil() {
               <p>Explora la ciudad, completa desafíos y sube de nivel.</p>
             </div>
             <div className="main-filters">
-              <button 
+              <button
                 className={`filter-btn ${tabActiva === 'todas' ? 'active' : ''}`}
                 onClick={() => setTabActiva('todas')}
               >
                 Todas
               </button>
-              <button 
+              <button
                 className={`filter-btn ${tabActiva === 'pendientes' ? 'active' : ''}`}
                 onClick={() => setTabActiva('pendientes')}
               >
@@ -300,15 +320,26 @@ function PaginaPerfil() {
           </div>
 
           <div className="missions-grid">
-            {/* Las dos misiones normales */}
-            {misiones.slice(0, 2).map((mision, i) => {
+            {misiones.length === 0 && (
+              <p style={{ color: 'rgba(255,255,255,0.5)', gridColumn: '1 / -1' }}>No hay misiones disponibles.</p>
+            )}
+
+            {misiones.map((mision, i) => {
               const completada = estaCompletada(mision.id);
-              // Si estamos filtrando pendientes y ya está completada, no mostrar (ejemplo simple)
               if (tabActiva === 'pendientes' && completada) return null;
+
+              // Generar un gradiente o color estético basado en el index
+              const gradients = [
+                'linear-gradient(45deg, #2D2D2D, #4a5568)',
+                'linear-gradient(45deg, #2D2D2D, #2b6cb0)',
+                'linear-gradient(45deg, #1A202C, #E8621A)',
+                'linear-gradient(45deg, #2D2D2D, #805AD5)'
+              ];
+              const bgGradient = gradients[i % gradients.length];
 
               return (
                 <div key={mision.id} className="mission-card">
-                  <div className="mission-img" style={{ background: i === 0 ? 'linear-gradient(45deg, #2D2D2D, #4a5568)' : 'linear-gradient(45deg, #2D2D2D, #2b6cb0)' }}>
+                  <div className="mission-img" style={{ background: bgGradient }}>
                     <div className="xp-pill">+{mision.xpRecompensa} XP</div>
                   </div>
                   <div className="mission-content">
@@ -334,33 +365,6 @@ function PaginaPerfil() {
                 </div>
               );
             })}
-
-            {/* Misión especial ancha */}
-            {misiones.length > 2 && (
-              <div className="mission-card full-width">
-                <div className="mission-img" style={{ background: 'linear-gradient(90deg, #1A202C, #2D3748)' }}>
-                  {/* Aquí iría la imagen de fondo de la tarjeta ancha */}
-                </div>
-                <div className="mission-content">
-                  <div className="xp-pill" style={{ top: 'auto', right: 'auto', position: 'relative', display: 'inline-block', marginBottom: '1rem', alignSelf: 'flex-start' }}>
-                    +{misiones[2].xpRecompensa} XP
-                  </div>
-                  <span className="status-badge completed" style={{ alignSelf: 'flex-start', marginBottom: '0.5rem' }}>
-                    COMPLETADO
-                  </span>
-                  <h3 className="mission-title" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>
-                    {misiones[2].titulo}
-                  </h3>
-                  <p className="mission-desc" style={{ maxWidth: '600px' }}>
-                    {misiones[2].descripcion || 'Escribe reseñas detalladas sobre los mejores lugares.'}
-                  </p>
-                  <button className="btn-action">Ver Reseñas</button>
-                </div>
-              </div>
-            )}
-            {misiones.length === 0 && (
-               <p style={{ color: 'rgba(255,255,255,0.5)' }}>No hay misiones disponibles.</p>
-            )}
           </div>
         </main>
 

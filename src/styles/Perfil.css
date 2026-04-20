@@ -148,7 +148,7 @@
   transition: width 0.5s ease;
 }
 
-/* RECENT BADGES */
+/* RECENT BADGES (RANGOS) */
 .badges-card {
   background-color: #1c1c1c;
   border-radius: 20px;
@@ -166,20 +166,67 @@
 
 .badges-grid {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
+  justify-content: center;
 }
 
 .badge-icon {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: #2D2D2D;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #E8621A;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  transition: transform 0.2s;
+  border: 2px solid transparent;
 }
+
+.badge-icon.unlocked {
+  background: rgba(232, 98, 26, 0.15);
+  border-color: #E8621A;
+  box-shadow: 0 0 10px rgba(232, 98, 26, 0.3);
+}
+
+.badge-icon.locked {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.badge-icon:hover {
+  transform: scale(1.1);
+}
+
+.badge-icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* AVATAR SELECTOR */
+.avatar-selector {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  background-color: #1a1a1a;
+  border: 1px solid #E8621A;
+  border-radius: 15px;
+  padding: 1rem;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+.avatar-selector-titulo { color: white; text-align: center; margin-bottom: 10px; font-weight: 600; font-size: 1rem; }
+.avatares-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.avatar-opcion { font-size: 2rem; cursor: pointer; text-align: center; padding: 5px; border-radius: 8px; transition: transform 0.2s; }
+.avatar-opcion:hover { transform: scale(1.1); }
+.avatar-opcion.activo { background: rgba(232, 98, 26, 0.2); border: 1px solid #E8621A; }
+.avatar-divider { text-align: center; color: gray; font-size: 0.8rem; margin: 10px 0; }
+.btn-subir-foto { display: block; text-align: center; background: #E8621A; color: white; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
 
 /* MAIN CONTENT */
 .profile-main-content {
