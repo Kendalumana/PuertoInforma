@@ -66,7 +66,10 @@
 }
 
 .profile-card {
-  background-color: #1c1c1c;
+  background: rgba(28, 28, 28, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 2rem;
   display: flex;
@@ -127,13 +130,21 @@
 }
 
 .stat-box {
-  background: #2D2D2D;
+  background: rgba(45, 45, 45, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 1rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  transition: transform 0.2s;
+}
+.stat-box:hover {
+  transform: translateY(-2px);
+  background: rgba(60, 60, 60, 0.7);
 }
 
 .stat-label {
@@ -195,16 +206,21 @@
 
 .xp-relleno {
   height: 100%;
-  background: #E8621A;
+  background: linear-gradient(90deg, #E8621A, #FF9B6A);
   border-radius: 10px;
-  transition: width 0.5s ease;
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 0 16px rgba(232, 98, 26, 0.6);
 }
 
 /* RECENT BADGES (RANGOS) */
 .badges-card {
-  background-color: #1c1c1c;
+  background: rgba(28, 28, 28, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .badges-title {
@@ -344,11 +360,21 @@
 }
 
 .mission-card {
-  background: #1c1c1c;
+  background: rgba(28, 28, 28, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.mission-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .mission-card.full-width {
