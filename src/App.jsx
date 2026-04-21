@@ -85,6 +85,12 @@ function MapaView() {
 
     useEffect(() => {
         if (!mapRef.current) return;
+        
+        // Solución al error de "Map container is already initialized" al volver de otra vista
+        if (mapRef.current._leaflet_id) {
+            mapRef.current._leaflet_id = null;
+        }
+
         const instance = L.map(mapRef.current, { zoomControl: false }).setView([CENTER.lat, CENTER.lng], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap contributors © CARTO',
@@ -93,6 +99,12 @@ function MapaView() {
         }).addTo(instance);
         markersLayer.current.addTo(instance);
         setMap(instance);
+        
+        // Forzar a Leaflet a recalcular el tamaño una vez que el DOM está listo
+        setTimeout(() => {
+            instance.invalidateSize();
+        }, 100);
+
         return () => instance.remove();
     }, []);
 
