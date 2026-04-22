@@ -3,85 +3,108 @@ import { MapPin, Phone, MessageCircle, Map, Award, ArrowLeft, Heart, Clock, X } 
 
 function PlaceModal({ place, onClose }) {
     const [isFavorite, setIsFavorite] = useState(false);
-    const [dragOffset, setDragOffset] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
     const [fullscreenImg, setFullscreenImg] = useState(null);
-    const dragStartY = useRef(0);
+
+    // ── Drag refs (refs para evitar closures viejos en touch handlers) ──
     const modalRef = useRef(null);
+    const dragStartY = useRef(0);
+    const currentOffset = useRef(0);
+    const dragging = useRef(false);
 
     useEffect(() => {
         if (place) {
             const favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
             setIsFavorite(favs.some(f => f.id === place.id));
-            setDragOffset(0);
             setFullscreenImg(null);
+            currentOffset.current = 0;
+            if (modalRef.current) {
+                modalRef.current.style.transform = '';
+                modalRef.current.style.transition = '';
+            }
         }
     }, [place]);
 
-    // ── Touch handlers para arrastrar el bottom-sheet ──
-    const handleTouchStart = useCallback((e) => {
+    // ── Touch handlers: manipulación directa del DOM via refs ──
+    // No usamos useCallback aquí porque estas funciones usan refs, no estado
+    const handleTouchStart = (e) => {
+        dragging.current = true;
         dragStartY.current = e.touches[0].clientY;
-        setIsDragging(true);
-    }, []);
-
-    const handleTouchMove = useCallback((e) => {
-        if (!isDragging) return;
-        const currentY = e.touches[0].clientY;
-        const diff = currentY - dragStartY.current;
-        if (diff > 0) {
-            setDragOffset(diff);
-        }
-    }, [isDragging]);
-
-    const handleTouchEnd = useCallback(() => {
-        setIsDragging(false);
-        if (dragOffset > 120) {
-            setDragOffset(window.innerHeight);
-            setTimeout(() => {
-                onClose();
-                setDragOffset(0);
-            }, 250);
-        } else {
-            setDragOffset(0);
-        }
-    }, [dragOffset, onClose]);
-
-    if (!place) return null;
-
-    const toggleFavorite = () => {
-        const favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
-        if (isFavorite) {
-            const newFavs = favs.filter(f => f.id !== place.id);
-            localStorage.setItem('favoritos', JSON.stringify(newFavs));
-            setIsFavorite(false);
-        } else {
-            favs.push(place);
-            localStorage.setItem('favoritos', JSON.stringify(favs));
-            setIsFavorite(true);
+        if (modalRef.current) {
+            modalRef.current.style.transition = 'none';
         }
     };
 
-    const callPhone = (phone) => window.open(`tel:${phone}`);
-    const sendWhatsApp = (phone, name) => {
+    const handleTouchMove = (e) => {
+        if (!dragging.current) return;
+        const diff = e.touches[0].clientY - dragStartY.current;
+        if (diff > 0) {
+            currentOffset.current = diff;
+            if (modalRef.current) {
+                modalRef.current.style.transform = `translateY(${diff}px)`;
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        dragging.current = false;
+        const offset = currentOffset.current;
+
+        if (modalRef.current) {
+            modalRef.current.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        }
+
+        if (offset > 120) {
+            if (modalRef.current) {
+                modalRef.current.style.transform = 'translateY(100vh)';
+            }
+            setTimeout(() => {
+                onClose();
+                currentOffset.current = 0;
+                if (modalRef.current) {
+                    modalRef.current.style.transform = '';
+                    modalRef.current.style.transition = '';
+                }
+            }, 300);
+        } else {
+            currentOffset.current = 0;
+            if (modalRef.current) {
+                modalRef.current.style.transform = 'translateY(0)';
+            }
+        }
+    };
+
+    if (!place) return null;
+
+    // ── Funciones con useCallback para evitar re-renders innecesarios ──
+    const toggleFavorite = useCallback(() => {
+        const favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
+        setIsFavorite(prev => {
+            if (prev) {
+                const newFavs = favs.filter(f => f.id !== place.id);
+                localStorage.setItem('favoritos', JSON.stringify(newFavs));
+                return false;
+            } else {
+                favs.push(place);
+                localStorage.setItem('favoritos', JSON.stringify(favs));
+                return true;
+            }
+        });
+    }, [place]);
+
+    const callPhone = useCallback((phone) => {
+        window.open(`tel:${phone}`);
+    }, []);
+
+    const sendWhatsApp = useCallback((phone, name) => {
         const msg = encodeURIComponent(
             `Hola, vi a ${name} en Puerto Informa y me gustaría consultar sobre sus servicios.`
         );
         window.open(`https://wa.me/${phone.replace('+', '')}?text=${msg}`);
-    };
-    const openInMaps = (lat, lng) => {
+    }, []);
+
+    const openInMaps = useCallback((lat, lng) => {
         window.open(`https://www.google.com/maps?q=${lat},${lng}`);
-    };
-
-    // Estilo dinámico para el arrastre
-    const modalDragStyle = dragOffset > 0 ? {
-        transform: `translateY(${dragOffset}px)`,
-        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
-    } : {};
-
-    // Opacidad del overlay según arrastre
-    const overlayStyle = dragOffset > 0 ? {
-        backgroundColor: `rgba(0, 0, 0, ${Math.max(0.1, 0.7 - (dragOffset / 500))})`,
-    } : {};
+    }, []);
 
     return (
         <>
@@ -95,52 +118,55 @@ function PlaceModal({ place, onClose }) {
                 </div>
             )}
 
-            <div className="aesthetic-modal-overlay" onClick={onClose} style={overlayStyle}>
+            <div className="aesthetic-modal-overlay" onClick={onClose}>
                 <div
                     ref={modalRef}
                     className="aesthetic-modal"
                     onClick={(e) => e.stopPropagation()}
-                    style={modalDragStyle}
                 >
-                    {/* Barra de arrastre (drag handle) — Solo funcional en móvil */}
+                    {/* ── Zona arrastrable: handle + galería (touch-action: none en CSS) ── */}
                     <div
-                        className="modal-drag-handle"
+                        className="modal-draggable-zone"
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
                     >
-                        <div className="drag-bar"></div>
-                    </div>
+                        {/* Barra de arrastre visual */}
+                        <div className="modal-drag-handle">
+                            <div className="drag-bar"></div>
+                        </div>
 
-                    {/* Galería de fotos: 1 principal + 2 placeholders */}
-                    <div className="aesthetic-modal-left">
-                        <button className="aesthetic-back-btn" onClick={onClose} aria-label="Volver">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div className="gallery-grid">
-                            {/* Foto principal */}
-                            <div
-                                className="gallery-main"
-                                onClick={() => place.urlImagen && setFullscreenImg(place.urlImagen)}
-                            >
-                                {place.urlImagen ? (
-                                    <img src={place.urlImagen} alt={place.nombre} />
-                                ) : (
-                                    <div className="aesthetic-no-img">Sin imagen</div>
-                                )}
-                                {place.urlImagen && <span className="gallery-tap-hint">Tocar para ampliar</span>}
-                            </div>
-                            {/* Placeholders para fotos futuras */}
-                            <div className="gallery-thumb placeholder">
-                                <span>📷</span>
-                            </div>
-                            <div className="gallery-thumb placeholder">
-                                <span>📷</span>
+                        {/* Galería de fotos: 1 principal + 2 placeholders */}
+                        <div className="aesthetic-modal-left">
+                            <button className="aesthetic-back-btn" onClick={onClose} aria-label="Volver">
+                                <ArrowLeft size={20} />
+                            </button>
+                            <div className="gallery-grid">
+                                <div
+                                    className="gallery-main"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (place.urlImagen) setFullscreenImg(place.urlImagen);
+                                    }}
+                                >
+                                    {place.urlImagen ? (
+                                        <img src={place.urlImagen} alt={place.nombre} draggable="false" />
+                                    ) : (
+                                        <div className="aesthetic-no-img">Sin imagen</div>
+                                    )}
+                                    {place.urlImagen && <span className="gallery-tap-hint">Tocar para ampliar</span>}
+                                </div>
+                                <div className="gallery-thumb placeholder">
+                                    <span>📷</span>
+                                </div>
+                                <div className="gallery-thumb placeholder">
+                                    <span>📷</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Lado Derecho: Información */}
+                    {/* ── Información (esta parte tiene scroll libre) ── */}
                     <div className="aesthetic-modal-right">
                         <div className="aesthetic-modal-content">
                             <div className="aesthetic-top-row">

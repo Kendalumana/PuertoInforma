@@ -566,9 +566,12 @@
   border-left: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Ocultar drag handle en desktop */
+/* En desktop: drag handle oculto, zona arrastrable es un div normal */
 .modal-drag-handle {
   display: none;
+}
+.modal-draggable-zone {
+  display: contents; /* Se comporta como si no existiera en desktop */
 }
 
 @keyframes slideInRight {
@@ -891,14 +894,22 @@
     animation: slideUpModal 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     transform: translateY(100%);
     opacity: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
-    overscroll-behavior: contain; /* Evita que el scroll se propague al fondo */
+    overflow: hidden; /* Sin scroll en el modal entero — el scroll va en .aesthetic-modal-right */
+    display: flex;
+    flex-direction: column;
   }
 
   @keyframes slideUpModal {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+  }
+
+  /* ── Zona arrastrable (handle + galería) ── */
+  .modal-draggable-zone {
+    touch-action: none;  /* CLAVE: evita que el navegador intercepte el swipe */
+    -webkit-user-select: none;
+    user-select: none;
+    flex-shrink: 0;
   }
 
   /* Barra de arrastre interactiva (drag handle) */
@@ -908,7 +919,6 @@
     align-items: center;
     padding: 14px 0 8px;
     cursor: grab;
-    touch-action: none; /* Previene el scroll del navegador al arrastrar */
     flex-shrink: 0;
   }
   .modal-drag-handle:active {
@@ -977,6 +987,9 @@
     padding: 1rem 1.25rem 2rem;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    flex: 1;
+    min-height: 0; /* Necesario para que flex + overflow funcione */
   }
 
   .aesthetic-title {
