@@ -1,331 +1,442 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../api/axios';
+import {
+    Search, Bus, ChevronRight, Bookmark, BookmarkCheck,
+    Share2, MapPin, ArrowLeft, Clock, Repeat, Bell, User, Route, Star
+} from 'lucide-react';
 import '../styles/Buses.css';
 
-// -------------------------------------------------------
-// Mini mapa SVG — dibuja la ruta con curvas y paradas
-// -------------------------------------------------------
-function MiniMapaSVG({ ruta }) {
+// ─────────────────────────────────────────────
+// Timeline vertical de paradas
+// ─────────────────────────────────────────────
+function ParadasTimeline({ ruta }) {
     let paradas = [];
     if (ruta.paradas) {
         try {
-            paradas = typeof ruta.paradas === 'string' ? JSON.parse(ruta.paradas) : ruta.paradas;
-        } catch(e) {
+            paradas = typeof ruta.paradas === 'string'
+                ? JSON.parse(ruta.paradas)
+                : ruta.paradas;
+        } catch {
             paradas = [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
         }
     } else {
         paradas = [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
     }
 
-    const total = paradas.length;
-    const W = 320;
-    const H = 80;
-    const margen = 40;
-    const paso = (W - margen * 2) / (total - 1);
-
-    const puntos = paradas.map((_, i) => ({
-        x: margen + i * paso,
-        y: i % 2 === 0 ? H / 2 - 10 : H / 2 + 10,
-    }));
-
-    const buildPath = () => {
-        if (puntos.length < 2) return '';
-        let d = `M ${puntos[0].x} ${puntos[0].y}`;
-        for (let i = 1; i < puntos.length; i++) {
-            const prev = puntos[i - 1];
-            const curr = puntos[i];
-            const cx = (prev.x + curr.x) / 2;
-            d += ` C ${cx} ${prev.y}, ${cx} ${curr.y}, ${curr.x} ${curr.y}`;
-        }
-        return d;
-    };
-
     return (
-        <div className="minimapa-svg-wrapper">
-            <div className="minimapa-badge-ruta">
-                <span className={`buses-badge ${ruta.tipo?.toLowerCase() === 'expreso' ? 'expreso' : 'normal'}`}>
-                    {ruta.nombre}
-                </span>
-                <span className="minimapa-titulo-ruta">
-                    {ruta.lugarOrigen?.nombre || '?'} → {ruta.lugarDestino?.nombre || '?'}
-                </span>
+        <div className="paradas-section">
+            <div className="buses-section-title">
+                <Route size={18} color="#E8621A" />
+                <h3>Paradas Principales</h3>
             </div>
-            <svg viewBox={`0 0 ${W} ${H}`} className="minimapa-svg" preserveAspectRatio="xMidYMid meet">
-                <path d={buildPath()} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" strokeLinecap="round" />
-                <path d={buildPath()} fill="none" stroke="#E8621A" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
-                {puntos.map((p, i) => (
-                    <g key={i}>
-                        <circle cx={p.x} cy={p.y} r={i === 0 || i === total - 1 ? 7 : 5}
-                                fill={i === 0 ? '#E8621A' : i === total - 1 ? '#aaaaaa' : '#2D2D2D'}
-                                stroke={i === 0 ? '#E8621A' : '#ffffff'} strokeWidth="1.5" />
-                        {(i === 0 || i === total - 1) && <circle cx={p.x} cy={p.y} r="3" fill="#fff" />}
-                    </g>
-                ))}
-                {puntos.map((p, i) => (
-                    <text key={`label-${i}`} x={p.x} y={i % 2 === 0 ? p.y - 14 : p.y + 20}
-                          textAnchor="middle" fontSize="8"
-                          fill={i === 0 ? '#E8621A' : 'rgba(255,255,255,0.7)'}
-                          fontWeight={i === 0 || i === total - 1 ? '700' : '400'}>
-                        {paradas[i]}
-                    </text>
-                ))}
-            </svg>
-            <div className="minimapa-info-rapida">
-                <span>⏱ {ruta.duracion || '—'}</span>
-                <span>🕐 {ruta.frecuencia || '—'}</span>
-                <span>🚌 {ruta.operador?.nombre || '—'}</span>
+            <div className="paradas-card">
+                <div className="paradas-timeline">
+                    {paradas.map((parada, i) => (
+                        <div key={i} className="parada-item">
+                            <div className="parada-indicator">
+                                <div className={`parada-dot ${i === 0 ? 'origin' : i === paradas.length - 1 ? 'destination' : 'stop'}`}></div>
+                                {i < paradas.length - 1 && <div className="parada-line"></div>}
+                            </div>
+                            <div className="parada-info">
+                                <span className="parada-name">{parada}</span>
+                                <span className="parada-sub">
+                                    {i === 0 ? 'Salida / Terminal' : i === paradas.length - 1 ? 'Destino Final' : 'Parada de Tránsito'}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
 
-// -------------------------------------------------------
+// ─────────────────────────────────────────────
+// Tabla de horarios
+// ─────────────────────────────────────────────
+function HorariosTable({ ruta, formatearRangoDias }) {
+    return (
+        <div className="horarios-section">
+            <div className="horarios-header-row">
+                <div className="buses-section-title">
+                    <Clock size={18} color="#E8621A" />
+                    <h3>Horario Semanal Completo</h3>
+                </div>
+                {ruta.frecuencia && (
+                    <span className="frecuencia-badge">Frecuencia: {ruta.frecuencia}</span>
+                )}
+            </div>
+            {ruta.horarios && ruta.horarios.length > 0 ? (
+                <div className="horarios-table-card">
+                    <div className="horarios-head">
+                        <span>HORA SALIDA</span>
+                        <span>DÍAS APLICABLES</span>
+                        <span>TIPO SERVICIO</span>
+                    </div>
+                    {ruta.horarios.map((h, idx) => {
+                        const esProximo = idx === 0; // primera fila como destacada
+                        const esDirecto = h.tipo === 'DIRECTO';
+                        return (
+                            <div key={idx} className={`horarios-row ${esProximo ? 'proximo' : ''}`}>
+                                <span className="hrow-time">
+                                    {h.horaSalida?.substring(0, 5) || '--:--'}
+                                    {esProximo && <span className="proximo-label">PRÓXIMO BUS</span>}
+                                </span>
+                                <span className="hrow-days">
+                                    {formatearRangoDias(h.diaInicio, h.diaFin)}
+                                </span>
+                                <span className={`hrow-type ${esDirecto ? 'directo' : 'regular'}`}>
+                                    {esDirecto ? 'DIRECTO' : 'REGULAR'}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <p className="no-horarios">No hay horarios registrados para esta ruta.</p>
+            )}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────
 // Componente principal
-// -------------------------------------------------------
+// ─────────────────────────────────────────────
 function PaginaBuses() {
     const navigate = useNavigate();
 
     const [rutas, setRutas] = useState([]);
     const [busqueda, setBusqueda] = useState('');
-    const [destinoActivo, setDestinoActivo] = useState('Todas');
+    const [terminalActiva, setTerminalActiva] = useState('Todas');
     const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
-    const [tabActiva, setTabActiva] = useState('detalles'); // 'detalles' o 'horarios'
+    const [tabActiva, setTabActiva] = useState('buses'); // 'buses' | 'horarios' | 'rutas' | 'favoritos'
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Cargar rutas desde el backend
-    useEffect(() => {
-        const cargarRutas = async () => {
-            try {
-                const response = await axiosPrivate.get('/ruta-transporte');
-                setRutas(response.data);
-            } catch (err) {
-                console.error(err);
-                setError('No se pudieron cargar las rutas. Intentá de nuevo.');
-            } finally {
-                setLoading(false);
-            }
-        };
-        cargarRutas();
-    }, []);
-
-    // Destinos únicos (para los chips)
-    const destinosUnicos = ['Todas', ...new Set(rutas.map(r => r.lugarDestino?.nombre).filter(Boolean))];
-
-    // Filtrar rutas según búsqueda y destino
-    const rutasFiltradas = rutas.filter(r => {
-        const destinoNombre = r.lugarDestino?.nombre || '';
-        const origenNombre = r.lugarOrigen?.nombre || '';
-        const matchBusqueda = destinoNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                              origenNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                              r.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                              (r.operador?.nombre || '').toLowerCase().includes(busqueda.toLowerCase());
-        const matchDestino = destinoActivo === 'Todas' || destinoNombre === destinoActivo;
-        return matchBusqueda && matchDestino;
+    // Favoritos de rutas — almacenamiento LOCAL (no se envía al backend)
+    const [favoritosRutas, setFavoritosRutas] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('favoritosRutas') || '[]'); }
+        catch { return []; }
     });
 
-    // Agrupar rutas por destino (para las tabs cuando no hay búsqueda)
-    const rutasPorDestino = destinosUnicos.filter(d => d !== 'Todas').reduce((acc, dest) => {
-        acc[dest] = rutas.filter(r => r.lugarDestino?.nombre === dest);
-        return acc;
-    }, {});
+    useEffect(() => {
+        localStorage.setItem('favoritosRutas', JSON.stringify(favoritosRutas));
+    }, [favoritosRutas]);
 
-    // Formatear rango de días (ej: "LUNES" -> "LUN", "LUNES-VIERNES" -> "LUN-VIE")
+    const toggleFavorito = useCallback((rutaId, e) => {
+        e?.stopPropagation();
+        setFavoritosRutas(prev =>
+            prev.includes(rutaId) ? prev.filter(id => id !== rutaId) : [...prev, rutaId]
+        );
+    }, []);
+
+    // Cargar rutas desde el backend
+    useEffect(() => {
+        axiosPrivate.get('/ruta-transporte')
+            .then(res => setRutas(res.data))
+            .catch(err => { console.error(err); setError('No se pudieron cargar las rutas.'); })
+            .finally(() => setLoading(false));
+    }, []);
+
+    // Terminales únicas (lugarOrigen = terminal de salida)
+    const terminales = ['Todas', ...new Set(rutas.map(r => r.lugarOrigen?.nombre).filter(Boolean))];
+
+    // Rutas filtradas
+    const rutasFiltradas = rutas.filter(r => {
+        const q = busqueda.toLowerCase();
+        const matchQ = !q ||
+            (r.nombre || '').toLowerCase().includes(q) ||
+            (r.lugarOrigen?.nombre || '').toLowerCase().includes(q) ||
+            (r.lugarDestino?.nombre || '').toLowerCase().includes(q) ||
+            (r.operador?.nombre || '').toLowerCase().includes(q);
+        const matchT = terminalActiva === 'Todas' || r.lugarOrigen?.nombre === terminalActiva;
+        return matchQ && matchT;
+    });
+
+    // Favoritos filtrados para su tab
+    const rutasFavoritas = rutas.filter(r => favoritosRutas.includes(r.id));
+
     const formatearRangoDias = (inicio, fin) => {
         if (!inicio) return '—';
-        const abrev = (dia) => dia.substring(0, 3).toUpperCase();
-        if (inicio === fin) return abrev(inicio);
-        return `${abrev(inicio)}-${abrev(fin)}`;
+        const abrev = d => d.substring(0, 1).toUpperCase() + '-' + d.substring(1, 2).toUpperCase();
+        const MAP = { LUNES: 'L', MARTES: 'M', MIÉRCOLES: 'X', JUEVES: 'J', VIERNES: 'V', SÁBADO: 'S', DOMINGO: 'D' };
+        const a = MAP[inicio?.toUpperCase()] || inicio?.substring(0, 1);
+        const b = MAP[fin?.toUpperCase()] || fin?.substring(0, 1);
+        return inicio === fin ? a : `${a}-${b}`;
     };
 
-    // Estados de carga y error
-    if (loading) {
-        return (
-            <div className="buses-page" style={{ textAlign: 'center', padding: '2rem' }}>
-                <p>Cargando rutas...</p>
-            </div>
-        );
-    }
+    const abrirDetalle = (ruta) => {
+        setRutaSeleccionada(ruta);
+        setTabActiva('horarios');
+    };
 
-    if (error) {
-        return (
-            <div className="buses-page" style={{ textAlign: 'center', padding: '2rem', color: '#ef5350' }}>
-                <p>{error}</p>
-                <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#E8621A', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer' }}>
-                    Reintentar
-                </button>
-            </div>
-        );
-    }
+    const handleCompartir = useCallback((ruta) => {
+        const txt = `🚌 ${ruta.nombre}: ${ruta.lugarOrigen?.nombre} → ${ruta.lugarDestino?.nombre}\n⏱ ${ruta.duracion || '—'} | 🕐 ${ruta.frecuencia || '—'}\nPuertoInforma`;
+        if (navigator.share) navigator.share({ title: ruta.nombre, text: txt }).catch(() => {});
+        else navigator.clipboard?.writeText(txt);
+    }, []);
+
+    // ── Loading / Error ──
+    if (loading) return (
+        <div className="buses-page">
+            <BusesNavbar onBack={() => navigate('/')} />
+            <div className="buses-loading"><div className="buses-spinner"></div><p>Cargando rutas...</p></div>
+        </div>
+    );
+    if (error) return (
+        <div className="buses-page">
+            <BusesNavbar onBack={() => navigate('/')} />
+            <div className="buses-error"><p>{error}</p><button className="buses-retry" onClick={() => window.location.reload()}>Reintentar</button></div>
+        </div>
+    );
+
+    const featuredRuta = tabActiva !== 'favoritos'
+        ? (rutasFiltradas[0] || null)
+        : (rutasFavoritas[0] || null);
+    const restRutas = tabActiva !== 'favoritos'
+        ? rutasFiltradas.slice(1)
+        : rutasFavoritas.slice(1);
 
     return (
         <div className="buses-page">
-            {/* ── Header ── */}
-            <header className="buses-header">
-                <button className="buses-back-btn" onClick={() => navigate('/')}>⬅️</button>
-                <h1 className="buses-title">Rutas de Puntarenas</h1>
-            </header>
+            <BusesNavbar onBack={() => { if (rutaSeleccionada) { setRutaSeleccionada(null); setTabActiva('buses'); } else navigate('/'); }} />
 
-            {/* ── Buscador ── */}
-            <div className="buses-search-container">
-                <span className="buses-search-icon">🔍</span>
-                <input
-                    type="text"
-                    className="buses-search-input"
-                    placeholder="¿A dónde vas?..."
-                    value={busqueda}
-                    onChange={(e) => {
-                        setBusqueda(e.target.value);
-                        setRutaSeleccionada(null);
-                    }}
-                />
-            </div>
-
-            {/* ── Chips de destino ── */}
-            <div className="buses-chips-container">
-                {destinosUnicos.map(dest => (
-                    <button
-                        key={dest}
-                        className={`buses-chip ${destinoActivo === dest ? 'active' : ''}`}
-                        onClick={() => {
-                            setDestinoActivo(dest);
-                            setRutaSeleccionada(null);
-                        }}
-                    >
-                        {dest}
-                    </button>
-                ))}
-            </div>
-
-            {/* ── Mini mapa SVG y detalles de la ruta seleccionada ── */}
-            {rutaSeleccionada && (
-                <div className="buses-mini-mapa-container">
-                    {/* Pestañas */}
-                    <div className="buses-detalle-tabs">
-                        <button
-                            className={`tab-btn ${tabActiva === 'detalles' ? 'active' : ''}`}
-                            onClick={() => setTabActiva('detalles')}
-                        >
-                            📍 Detalles
-                        </button>
-                        <button
-                            className={`tab-btn ${tabActiva === 'horarios' ? 'active' : ''}`}
-                            onClick={() => setTabActiva('horarios')}
-                        >
-                            🕐 Horarios
-                        </button>
-                        <button
-                            className="tab-cerrar"
-                            onClick={() => setRutaSeleccionada(null)}
-                        >
-                            ✕
-                        </button>
+            {/* ══════════════════════════════════════
+                VISTA DETALLE (cuando hay ruta seleccionada)
+            ══════════════════════════════════════ */}
+            {rutaSeleccionada ? (
+                <div className="buses-detail-page">
+                    {/* Hero */}
+                    <div className="detail-hero">
+                        <div className="detail-hero-bg"></div>
+                        <div className="detail-hero-overlay"></div>
+                        <div className="detail-hero-content">
+                            <div className="detail-hero-top">
+                                <span className="detail-route-badge">{rutaSeleccionada.nombre}</span>
+                                <div className="detail-hero-pills-top">
+                                    {rutaSeleccionada.duracion && (
+                                        <div className="hero-pill">
+                                            <span className="hero-pill-label">DURACIÓN</span>
+                                            <span className="hero-pill-val">{rutaSeleccionada.duracion}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <h2 className="detail-hero-title">
+                                {rutaSeleccionada.lugarOrigen?.nombre} – {rutaSeleccionada.lugarDestino?.nombre}
+                            </h2>
+                            <p className="detail-hero-operator">{rutaSeleccionada.operador?.nombre}</p>
+                        </div>
                     </div>
 
-                    {/* Contenido de la pestaña Detalles */}
-                    {tabActiva === 'detalles' && (
-                        <div className="tab-panel">
-                            <MiniMapaSVG ruta={rutaSeleccionada} />
-                            <div className="buses-detalle-info">
-                                <h3>{rutaSeleccionada.nombre}</h3>
-                                <p><strong>Operador:</strong> {rutaSeleccionada.operador?.nombre || '—'}</p>
-                                <p><strong>Duración:</strong> {rutaSeleccionada.duracion || '—'}</p>
-                                <p><strong>Frecuencia:</strong> {rutaSeleccionada.frecuencia || '—'}</p>
-                                <p><strong>Próxima salida:</strong> {rutaSeleccionada.proxima || '—'}</p>
+                    {/* Contenido principal 2 columnas en desktop */}
+                    <div className="detail-body-layout">
+                        {/* Izquierda: horarios */}
+                        <div className="detail-col-main">
+                            <HorariosTable ruta={rutaSeleccionada} formatearRangoDias={formatearRangoDias} />
+                        </div>
+
+                        {/* Derecha: paradas + info */}
+                        <div className="detail-col-side">
+                            <ParadasTimeline ruta={rutaSeleccionada} />
+
+                            <div className="info-a-bordo">
+                                <div className="buses-section-title">
+                                    <span>ℹ️</span>
+                                    <h3>Información de Abordo</h3>
+                                </div>
+                                <div className="info-bordo-card">
+                                    <div className="info-bordo-item">
+                                        <Repeat size={16} color="#E8621A" />
+                                        <span>Frecuencia: {rutaSeleccionada.frecuencia || '—'}</span>
+                                    </div>
+                                    <div className="info-bordo-item">
+                                        <MapPin size={16} color="#E8621A" />
+                                        <span>Terminal: {rutaSeleccionada.lugarOrigen?.nombre || '—'}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Contenido de la pestaña Horarios */}
-                    {tabActiva === 'horarios' && (
-                        <div className="tab-panel horarios-panel">
-                            <h3>Horarios de {rutaSeleccionada.nombre}</h3>
-                            {rutaSeleccionada.horarios && rutaSeleccionada.horarios.length > 0 ? (
-                                <div className="horarios-tabla">
-                                    <div className="horarios-header">
-                                        <span>Hora salida</span>
-                                        <span>Días</span>
-                                        <span>Tipo</span>
-                                    </div>
-                                    {rutaSeleccionada.horarios.map((h, idx) => (
-                                        <div key={idx} className="horarios-fila">
-                                            <span className="hora">{h.horaSalida?.substring(0, 5) || '--:--'}</span>
-                                            <span className="dias">{formatearRangoDias(h.diaInicio, h.diaFin)}</span>
-                                            <span className={`tipo ${h.tipo?.toLowerCase() === 'directo' ? 'directo' : 'indirecto'}`}>
-                                                {h.tipo === 'DIRECTO' ? '🚌 Directo' : '🔄 Indirecto'}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p>No hay horarios registrados para esta ruta.</p>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* ── Tabs por destino (solo cuando no hay búsqueda y el chip es "Todas") ── */}
-            {destinoActivo === 'Todas' && !busqueda && (
-                <div className="buses-tabs-destino">
-                    {Object.keys(rutasPorDestino).map(dest => (
-                        <button
-                            key={dest}
-                            className="buses-tab-destino"
-                            onClick={() => {
-                                setDestinoActivo(dest);
-                                setRutaSeleccionada(null);
-                            }}
-                        >
-                            {dest}
+                    {/* Botones de acción */}
+                    <div className="detail-actions-bar">
+                        <button className="detail-btn-primary" onClick={() => navigate('/')}>
+                            <MapPin size={18} /> VER EN MAPA
                         </button>
-                    ))}
+                        <button className="detail-btn-secondary" onClick={() => handleCompartir(rutaSeleccionada)}>
+                            <Share2 size={18} /> COMPARTIR
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                /* ══════════════════════════════════════
+                   VISTA LISTA
+                ══════════════════════════════════════ */
+                <div className="buses-content">
+                    {/* Hero */}
+                    <section className="buses-hero">
+                        <h1 className="buses-hero-title">Explora <span className="accent-italic">Tus Rutas</span></h1>
+                        <p className="buses-hero-sub">Encuentra horarios, terminales y operadores para tu próximo viaje.</p>
+                    </section>
+
+                    {/* Búsqueda */}
+                    <div className="buses-search-wrapper">
+                        <Search size={17} className="buses-search-icon-svg" />
+                        <input
+                            type="text"
+                            className="buses-search-input"
+                            placeholder="Busca tu ruta..."
+                            value={busqueda}
+                            onChange={e => { setBusqueda(e.target.value); }}
+                        />
+                    </div>
+
+                    {/* Chips terminales */}
+                    {tabActiva !== 'favoritos' && (
+                        <div className="buses-chips-scroll">
+                            {terminales.map(t => (
+                                <button key={t}
+                                    className={`buses-chip ${terminalActiva === t ? 'active' : ''}`}
+                                    onClick={() => setTerminalActiva(t)}
+                                >
+                                    {t === 'Todas' ? 'Todas las Terminales' : `Terminal ${t}`}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Featured card */}
+                    {featuredRuta && (
+                        <div className="buses-featured-card" onClick={() => abrirDetalle(featuredRuta)}>
+                            <div className="featured-bg-gradient"></div>
+                            <div className="featured-content">
+                                <div className="featured-top-badges">
+                                    <span className="badge-live">EN TIEMPO REAL</span>
+                                    <span className="badge-terminal">Terminal {featuredRuta.lugarOrigen?.nombre || '—'}</span>
+                                </div>
+                                <h2 className="featured-title">{featuredRuta.nombre}</h2>
+                                <div className="featured-meta-row">
+                                    <span>🚌 {featuredRuta.operador?.nombre || '—'}</span>
+                                    <span>🕐 {featuredRuta.frecuencia || '—'}</span>
+                                </div>
+                                <div className="featured-bottom-row">
+                                    <div className="featured-next">
+                                        <span className="fnext-label">PRÓXIMA SALIDA</span>
+                                        <span className="fnext-time">{featuredRuta.proxima || '00:00'}</span>
+                                    </div>
+                                    <button className="featured-btn" onClick={e => { e.stopPropagation(); abrirDetalle(featuredRuta); }}>
+                                        Ver Detalles <ChevronRight size={15} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Grid de rutas */}
+                    <div className="buses-grid">
+                        {restRutas.map(ruta => (
+                            <div key={ruta.id} className="buses-route-card" onClick={() => abrirDetalle(ruta)}>
+                                <div className="rcard-header">
+                                    <div className="rcard-icon"><Bus size={18} /></div>
+                                    {favoritosRutas.includes(ruta.id) && <span className="rcard-fav-tag">FAVORITO</span>}
+                                </div>
+                                <h3 className="rcard-name">
+                                    {ruta.lugarOrigen?.nombre || '?'} – {ruta.lugarDestino?.nombre || '?'}
+                                </h3>
+                                <p className="rcard-operator">{ruta.operador?.nombre || '—'}</p>
+                                <div className="rcard-info">
+                                    <div className="rcard-row">
+                                        <span className="rcard-label">Frecuencia</span>
+                                        <span className="rcard-val">{ruta.frecuencia || '—'}</span>
+                                    </div>
+                                    <div className="rcard-row">
+                                        <span className="rcard-label">Terminal</span>
+                                        <span className="rcard-val">{ruta.lugarOrigen?.nombre || '—'}</span>
+                                    </div>
+                                </div>
+                                <div className="rcard-footer">
+                                    <div className="rcard-next">
+                                        <span className="rcard-next-label">PRÓXIMA SALIDA</span>
+                                        <span className="rcard-next-time">{ruta.proxima || '00:00'}</span>
+                                    </div>
+                                    <button className="rcard-bookmark" onClick={e => toggleFavorito(ruta.id, e)}>
+                                        {favoritosRutas.includes(ruta.id)
+                                            ? <BookmarkCheck size={18} color="#E8621A" />
+                                            : <Bookmark size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {!featuredRuta && restRutas.length === 0 && (
+                            <p className="buses-no-results">
+                                {tabActiva === 'favoritos'
+                                    ? 'No tenés rutas favoritas aún.'
+                                    : `No se encontraron rutas para "${busqueda || terminalActiva}".`
+                                }
+                            </p>
+                        )}
+                    </div>
                 </div>
             )}
 
-            {/* ── Lista de rutas (tarjetas) ── */}
-            <div className="buses-lista">
-                {rutasFiltradas.length > 0 ? (
-                    rutasFiltradas.map(ruta => (
-                        <div
-                            key={ruta.id}
-                            className={`buses-card ${rutaSeleccionada?.id === ruta.id ? 'seleccionada' : ''}`}
-                            onClick={() => {
-                                setRutaSeleccionada(rutaSeleccionada?.id === ruta.id ? null : ruta);
-                                setTabActiva('detalles'); // Reiniciar a detalles al abrir
-                            }}
-                        >
-                            <div className="buses-card-header">
-                                <div className="buses-card-left">
-                                    <span className={`buses-badge ${ruta.tipo?.toLowerCase() === 'expreso' ? 'expreso' : 'normal'}`}>
-                                        {ruta.nombre}
-                                    </span>
-                                    <div className="buses-card-info">
-                                        <span className="buses-card-ruta">
-                                            {ruta.lugarOrigen?.nombre || '?'} → {ruta.lugarDestino?.nombre || '?'}
-                                        </span>
-                                        {ruta.tipo?.toLowerCase() === 'expreso' && (
-                                            <span className="buses-expreso-tag">Expreso</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <span className="buses-proxima">{ruta.proxima || '—'} ↗</span>
-                            </div>
-                            <div className="buses-card-meta">
-                                <span className="buses-meta-item">🕐 {ruta.frecuencia || '—'}</span>
-                                <span className="buses-meta-item">⏱ {ruta.duracion || '—'}</span>
-                                <span className="buses-meta-item">🚌 {ruta.operador?.nombre || '—'}</span>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <p className="buses-sin-resultados">
-                        No se encontraron rutas para "{busqueda || destinoActivo}".
-                    </p>
-                )}
-            </div>
+            {/* ══════════════════════════════════════
+                BOTTOM TAB BAR — Solo en esta sección
+            ══════════════════════════════════════ */}
+            <nav className="buses-bottom-bar">
+                <button
+                    className={`bbar-tab ${tabActiva === 'buses' ? 'active' : ''}`}
+                    onClick={() => { setRutaSeleccionada(null); setTabActiva('buses'); }}
+                >
+                    <Bus size={20} />
+                    <span>BUSES</span>
+                </button>
+                <button
+                    className={`bbar-tab ${tabActiva === 'horarios' ? 'active' : ''}`}
+                    onClick={() => { if (rutaSeleccionada) setTabActiva('horarios'); }}
+                    disabled={!rutaSeleccionada}
+                >
+                    <Clock size={20} />
+                    <span>HORARIOS</span>
+                </button>
+                <button
+                    className={`bbar-tab ${tabActiva === 'rutas' ? 'active' : ''}`}
+                    onClick={() => { if (rutaSeleccionada) setTabActiva('rutas'); }}
+                    disabled={!rutaSeleccionada}
+                >
+                    <Route size={20} />
+                    <span>RUTAS</span>
+                </button>
+                <button
+                    className={`bbar-tab ${tabActiva === 'favoritos' ? 'active' : ''}`}
+                    onClick={() => { setRutaSeleccionada(null); setTabActiva('favoritos'); }}
+                >
+                    <Star size={20} />
+                    <span>FAVORITOS</span>
+                </button>
+            </nav>
         </div>
+    );
+}
+
+// ─────────────────────────────────────────────
+// Navbar compacto para buses
+// ─────────────────────────────────────────────
+function BusesNavbar({ onBack }) {
+    return (
+        <header className="buses-navbar">
+            <button className="buses-nav-back" onClick={onBack}>
+                <ArrowLeft size={20} />
+            </button>
+            <span className="buses-nav-logo">
+                <span className="logo-orange">Puerto</span> Informa
+            </span>
+            <div className="buses-nav-right">
+                <button className="buses-nav-icon"><Bell size={20} /></button>
+                <button className="buses-nav-icon"><User size={20} /></button>
+            </div>
+        </header>
     );
 }
 

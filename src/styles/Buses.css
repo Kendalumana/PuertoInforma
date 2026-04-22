@@ -1,428 +1,620 @@
 /* ============================================================
-   Buses.css — PuertoInforma
-   Página de rutas de buses de Puntarenas
+   Buses.css — PuertoInforma (Rediseño 2026)
    ============================================================ */
 
+/* ── Base ── */
 .buses-page {
   min-height: 100vh;
-  background-color: var(--negro);
-  color: var(--blanco);
-  padding-bottom: 2rem;
+  background-color: #111;
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 72px; /* espacio para bottom bar */
 }
 
-/* ── Header ── */
-.buses-header {
+/* ── Navbar ── */
+.buses-navbar {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.25rem;
-  background-color: var(--negro);
-  border-bottom: 2px solid var(--naranja);
+  padding: 0 1.5rem;
+  height: 60px;
+  background: rgba(17,17,17,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   position: sticky;
   top: 0;
-  z-index: 100;
-}
-
-.buses-back-btn {
-  background: transparent;
-  border: none;
-  color: var(--blanco);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  z-index: 200;
   flex-shrink: 0;
 }
-
-.buses-back-btn:hover { background: rgba(255,255,255,0.08); }
-
-.buses-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--blanco);
-}
-
-/* ── Buscador ── */
-.buses-search-container {
-  position: relative;
-  margin: 1rem 1.25rem 0.75rem;
-}
-
-.buses-search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.9rem;
-  pointer-events: none;
-}
-
-.buses-search-input {
-  width: 100%;
-  padding: 0.7rem 1rem 0.7rem 2.5rem;
-  background: var(--gris-oscuro);
-  border: 2px solid transparent;
-  border-radius: 20px;
-  color: var(--blanco);
-  font-size: 0.9rem;
-  transition: border-color 0.3s ease;
-}
-
-.buses-search-input::placeholder { color: rgba(255,255,255,0.4); }
-.buses-search-input:focus {
-  outline: none;
-  border-color: var(--naranja);
-}
-
-/* ── Chips de destino ── */
-.buses-chips-container {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0 1.25rem 0.75rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  white-space: nowrap;
-}
-
-.buses-chips-container::-webkit-scrollbar { display: none; }
-
-.buses-chip {
-  padding: 0.35rem 1rem;
-  border-radius: 20px;
-  border: 1px solid var(--gris-oscuro);
-  background: var(--gris-oscuro);
-  color: rgba(255,255,255,0.7);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.buses-chip:hover { border-color: var(--naranja); color: var(--blanco); }
-.buses-chip.active {
-  background: var(--naranja);
-  border-color: var(--naranja);
-  color: var(--blanco);
-  font-weight: 700;
-}
-
-/* ── Tabs por destino ── */
-.buses-tabs-destino {
-  display: flex;
-  border-bottom: 1px solid var(--gris-oscuro);
-  padding: 0 1.25rem;
-  gap: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.buses-tabs-destino::-webkit-scrollbar { display: none; }
-
-.buses-tab-destino {
-  padding: 0.6rem 1rem;
-  background: transparent;
+.buses-nav-back {
+  background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.85rem;
-  font-weight: 500;
+  color: #E8621A;
   cursor: pointer;
-  white-space: nowrap;
-  margin-bottom: -1px;
-  transition: all 0.2s ease;
-}
-
-.buses-tab-destino:hover { color: var(--blanco); }
-.buses-tab-destino.active {
-  color: var(--naranja);
-  border-bottom-color: var(--naranja);
-}
-
-/* ── Lista de rutas ── */
-.buses-lista {
-  padding: 1rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* ── Card de cada ruta ── */
-.buses-card {
-  background: var(--gris-oscuro);
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  border: 1px solid rgba(255,255,255,0.06);
-  cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.buses-card:hover { border-color: rgba(232,98,26,0.4); transform: translateY(-1px); }
-.buses-card.seleccionada { border-color: var(--naranja); }
-
-.buses-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.buses-card-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.buses-badge {
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.buses-badge.normal  { background: var(--naranja); color: var(--blanco); }
-.buses-badge.expreso { background: #1a3a1a; color: #66bb6a; border: 1px solid #66bb6a; }
-
-.buses-card-ruta {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--blanco);
-}
-
-.buses-expreso-tag {
-  display: inline-block;
-  font-size: 0.7rem;
-  color: #66bb6a;
-  margin-left: 0.4rem;
-}
-
-.buses-proxima {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--naranja);
-  flex-shrink: 0;
-}
-
-.buses-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.buses-meta-item {
-  font-size: 0.76rem;
-  color: rgba(255,255,255,0.5);
-  background: var(--negro);
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
-}
-
-/* ── Mini mapa SVG (contenedor principal) ── */
-.buses-mini-mapa-container {
-  margin: 0 1.25rem 1rem;
-  background: #1a2a1a;
-  border: 1px solid rgba(232, 98, 26, 0.35);
-  border-radius: 16px;
-  padding: 1rem 1.25rem 0.75rem;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  width: calc(100% - 2rem);
-  max-height: 80vh;
-  overflow-y: auto;
-  animation: fadeInDown 0.3s ease;
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.minimapa-badge-ruta {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.5rem;
-}
-
-.minimapa-titulo-ruta {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: rgba(255,255,255,0.8);
-}
-
-.minimapa-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-  overflow: visible;
-}
-
-.minimapa-svg-wrapper {
-  width: 100%;
-}
-
-.minimapa-info-rapida {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.5);
-}
-
-.minimapa-cerrar-btn {
-  display: block;
-  width: 100%;
-  margin-top: 0.75rem;
   padding: 0.4rem;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 8px;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s;
 }
-
-.minimapa-cerrar-btn:hover {
-  border-color: var(--naranja);
-  color: var(--naranja);
+.buses-nav-back:hover { background: rgba(232,98,26,0.1); }
+.buses-nav-logo {
+  font-size: 1.15rem;
+  font-weight: 800;
+  flex: 1;
+  color: #fff;
 }
-
-/* ── Pestañas de detalle ── */
-.buses-detalle-tabs {
+.logo-orange { color: #E8621A; font-style: italic; }
+.buses-nav-right {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  align-items: center;
 }
-
-.tab-btn {
-  background: transparent;
+.buses-nav-icon {
+  background: none;
   border: none;
-  color: rgba(255,255,255,0.6);
-  padding: 0.5rem 1rem;
+  color: rgba(255,255,255,0.5);
   cursor: pointer;
-  font-weight: 600;
-  border-radius: 20px;
+  padding: 0.4rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.buses-nav-icon:hover { color: #E8621A; }
+
+/* ── Loading & Error ── */
+.buses-loading {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex: 1; gap: 1rem; color: rgba(255,255,255,0.4);
+}
+.buses-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255,255,255,0.08);
+  border-top-color: #E8621A;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.buses-error {
+  text-align: center; padding: 3rem; color: #ef5350;
+}
+.buses-retry {
+  margin-top: 1rem; padding: 0.6rem 1.5rem;
+  background: #E8621A; border: none; border-radius: 10px;
+  color: white; font-weight: 700; cursor: pointer;
   transition: all 0.2s;
 }
+.buses-retry:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(232,98,26,0.4); }
 
-.tab-btn.active {
-  background: var(--naranja);
-  color: white;
+/* ══════════════════════════════════════════
+   VISTA LISTA
+══════════════════════════════════════════ */
+.buses-content {
+  flex: 1;
+  padding: 0 2rem 1.5rem;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.tab-cerrar {
-  margin-left: auto;
-  background: rgba(255,255,255,0.1);
-  border: none;
-  color: white;
-  font-size: 1.2rem;
+/* Hero */
+.buses-hero { padding: 2rem 0 1.25rem; }
+.buses-hero-title {
+  font-size: 3rem; font-weight: 900;
+  margin: 0 0 0.5rem; line-height: 1.1;
+}
+.accent-italic { color: #E8621A; font-style: italic; }
+.buses-hero-sub {
+  color: rgba(255,255,255,0.45); font-size: 0.95rem;
+  margin: 0; max-width: 480px; line-height: 1.6;
+}
+
+/* Search */
+.buses-search-wrapper {
+  position: relative;
+  margin-bottom: 1.25rem;
+  max-width: 500px;
+}
+.buses-search-icon-svg {
+  position: absolute; left: 1rem; top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.3); pointer-events: none;
+}
+.buses-search-input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.75rem;
+  background: rgba(45,45,45,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: #fff; font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.buses-search-input::placeholder { color: rgba(255,255,255,0.3); }
+.buses-search-input:focus {
+  border-color: rgba(232,98,26,0.5);
+  box-shadow: 0 0 0 3px rgba(232,98,26,0.08);
+}
+
+/* Chips */
+.buses-chips-scroll {
+  display: flex; gap: 0.5rem;
+  overflow-x: auto; scrollbar-width: none;
+  padding-bottom: 1.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+.buses-chips-scroll::-webkit-scrollbar { display: none; }
+.buses-chip {
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(45,45,45,0.5);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.buses-chip:hover { border-color: rgba(232,98,26,0.4); background: rgba(60,60,60,0.6); }
+.buses-chip.active {
+  background: #E8621A; border-color: #E8621A;
+  color: #fff; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(232,98,26,0.3);
+}
+
+/* Featured Card */
+.buses-featured-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  min-height: 260px;
+  margin-bottom: 1.25rem;
   cursor: pointer;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.buses-featured-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+.featured-bg-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(50,28,8,0.97) 0%,
+    rgba(30,20,10,0.9) 45%,
+    rgba(40,30,15,0.95) 100%
+  );
+}
+.featured-content {
+  position: relative; z-index: 1;
+  padding: 1.5rem;
+  display: flex; flex-direction: column;
+  min-height: 260px; justify-content: flex-end;
+}
+.featured-top-badges {
+  display: flex; gap: 0.5rem;
+  margin-bottom: auto;
+}
+.badge-live {
+  background: rgba(232,98,26,0.9); color: #fff;
+  padding: 0.3rem 0.7rem; border-radius: 6px;
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em;
+}
+.badge-terminal {
+  background: rgba(255,255,255,0.12); color: #fff;
+  padding: 0.3rem 0.7rem; border-radius: 6px;
+  font-size: 0.65rem; font-weight: 600;
+}
+.featured-title {
+  font-size: 1.8rem; font-weight: 800;
+  margin: 0 0 0.4rem; color: #fff;
+}
+.featured-meta-row {
+  display: flex; gap: 1.25rem;
+  font-size: 0.82rem; color: rgba(255,255,255,0.55);
+  margin-bottom: 1rem;
+}
+.featured-bottom-row {
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.featured-next { display: flex; flex-direction: column; gap: 0.15rem; }
+.fnext-label {
+  font-size: 0.6rem; font-weight: 700;
+  color: rgba(255,255,255,0.35); letter-spacing: 0.06em;
+}
+.fnext-time {
+  font-size: 1.8rem; font-weight: 900; color: #E8621A;
+  background: rgba(232,98,26,0.1);
+  padding: 0.2rem 0.6rem; border-radius: 8px; line-height: 1;
+}
+.featured-btn {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; padding: 0.55rem 1rem;
+  border-radius: 10px; font-weight: 600;
+  font-size: 0.82rem; cursor: pointer;
+  display: flex; align-items: center; gap: 0.35rem;
+  transition: background 0.2s;
+}
+.featured-btn:hover { background: rgba(255,255,255,0.18); }
+
+/* Grid de rutas */
+.buses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+}
+.buses-route-card {
+  background: rgba(28,28,28,0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 1.2rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25,0.8,0.25,1);
+}
+.buses-route-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+}
+.rcard-header { display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
+.rcard-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: rgba(232,98,26,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: #E8621A;
+}
+.rcard-fav-tag {
+  font-size: 0.58rem; font-weight: 800;
+  color: rgba(255,255,255,0.35); letter-spacing: 0.08em;
+  align-self: flex-start;
+}
+.rcard-name { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.2rem; }
+.rcard-operator { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin: 0 0 0.9rem; }
+.rcard-info { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1rem; }
+.rcard-row { display: flex; justify-content: space-between; font-size: 0.82rem; }
+.rcard-label { color: rgba(255,255,255,0.4); }
+.rcard-val { color: #fff; font-weight: 600; }
+.rcard-footer {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.rcard-next { display: flex; flex-direction: column; gap: 0.1rem; }
+.rcard-next-label {
+  font-size: 0.58rem; font-weight: 700;
+  color: rgba(255,255,255,0.3); letter-spacing: 0.05em;
+}
+.rcard-next-time { font-size: 1.4rem; font-weight: 900; color: #E8621A; }
+.rcard-bookmark {
+  background: none; border: none;
+  color: rgba(255,255,255,0.3); cursor: pointer;
+  padding: 0.35rem; border-radius: 8px;
+  transition: all 0.2s;
+}
+.rcard-bookmark:hover { background: rgba(255,255,255,0.06); color: #E8621A; }
+.buses-no-results {
+  grid-column: 1/-1; text-align: center;
+  color: rgba(255,255,255,0.35); padding: 2.5rem; font-size: 0.9rem;
 }
 
-.tab-panel {
-  animation: fadeIn 0.2s ease;
-  padding-bottom: 0.5rem;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Tabla de horarios (con scroll vertical) ── */
-.horarios-tabla {
+/* ══════════════════════════════════════════
+   VISTA DETALLE
+══════════════════════════════════════════ */
+.buses-detail-page {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  max-height: 300px;
   overflow-y: auto;
-  padding-right: 0.5rem;
 }
 
-.horarios-tabla::-webkit-scrollbar {
-  width: 4px;
+/* Hero del detalle */
+.detail-hero {
+  position: relative;
+  min-height: 200px;
+  background: linear-gradient(135deg, rgba(50,25,5,0.98) 0%, rgba(30,20,10,0.9) 100%);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  flex-shrink: 0; overflow: hidden;
 }
-.horarios-tabla::-webkit-scrollbar-track {
+.detail-hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(232,98,26,0.15) 0%, transparent 60%);
+}
+.detail-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(17,17,17,1) 0%, transparent 55%);
+}
+.detail-hero-content {
+  position: relative; z-index: 1;
+  padding: 1.5rem 2rem;
+}
+.detail-hero-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 0.75rem;
+}
+.detail-route-badge {
+  display: inline-block;
+  background: #E8621A; color: #fff;
+  padding: 0.3rem 0.8rem; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em;
+}
+.detail-hero-pills-top { display: flex; gap: 0.5rem; }
+.hero-pill {
   background: rgba(255,255,255,0.1);
-  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 0.4rem 0.75rem; border-radius: 8px;
+  display: flex; flex-direction: column; gap: 0.1rem;
 }
-.horarios-tabla::-webkit-scrollbar-thumb {
-  background: var(--naranja);
-  border-radius: 4px;
+.hero-pill-label {
+  font-size: 0.55rem; font-weight: 700;
+  color: rgba(255,255,255,0.4); letter-spacing: 0.07em;
+}
+.hero-pill-val { font-size: 0.85rem; font-weight: 700; color: #fff; }
+.detail-hero-title {
+  font-size: 2rem; font-weight: 800;
+  margin: 0 0 0.35rem; color: #fff; line-height: 1.2;
+}
+.detail-hero-operator {
+  font-size: 0.85rem; color: rgba(255,255,255,0.5); margin: 0;
 }
 
-.horarios-header {
+/* Layout de 2 columnas */
+.detail-body-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--naranja);
-  font-weight: bold;
-  color: var(--naranja);
-  font-size: 0.8rem;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: start;
 }
 
-.horarios-fila {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr;
-  padding: 0.4rem 0;
-  border-bottom: 1px dashed rgba(255,255,255,0.1);
-  font-size: 0.85rem;
+/* Section titles */
+.buses-section-title {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.buses-section-title h3 {
+  margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff;
 }
 
-.horarios-fila .hora {
-  font-weight: 600;
-  color: var(--blanco);
+/* Horarios */
+.horarios-section { display: flex; flex-direction: column; }
+.horarios-header-row {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 0.75rem;
+}
+.frecuencia-badge {
+  background: rgba(45,45,45,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.6);
+  padding: 0.3rem 0.75rem; border-radius: 8px;
+  font-size: 0.75rem; font-weight: 500;
+}
+.horarios-table-card {
+  background: rgba(28,28,28,0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; overflow: hidden;
+}
+.horarios-head {
+  display: grid; grid-template-columns: 1.5fr 1.5fr 1fr;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.62rem; font-weight: 700;
+  color: rgba(255,255,255,0.35); letter-spacing: 0.06em;
+}
+.horarios-row {
+  display: grid; grid-template-columns: 1.5fr 1.5fr 1fr;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  align-items: center;
+  transition: background 0.15s;
+}
+.horarios-row:last-child { border-bottom: none; }
+.horarios-row:hover { background: rgba(255,255,255,0.02); }
+.horarios-row.proximo { background: rgba(232,98,26,0.05); }
+.hrow-time {
+  font-size: 1.1rem; font-weight: 700; color: #fff;
+  display: flex; flex-direction: column; gap: 0.15rem;
+}
+.horarios-row.proximo .hrow-time { color: #E8621A; }
+.proximo-label {
+  font-size: 0.55rem; font-weight: 700;
+  color: rgba(255,255,255,0.4); letter-spacing: 0.06em;
+}
+.hrow-days { font-size: 0.85rem; color: rgba(255,255,255,0.55); }
+.hrow-type {
+  display: inline-flex; align-items: center;
+  padding: 0.25rem 0.6rem; border-radius: 6px;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.04em; width: fit-content;
+}
+.hrow-type.directo { background: rgba(232,98,26,0.15); color: #E8621A; }
+.hrow-type.regular { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55); }
+.no-horarios {
+  color: rgba(255,255,255,0.35); text-align: center;
+  padding: 2rem; font-size: 0.9rem;
 }
 
-.horarios-fila .dias {
-  color: rgba(255,255,255,0.7);
+/* Paradas Timeline */
+.paradas-section { display: flex; flex-direction: column; }
+.paradas-card {
+  background: rgba(28,28,28,0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; padding: 1.25rem;
+}
+.paradas-timeline { display: flex; flex-direction: column; }
+.parada-item { display: flex; gap: 1rem; min-height: 60px; }
+.parada-item:last-child { min-height: auto; }
+.parada-indicator {
+  display: flex; flex-direction: column;
+  align-items: center; flex-shrink: 0; width: 20px;
+}
+.parada-dot {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.parada-dot.origin { background: #E8621A; box-shadow: 0 0 8px rgba(232,98,26,0.5); }
+.parada-dot.destination {
+  background: transparent; border: 2px solid #555;
+  position: relative;
+}
+.parada-dot.destination::after {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 6px; height: 6px; border-radius: 50%; background: #3399ff;
+}
+.parada-dot.stop { background: #E8621A; opacity: 0.6; }
+.parada-line {
+  flex: 1; width: 2px;
+  background: linear-gradient(to bottom, #E8621A 0%, rgba(100,100,100,0.3) 100%);
+  margin: 4px 0;
+}
+.parada-info { padding-bottom: 1rem; padding-top: 0; }
+.parada-item:last-child .parada-info { padding-bottom: 0; }
+.parada-name { font-size: 0.9rem; font-weight: 700; color: #fff; display: block; }
+.parada-sub { font-size: 0.75rem; color: rgba(255,255,255,0.4); display: block; margin-top: 0.15rem; }
+
+/* Info a bordo */
+.info-a-bordo { margin-top: 1rem; }
+.info-bordo-card {
+  background: rgba(28,28,28,0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; padding: 1rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.info-bordo-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  font-size: 0.85rem; color: rgba(255,255,255,0.7);
 }
 
-.horarios-fila .tipo.directo {
-  color: #4caf50;
+/* Botones de acción del detalle */
+.detail-actions-bar {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem 1.5rem;
+  max-width: 1100px; width: 100%; margin: 0 auto;
 }
-
-.horarios-fila .tipo.indirecto {
-  color: #ff9800;
+.detail-btn-primary {
+  background: linear-gradient(135deg, #E8621A, #FF9B6A);
+  color: #fff; border: none; padding: 0.9rem;
+  border-radius: 14px; font-weight: 700; font-size: 0.85rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(232,98,26,0.3);
 }
+.detail-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,98,26,0.5); }
+.detail-btn-secondary {
+  background: rgba(45,45,45,0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8); padding: 0.9rem;
+  border-radius: 14px; font-weight: 700; font-size: 0.85rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  transition: all 0.25s;
+}
+.detail-btn-secondary:hover { background: rgba(60,60,60,0.8); transform: translateY(-2px); }
 
-/* Información adicional dentro del panel */
-.buses-detalle-info {
-  margin-top: 0.5rem;
+/* ══════════════════════════════════════════
+   BOTTOM TAB BAR (solo sección buses)
+══════════════════════════════════════════ */
+.buses-bottom-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 68px;
+  background: rgba(17,17,17,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  z-index: 300;
+}
+.bbar-tab {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.2rem;
+  background: none; border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
   padding: 0.5rem;
-  background: rgba(0,0,0,0.2);
   border-radius: 12px;
+  margin: 0 0.25rem;
+  transition: all 0.2s;
+}
+.bbar-tab:hover:not(:disabled) { color: rgba(255,255,255,0.7); }
+.bbar-tab.active {
+  color: #E8621A;
+}
+.bbar-tab.active svg {
+  background: rgba(232,98,26,0.12);
+  border-radius: 12px; padding: 6px;
+  box-sizing: content-box;
+}
+.bbar-tab:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE MOBILE
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .buses-content { padding: 0 1rem 1rem; }
+
+  .buses-hero { padding: 1.25rem 0 0.75rem; }
+  .buses-hero-title { font-size: 1.9rem; }
+  .buses-hero-sub { font-size: 0.82rem; }
+
+  .buses-search-wrapper { max-width: 100%; }
+
+  .buses-featured-card { min-height: 220px; border-radius: 14px; }
+  .featured-title { font-size: 1.4rem; }
+  .fnext-time { font-size: 1.4rem; }
+
+  .buses-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+
+  /* Detalle en mobile */
+  .detail-hero { min-height: 180px; }
+  .detail-hero-content { padding: 1.25rem 1rem; }
+  .detail-hero-title { font-size: 1.5rem; }
+
+  .detail-body-layout {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1.25rem;
+  }
+
+  .horarios-head { padding: 0.6rem 1rem; font-size: 0.57rem; }
+  .horarios-row { padding: 0.75rem 1rem; }
+  .hrow-time { font-size: 0.95rem; }
+  .hrow-days { font-size: 0.78rem; }
+
+  .detail-actions-bar {
+    padding: 1rem;
+  }
+  .detail-btn-primary,
+  .detail-btn-secondary {
+    padding: 0.8rem; font-size: 0.8rem; border-radius: 12px;
+  }
 }
 
-.buses-detalle-info h3 {
-  margin: 0 0 0.5rem 0;
-  color: var(--naranja);
-}
-
-.buses-detalle-info p {
-  margin: 0.25rem 0;
-  font-size: 0.85rem;
-}
-
-/* Desktop */
-@media (min-width: 768px) {
-  .buses-page { max-width: 800px; margin: 0 auto; }
+@media (max-width: 400px) {
+  .buses-hero-title { font-size: 1.6rem; }
+  .featured-title { font-size: 1.2rem; }
+  .horarios-head,
+  .horarios-row { font-size: 0.72rem; }
 }
