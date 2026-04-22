@@ -48,22 +48,6 @@
   color: #fff;
 }
 .logo-orange { color: #E8621A; font-style: italic; }
-.buses-nav-right {
-  display: flex;
-  gap: 0.5rem;
-}
-.buses-nav-icon {
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.5);
-  cursor: pointer;
-  padding: 0.4rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
-}
-.buses-nav-icon:hover { color: #E8621A; }
 
 /* ── Loading & Error ── */
 .buses-loading {

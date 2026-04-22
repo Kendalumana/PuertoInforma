@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './styles/Index.css';
 
-import api from './api/axios';
+import api, { axiosPrivate } from './api/axios';
 
 import MiniCard from './components/MiniCard';
 import Navbar from './components/Navbar';
@@ -63,7 +63,7 @@ function MapaView() {
     }, [favorites]);
 
     useEffect(() => {
-        api.get('/lugar')
+        axiosPrivate.get('/lugar')
             .then(res => {
                 const lugares = res.data;
                 setAllPlaces(lugares);

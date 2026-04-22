@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../api/axios';
 import {
     Search, Bus, ChevronRight, Bookmark, BookmarkCheck,
-    Share2, MapPin, ArrowLeft, Clock, Repeat, Bell, User, Route, Star
+    Share2, MapPin, ArrowLeft, Clock, Repeat, Route, Star
 } from 'lucide-react';
 import '../styles/Buses.css';
 
@@ -386,24 +386,35 @@ function PaginaBuses() {
             ══════════════════════════════════════ */}
             <nav className="buses-bottom-bar">
                 <button
-                    className={`bbar-tab ${tabActiva === 'buses' ? 'active' : ''}`}
+                    className={`bbar-tab ${!rutaSeleccionada && tabActiva === 'buses' ? 'active' : ''}`}
                     onClick={() => { setRutaSeleccionada(null); setTabActiva('buses'); }}
                 >
                     <Bus size={20} />
                     <span>BUSES</span>
                 </button>
                 <button
-                    className={`bbar-tab ${tabActiva === 'horarios' ? 'active' : ''}`}
-                    onClick={() => { if (rutaSeleccionada) setTabActiva('horarios'); }}
-                    disabled={!rutaSeleccionada}
+                    className={`bbar-tab ${rutaSeleccionada && tabActiva === 'horarios' ? 'active' : ''}`}
+                    onClick={() => {
+                        if (rutaSeleccionada) {
+                            setTabActiva('horarios');
+                        } else {
+                            // Seleccionar primera ruta disponible si no hay ninguna
+                            if (rutasFiltradas.length > 0) abrirDetalle(rutasFiltradas[0]);
+                        }
+                    }}
                 >
                     <Clock size={20} />
                     <span>HORARIOS</span>
                 </button>
                 <button
-                    className={`bbar-tab ${tabActiva === 'rutas' ? 'active' : ''}`}
-                    onClick={() => { if (rutaSeleccionada) setTabActiva('rutas'); }}
-                    disabled={!rutaSeleccionada}
+                    className={`bbar-tab ${rutaSeleccionada && tabActiva === 'rutas' ? 'active' : ''}`}
+                    onClick={() => {
+                        if (rutaSeleccionada) {
+                            setTabActiva('rutas');
+                        } else {
+                            if (rutasFiltradas.length > 0) abrirDetalle(rutasFiltradas[0]);
+                        }
+                    }}
                 >
                     <Route size={20} />
                     <span>RUTAS</span>
@@ -421,7 +432,7 @@ function PaginaBuses() {
 }
 
 // ─────────────────────────────────────────────
-// Navbar compacto para buses
+// Navbar compacto para buses (sin iconos de usuario en mobile)
 // ─────────────────────────────────────────────
 function BusesNavbar({ onBack }) {
     return (
@@ -432,10 +443,6 @@ function BusesNavbar({ onBack }) {
             <span className="buses-nav-logo">
                 <span className="logo-orange">Puerto</span> Informa
             </span>
-            <div className="buses-nav-right">
-                <button className="buses-nav-icon"><Bell size={20} /></button>
-                <button className="buses-nav-icon"><User size={20} /></button>
-            </div>
         </header>
     );
 }
