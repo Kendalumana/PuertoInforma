@@ -565,6 +565,12 @@
   animation: slideInRight 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   border-left: 1px solid rgba(255,255,255,0.05);
 }
+
+/* Ocultar drag handle en desktop */
+.modal-drag-handle {
+  display: none;
+}
+
 @keyframes slideInRight {
   to { transform: translateX(0); }
 }
@@ -573,18 +579,124 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* ── VISOR FULLSCREEN DE IMAGEN ── */
+.fullscreen-img-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInFs 0.25s ease;
+}
+@keyframes fadeInFs {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fullscreen-img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+}
+.fullscreen-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.fullscreen-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* ── GALERÍA DE FOTOS ── */
 .aesthetic-modal-left {
   position: relative;
   width: 100%;
-  min-height: 240px;
   background: #2D2D2D;
   flex-shrink: 0;
+  overflow: hidden;
 }
-.aesthetic-modal-left img {
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: 1fr;
+  gap: 4px;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+}
+
+.gallery-main {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.gallery-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.3s ease;
+}
+.gallery-main:hover img {
+  transform: scale(1.03);
+}
+.gallery-tap-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+
+.gallery-thumb {
+  width: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.gallery-thumb.placeholder {
+  background: rgba(45, 45, 45, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 1.2rem;
+  opacity: 0.4;
+}
+.gallery-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .aesthetic-no-img {
   width: 100%;
   height: 100%;
@@ -789,32 +901,69 @@
     to { transform: translateY(0); }
   }
 
-  /* Indicador de "drag" en la parte superior */
-  .aesthetic-modal::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
-    margin: 12px auto 8px;
+  /* Barra de arrastre interactiva (drag handle) */
+  .modal-drag-handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px 0 8px;
+    cursor: grab;
+    touch-action: none; /* Previene el scroll del navegador al arrastrar */
     flex-shrink: 0;
+  }
+  .modal-drag-handle:active {
+    cursor: grabbing;
+  }
+  .drag-bar {
+    width: 44px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    transition: background 0.2s, width 0.2s;
+  }
+  .modal-drag-handle:active .drag-bar {
+    width: 56px;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Quitar el pseudo-elemento que ya no se necesita */
+  .aesthetic-modal::before {
+    display: none;
   }
   
   .aesthetic-modal-left {
-    min-height: 140px;
-    max-height: 180px;
+    min-height: auto;
+    max-height: none;
     overflow: hidden;
-    border-radius: 12px;
-    margin: 0 1rem;
+    border-radius: 0;
+    margin: 0;
     flex-shrink: 0;
   }
 
-  .aesthetic-modal-left img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .gallery-grid {
+    height: 160px;
+    grid-template-columns: 1fr 50px 50px;
+    gap: 3px;
+    margin: 0 0.75rem;
     border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .gallery-main img {
+    border-radius: 0;
+  }
+
+  .gallery-thumb {
+    width: 100%;
+  }
+  .gallery-thumb.placeholder {
+    font-size: 1rem;
+  }
+
+  .gallery-tap-hint {
+    font-size: 0.6rem;
+    bottom: 6px;
+    left: 6px;
   }
 
   .aesthetic-back-btn {
