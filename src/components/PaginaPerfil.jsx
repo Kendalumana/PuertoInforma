@@ -196,14 +196,51 @@ function PaginaPerfil() {
   };
 
   if (cargando) return (
-    <div className="profile-page" style={{ color: 'white', textAlign: 'center', paddingTop: '4rem' }}>
-      Cargando perfil...
+    <div className="profile-page">
+      <div className="profile-layout">
+        {/* Skeleton sidebar */}
+        <aside className="profile-sidebar">
+          <div className="skeleton-card">
+            <div className="skeleton-avatar"></div>
+            <div className="skeleton-line wide"></div>
+            <div className="skeleton-line medium"></div>
+            <div className="skeleton-stats">
+              <div className="skeleton-stat-box"></div>
+              <div className="skeleton-stat-box"></div>
+            </div>
+            <div className="skeleton-bar"></div>
+          </div>
+        </aside>
+        {/* Skeleton misiones */}
+        <main className="profile-main-content">
+          <div className="skeleton-line wide" style={{ height: '2rem', marginBottom: '1.5rem', maxWidth: '250px' }}></div>
+          <div className="missions-grid">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="skeleton-mission-card">
+                <div className="skeleton-mission-img"></div>
+                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <div className="skeleton-line wide"></div>
+                  <div className="skeleton-line medium"></div>
+                  <div className="skeleton-line short"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
     </div>
   );
 
   if (error) return (
-    <div className="profile-page" style={{ color: '#ef5350', textAlign: 'center', paddingTop: '4rem' }}>
-      {error}
+    <div className="profile-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.5rem', minHeight: '100vh' }}>
+      <div style={{ fontSize: '3rem' }}>⚠️</div>
+      <p style={{ color: '#ef5350', fontWeight: 700, fontSize: '1rem', textAlign: 'center', maxWidth: '300px' }}>{error}</p>
+      <button
+        onClick={() => window.location.reload()}
+        style={{ background: '#E8621A', color: '#fff', border: 'none', padding: '0.7rem 2rem', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}
+      >
+        Reintentar
+      </button>
     </div>
   );
 

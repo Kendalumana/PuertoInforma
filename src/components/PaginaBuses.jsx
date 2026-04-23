@@ -457,7 +457,21 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
 
             {/* ── Botones de acción ── */}
             <div className="mv-detail-actions">
-                <button className="mv-btn-primary" onClick={() => { /* navigate to map */ }}>
+                <button
+                    className="mv-btn-primary"
+                    onClick={() => {
+                        const lat = ruta.lugarOrigen?.latitud;
+                        const lng = ruta.lugarOrigen?.longitud;
+                        onVolver(); // vuelve a la lista primero
+                        // Navega al mapa con coordenadas del origen si existen
+                        navigate('/', {
+                            state: {
+                                flyTo: lat && lng ? { lat, lng } : null,
+                                label: ruta.lugarOrigen?.nombre || ruta.nombre
+                            }
+                        });
+                    }}
+                >
                     <MapPin size={18} /> VER EN MAPA
                 </button>
                 <button className="mv-btn-secondary" onClick={() => onCompartir(ruta)}>

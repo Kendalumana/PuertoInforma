@@ -8,13 +8,6 @@
   --negro:        #1A1A1A;
   --gris-oscuro:  #2D2D2D;
   --blanco:       #FFFFFF;
-
-  /* Alias del diseño anterior — no eliminar */
-  --mar-profundo:   #1A1A1A;
-  --turquesa-claro: #E8621A;
-  --arena-suave:    #2D2D2D;
-  --sol-coral:      #E8621A;
-  --gris-pardo:     #FFFFFF;
 }
 
 * {
