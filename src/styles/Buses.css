@@ -669,3 +669,47 @@
   .mv-tabs      { padding: 0 0.25rem; }
   .mv-tab       { font-size: 0.65rem; padding: 0.8rem 0.25rem; }
 }
+
+/* ═══════════════════════════════════════════
+   FILTROS TIPO + DÍA (en RutaDetalle)
+═══════════════════════════════════════════ */
+.mv-tipo-chips,
+.mv-dia-selector {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  -webkit-overflow-scrolling: touch;
+}
+.mv-tipo-chips::-webkit-scrollbar,
+.mv-dia-selector::-webkit-scrollbar { display: none; }
+
+.mv-tipo-chip,
+.mv-dia-chip {
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  letter-spacing: 0.03em;
+}
+.mv-tipo-chip:hover,
+.mv-dia-chip:hover {
+  border-color: rgba(232,98,26,0.4);
+  color: rgba(255,255,255,0.85);
+}
+.mv-tipo-chip.active,
+.mv-dia-chip.active {
+  background: #E8621A;
+  border-color: #E8621A;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(232,98,26,0.35);
+}

@@ -193,30 +193,68 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
     );
 }
 
+// Nombres cortos de días para la UI (orden JS: 0=Dom)
+const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+// Formatea el rango de días de un horario de manera legible
+function formatearRangoDia(h) {
+    const ini = normalizarDia(h.diaInicio);
+    const fin = normalizarDia(h.diaFin);
+    const idxIni = DIA_NUM[ini] ?? -1;
+    const idxFin = DIA_NUM[fin] ?? -1;
+    if (idxIni === -1) return '';
+    if (ini === fin) return `Solo ${DIA_CORTO[idxIni]}`;
+    if ((ini === 'LUNES' && fin === 'DOMINGO') || (ini === 'DOMINGO' && fin === 'SABADO'))
+        return 'Todos los días';
+    return `${DIA_CORTO[idxIni]} – ${DIA_CORTO[idxFin]}`;
+}
+
 // ═══════════════════════════════════════════════════════════
 // COMPONENTE: Vista de detalle — estilo Move It
 // ═══════════════════════════════════════════════════════════
 function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver }) {
-    const [tabHorario, setTabHorario] = useState('hoy'); // 'hoy' | 'manana' | 'semana'
+    const [tabHorario,  setTabHorario]  = useState('hoy');   // 'hoy' | 'manana' | 'semana'
+    const [tipoFiltro,  setTipoFiltro]  = useState('TODOS'); // 'TODOS' | 'DIRECTO' | 'INDIRECTO'
+    const [diaSemana,   setDiaSemana]   = useState(null);    // 0-6 | null = todos
     const hoy    = new Date().getDay();
     const manana = (hoy + 1) % 7;
+
+    // Reset diaSemana al cambiar de tab
+    const cambiarTab = (tab) => {
+        setTabHorario(tab);
+        if (tab !== 'semana') setDiaSemana(null);
+    };
 
     // Paradas parseadas correctamente (string JSON → array)
     const paradas = useMemo(() => parsearParadas(ruta), [ruta]);
 
-    // Horarios según tab activo
+    // Tipos disponibles en esta ruta
+    const tiposDisponibles = useMemo(() => {
+        if (!ruta.horarios?.length) return [];
+        return [...new Set(ruta.horarios.map(h => (h.tipo || 'REGULAR').toUpperCase()))];
+    }, [ruta.horarios]);
+
+    // Horarios según tab + filtros
     const horariosTab = useMemo(() => {
         if (!ruta.horarios?.length) return [];
-        const diaFiltro = tabHorario === 'hoy' ? hoy : tabHorario === 'manana' ? manana : null;
+        let base = ruta.horarios;
 
-        if (diaFiltro !== null) {
-            return ruta.horarios
-                .filter(h => correEnDia(h, diaFiltro))
-                .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
+        // Filtro por día de la semana
+        if (tabHorario === 'hoy') {
+            base = base.filter(h => correEnDia(h, hoy));
+        } else if (tabHorario === 'manana') {
+            base = base.filter(h => correEnDia(h, manana));
+        } else if (tabHorario === 'semana' && diaSemana !== null) {
+            base = base.filter(h => correEnDia(h, diaSemana));
         }
-        // Semana completa: todos, ordenados por hora
-        return [...ruta.horarios].sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
-    }, [ruta.horarios, tabHorario, hoy, manana]);
+
+        // Filtro por tipo (DIRECTO / INDIRECTO)
+        if (tipoFiltro !== 'TODOS') {
+            base = base.filter(h => (h.tipo || '').toUpperCase() === tipoFiltro);
+        }
+
+        return [...base].sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
+    }, [ruta.horarios, tabHorario, hoy, manana, diaSemana, tipoFiltro]);
 
     // Índice del próximo bus (solo en tab HOY)
     const idxProximo = tabHorario === 'hoy'
@@ -266,16 +304,48 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
             {/* ── Tabs de horario ── */}
             <div className="mv-horario-section">
                 <div className="mv-tabs">
-                    <button className={`mv-tab ${tabHorario === 'hoy' ? 'active' : ''}`} onClick={() => setTabHorario('hoy')}>
+                    <button className={`mv-tab ${tabHorario === 'hoy' ? 'active' : ''}`} onClick={() => cambiarTab('hoy')}>
                         <Clock size={14} /> HOY
                     </button>
-                    <button className={`mv-tab ${tabHorario === 'manana' ? 'active' : ''}`} onClick={() => setTabHorario('manana')}>
+                    <button className={`mv-tab ${tabHorario === 'manana' ? 'active' : ''}`} onClick={() => cambiarTab('manana')}>
                         <CalendarDays size={14} /> MAÑANA
                     </button>
-                    <button className={`mv-tab ${tabHorario === 'semana' ? 'active' : ''}`} onClick={() => setTabHorario('semana')}>
-                        <ListFilter size={14} /> SEMANA COMPLETA
+                    <button className={`mv-tab ${tabHorario === 'semana' ? 'active' : ''}`} onClick={() => cambiarTab('semana')}>
+                        <ListFilter size={14} /> SEMANA
                     </button>
                 </div>
+
+                {/* Filtros de tipo (si hay más de uno disponible) */}
+                {tiposDisponibles.length > 1 && (
+                    <div className="mv-tipo-chips">
+                        {['TODOS', ...tiposDisponibles].map(t => (
+                            <button
+                                key={t}
+                                className={`mv-tipo-chip ${tipoFiltro === t ? 'active' : ''}`}
+                                onClick={() => setTipoFiltro(t)}
+                            >
+                                {t === 'TODOS' ? 'Todos' : t.charAt(0) + t.slice(1).toLowerCase()}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Selector de día (solo en tab SEMANA) */}
+                {tabHorario === 'semana' && (
+                    <div className="mv-dia-selector">
+                        <button
+                            className={`mv-dia-chip ${diaSemana === null ? 'active' : ''}`}
+                            onClick={() => setDiaSemana(null)}
+                        >Todos</button>
+                        {DIA_CORTO.map((d, i) => (
+                            <button
+                                key={i}
+                                className={`mv-dia-chip ${diaSemana === i ? 'active' : ''}`}
+                                onClick={() => setDiaSemana(diaSemana === i ? null : i)}
+                            >{d}</button>
+                        ))}
+                    </div>
+                )}
 
                 {/* Lista de horarios */}
                 <div className="mv-horarios-list">
@@ -314,11 +384,11 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
                                     {/* Info adicional */}
                                     <div className="mv-horario-info">
                                         <span className={`mv-tipo-badge ${esDirecto ? 'directo' : 'regular'}`}>
-                                            {esDirecto ? 'DIRECTO' : 'REGULAR'}
+                                            {h.tipo || 'REGULAR'}
                                         </span>
                                         {tabHorario === 'semana' && (
                                             <span className="mv-dias-badge">
-                                                {h.diaInicio?.substring(0, 3)} – {h.diaFin?.substring(0, 3)}
+                                                {formatearRangoDia(h)}
                                             </span>
                                         )}
                                     </div>
