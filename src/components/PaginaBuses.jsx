@@ -4,7 +4,7 @@ import { axiosPrivate } from '../api/axios';
 import {
     Search, Bus, Bookmark, BookmarkCheck,
     Share2, MapPin, ArrowLeft, Clock, Star,
-    ChevronRight, CalendarDays, ListFilter
+    ChevronRight, CalendarDays, ListFilter, Navigation
 } from 'lucide-react';
 import '../styles/Buses.css';
 
@@ -21,6 +21,16 @@ function normalizarDia(dia) {
     if (!dia) return '';
     return dia.toUpperCase().trim()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quita tildes
+}
+
+// Distancia entre dos coordenadas en km (Haversine)
+function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // Parsea paradas: la DB las guarda como string JSON "[\"A\",\"B\"]"
@@ -496,6 +506,10 @@ function PaginaBuses() {
     const [loading, setLoading]                 = useState(true);
     const [error, setError]                     = useState(null);
 
+    // Geolocalización
+    const [ubicacion, setUbicacion]   = useState(null);       // { lat, lng }
+    const [geoEstado, setGeoEstado]   = useState('idle');      // 'idle' | 'loading' | 'ok' | 'error'
+
     // Favoritos — almacenamiento LOCAL (no se envía al backend)
     const [favoritos, setFavoritos] = useState(() => {
         try { return JSON.parse(localStorage.getItem('favoritosRutas') || '[]'); }
@@ -515,6 +529,35 @@ function PaginaBuses() {
         );
     }, []);
 
+    // Geolocalización: pedir permiso al montar
+    useEffect(() => {
+        if (!navigator.geolocation) { setGeoEstado('error'); return; }
+        setGeoEstado('loading');
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setUbicacion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                setGeoEstado('ok');
+            },
+            () => setGeoEstado('error'),
+            { timeout: 8000, maximumAge: 60000 }
+        );
+    }, []);
+
+    // Auto-seleccionar la terminal más cercana cuando llega el GPS (solo si está en 'Todas')
+    useEffect(() => {
+        if (!ubicacion || rutas.length === 0 || terminalActiva !== 'Todas') return;
+        let nearest = null;
+        let minDist = Infinity;
+        rutas.forEach(r => {
+            if (r.lugarOrigen?.latitud && r.lugarOrigen?.nombre) {
+                const d = haversineKm(ubicacion.lat, ubicacion.lng,
+                    r.lugarOrigen.latitud, r.lugarOrigen.longitud);
+                if (d < minDist) { minDist = d; nearest = r.lugarOrigen.nombre; }
+            }
+        });
+        if (nearest) setTerminalActiva(nearest);
+    }, [ubicacion, rutas]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Cargar rutas
     useEffect(() => {
         axiosPrivate.get('/ruta-transporte')
@@ -533,11 +576,32 @@ function PaginaBuses() {
         else navigator.clipboard?.writeText(txt);
     }, []);
 
-    // Terminales únicas para chips
-    const terminales = useMemo(() =>
-        ['Todas', ...new Set(rutas.map(r => r.lugarOrigen?.nombre).filter(Boolean))],
-        [rutas]
-    );
+    // Mapa de coordenadas por nombre de terminal
+    const terminalCoordsMap = useMemo(() => {
+        const m = {};
+        rutas.forEach(r => {
+            if (r.lugarOrigen?.nombre && r.lugarOrigen.latitud) {
+                m[r.lugarOrigen.nombre] = {
+                    lat: r.lugarOrigen.latitud,
+                    lng: r.lugarOrigen.longitud
+                };
+            }
+        });
+        return m;
+    }, [rutas]);
+
+    // Terminales únicas — ordenadas por cercanía si GPS disponible
+    const terminales = useMemo(() => {
+        const nombres = [...new Set(rutas.map(r => r.lugarOrigen?.nombre).filter(Boolean))];
+        if (!ubicacion) return ['Todas', ...nombres];
+        const sorted = nombres.sort((a, b) => {
+            const ca = terminalCoordsMap[a], cb = terminalCoordsMap[b];
+            if (!ca) return 1; if (!cb) return -1;
+            return haversineKm(ubicacion.lat, ubicacion.lng, ca.lat, ca.lng)
+                 - haversineKm(ubicacion.lat, ubicacion.lng, cb.lat, cb.lng);
+        });
+        return ['Todas', ...sorted];
+    }, [rutas, ubicacion, terminalCoordsMap]);
 
     // Rutas filtradas
     const rutasFiltradas = useMemo(() => {
@@ -609,7 +673,11 @@ function PaginaBuses() {
                         <p className="mv-hero-sub">
                             {tabPrincipal === 'favoritos'
                                 ? 'Tus rutas guardadas'
-                                : 'Salidas en tiempo real desde tu posición'}
+                                : geoEstado === 'ok'
+                                    ? '📍 Ubicación activa · Terminales ordenadas por cercanía'
+                                    : geoEstado === 'loading'
+                                        ? '⏳ Obteniendo tu ubicación...'
+                                        : 'Salidas en tiempo real · Filtrá por terminal'}
                         </p>
                     </div>
                     <RelojVivo />
@@ -633,15 +701,32 @@ function PaginaBuses() {
                 {/* Chips de terminal */}
                 {tabPrincipal !== 'favoritos' && (
                     <div className="mv-chips">
-                        {terminales.map(t => (
-                            <button
-                                key={t}
-                                className={`mv-chip ${terminalActiva === t ? 'active' : ''}`}
-                                onClick={() => setTerminalActiva(t)}
-                            >
-                                {t === 'Todas' ? 'Todas' : t}
-                            </button>
-                        ))}
+                        {terminales.map(t => {
+                            const coords = t !== 'Todas' ? terminalCoordsMap[t] : null;
+                            const dist = coords && ubicacion
+                                ? haversineKm(ubicacion.lat, ubicacion.lng, coords.lat, coords.lng)
+                                : null;
+                            return (
+                                <button
+                                    key={t}
+                                    className={`mv-chip ${terminalActiva === t ? 'active' : ''}`}
+                                    onClick={() => setTerminalActiva(t)}
+                                >
+                                    {t === 'Todas' ? (
+                                        <>{geoEstado === 'error'
+                                            ? <Navigation size={12} style={{ opacity: 0.4 }} />
+                                            : null} Todas</>
+                                    ) : t}
+                                    {dist !== null && (
+                                        <span className="mv-chip-dist">
+                                            {dist < 1
+                                                ? `${Math.round(dist * 1000)}m`
+                                                : `${dist.toFixed(1)}km`}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
