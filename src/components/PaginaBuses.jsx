@@ -12,17 +12,29 @@ import '../styles/Buses.css';
 // HELPERS DE TIEMPO REAL
 // ═══════════════════════════════════════════════════════════
 
-const DIA_ORDEN = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
-const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const DIA_NUM = Object.fromEntries(DIA_ORDEN.map((d, i) => [d, i]));
+// Días en el mismo formato que devuelve la DB (sin tildes)
+const DIA_ORDEN = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
+const DIA_NUM   = Object.fromEntries(DIA_ORDEN.map((d, i) => [d, i]));
 
-// Normaliza nombres de días (por si vienen con o sin tilde)
+// Normaliza un nombre de día eliminando tildes/espacios (robusto para SABADO y SÁBADO)
 function normalizarDia(dia) {
     if (!dia) return '';
-    const d = dia.toUpperCase().trim();
-    // Manejar variaciones comunes
-    if (d === 'MIERCOLES' || d === 'MIÉRCOLES') return 'MIÉRCOLES';
-    return d;
+    return dia.toUpperCase().trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quita tildes
+}
+
+// Parsea paradas: la DB las guarda como string JSON "[\"A\",\"B\"]"
+function parsearParadas(ruta) {
+    if (!ruta) return ['Origen', 'Destino'];
+    const raw = ruta.paradas;
+    if (Array.isArray(raw) && raw.length >= 2) return raw;
+    if (typeof raw === 'string') {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length >= 2) return parsed;
+        } catch (_) { /* continúa al fallback */ }
+    }
+    return [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
 }
 
 // ¿Corre esta ruta en el día numérico dado?
@@ -130,9 +142,10 @@ function RelojVivo() {
 // COMPONENTE: Card de ruta en la lista
 // ═══════════════════════════════════════════════════════════
 function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
-    const resumen = useMemo(() => resumenProximaSalida(ruta.horarios), [ruta.horarios]);
-    const origen  = ruta.paradas?.[0] || ruta.lugarOrigen?.nombre || 'Origen';
-    const destino = ruta.paradas?.[ruta.paradas.length - 1] || ruta.lugarDestino?.nombre || 'Destino';
+    const paradas = useMemo(() => parsearParadas(ruta), [ruta]);
+    const resumen = useMemo(() => resumenProximaSalida(Array.isArray(ruta.horarios) ? ruta.horarios : []), [ruta.horarios]);
+    const origen  = paradas[0];
+    const destino = paradas[paradas.length - 1];
 
     return (
         <div className={`mv-route-card ${resumen.estado}`} onClick={() => onSelect(ruta)}>
@@ -188,9 +201,8 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
     const hoy    = new Date().getDay();
     const manana = (hoy + 1) % 7;
 
-    // Paradas desde el campo paradas (JSON array)
-    const paradas = ruta.paradas?.length >= 2 ? ruta.paradas
-        : [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
+    // Paradas parseadas correctamente (string JSON → array)
+    const paradas = useMemo(() => parsearParadas(ruta), [ruta]);
 
     // Horarios según tab activo
     const horariosTab = useMemo(() => {
@@ -356,8 +368,10 @@ function PaginaBuses() {
 
     const toggleFavorito = useCallback((rutaId, e) => {
         e?.stopPropagation();
+        // Normalizar a string para evitar discrepancias number vs string
+        const id = String(rutaId);
         setFavoritos(prev =>
-            prev.includes(rutaId) ? prev.filter(id => id !== rutaId) : [...prev, rutaId]
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
         );
     }, []);
 
@@ -371,8 +385,9 @@ function PaginaBuses() {
 
     // Compartir ruta
     const handleCompartir = useCallback((ruta) => {
-        const origen  = ruta.paradas?.[0] || ruta.lugarOrigen?.nombre || '?';
-        const destino = ruta.paradas?.[ruta.paradas.length - 1] || ruta.lugarDestino?.nombre || '?';
+        const p = parsearParadas(ruta);
+        const origen  = p[0];
+        const destino = p[p.length - 1];
         const txt = `🚌 ${origen} → ${destino}\n${ruta.operador?.nombre || ''}\n⏱ ${ruta.duracion || '—'} | ${ruta.frecuencia || '—'}\nPuertoInforma`;
         if (navigator.share) navigator.share({ title: ruta.nombre, text: txt }).catch(() => {});
         else navigator.clipboard?.writeText(txt);
@@ -387,18 +402,20 @@ function PaginaBuses() {
     // Rutas filtradas
     const rutasFiltradas = useMemo(() => {
         const q = busqueda.toLowerCase();
-        const base = tabPrincipal === 'favoritos' ? rutas.filter(r => favoritos.includes(r.id)) : rutas;
+        const base = tabPrincipal === 'favoritos'
+            ? rutas.filter(r => favoritos.includes(String(r.id)))
+            : rutas;
         return base.filter(r => {
-            const paradas    = r.paradas || [];
-            const origen     = r.paradas?.[0] || r.lugarOrigen?.nombre || '';
-            const destino    = r.paradas?.[r.paradas?.length - 1] || r.lugarDestino?.nombre || '';
-            const matchQ     = !q ||
+            const p      = parsearParadas(r);
+            const origen = p[0];
+            const dest   = p[p.length - 1];
+            const matchQ = !q ||
                 (r.nombre || '').toLowerCase().includes(q) ||
                 origen.toLowerCase().includes(q) ||
-                destino.toLowerCase().includes(q) ||
+                dest.toLowerCase().includes(q) ||
                 (r.operador?.nombre || '').toLowerCase().includes(q) ||
-                paradas.some(p => p.toLowerCase().includes(q));
-            const matchT     = terminalActiva === 'Todas' || r.lugarOrigen?.nombre === terminalActiva;
+                p.some(stop => stop.toLowerCase().includes(q));
+            const matchT = terminalActiva === 'Todas' || r.lugarOrigen?.nombre === terminalActiva;
             return matchQ && matchT;
         });
     }, [rutas, busqueda, terminalActiva, tabPrincipal, favoritos]);
