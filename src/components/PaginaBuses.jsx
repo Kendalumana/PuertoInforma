@@ -96,6 +96,8 @@ function resumenProximaSalida(horarios) {
         return {
             label: formatearTiempoRestante(min),
             hora: formatHora(primero.horaSalida),
+            // horaLlegada solo existe en INDIRECTO — se muestra en la card como referencia
+            horaLlegada: primero.horaLlegada ? formatHora(primero.horaLlegada) : null,
             siguiente: proximosHoy[1] ? formatHora(proximosHoy[1].horaSalida) : null,
             estado: min < 15 ? 'urgente' : min < 60 ? 'pronto' : 'normal',
             hayHoy: true
@@ -110,12 +112,13 @@ function resumenProximaSalida(horarios) {
         return {
             label: `Mañana ${formatHora(mananaHorarios[0].horaSalida)}`,
             hora: formatHora(mananaHorarios[0].horaSalida),
+            horaLlegada: mananaHorarios[0].horaLlegada ? formatHora(mananaHorarios[0].horaLlegada) : null,
             siguiente: null,
             estado: 'manana',
             hayHoy: false
         };
     }
-    return { label: 'Sin salidas próximas', hora: '--:--', siguiente: null, estado: 'sinSalidas', hayHoy: false };
+    return { label: 'Sin salidas próximas', hora: '--:--', horaLlegada: null, siguiente: null, estado: 'sinSalidas', hayHoy: false };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -141,14 +144,42 @@ function RelojVivo() {
 // ═══════════════════════════════════════════════════════════
 // COMPONENTE: Card de ruta en la lista
 // ═══════════════════════════════════════════════════════════
+
+// Acorta nombres largos de terminales para que quepan en la card
+function acortarTerminal(nombre) {
+    if (!nombre) return '?';
+    const n = nombre.trim();
+    if (n.length <= 22) return n;
+    // Quita prefijos verbosos comunes
+    return n.replace(/Terminal (de buses de|Buses)/i, 'Term.').trim().substring(0, 24);
+}
+
+// Tipo dominante de una ruta según sus horarios
+function tipoRuta(ruta) {
+    if (!ruta.horarios?.length) return null;
+    const counts = {};
+    ruta.horarios.forEach(h => {
+        const t = (h.tipo || 'REGULAR').toUpperCase();
+        counts[t] = (counts[t] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+}
+
 function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
-    const paradas = useMemo(() => parsearParadas(ruta), [ruta]);
     const resumen = useMemo(() => resumenProximaSalida(Array.isArray(ruta.horarios) ? ruta.horarios : []), [ruta.horarios]);
-    const origen  = paradas[0];
-    const destino = paradas[paradas.length - 1];
+    const origen  = acortarTerminal(ruta.lugarOrigen?.nombre);
+    const destino = acortarTerminal(ruta.lugarDestino?.nombre);
+    const tipo    = tipoRuta(ruta); // 'DIRECTO' | 'INDIRECTO' | null
 
     return (
         <div className={`mv-route-card ${resumen.estado}`} onClick={() => onSelect(ruta)}>
+            {/* Franja de tipo (arriba de la card) */}
+            {tipo && (
+                <div className={`mv-card-tipo-strip ${tipo === 'DIRECTO' ? 'directo' : 'indirecto'}`}>
+                    {tipo === 'DIRECTO' ? '⚡ DIRECTO' : '🔄 INDIRECTO'}
+                </div>
+            )}
+
             {/* Cabecera: origen → destino */}
             <div className="mv-card-header">
                 <div className="mv-route-direction">
@@ -165,7 +196,9 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
             </div>
 
             {/* Operador */}
-            <p className="mv-operator">{ruta.operador?.nombre || '—'}</p>
+            <div className="mv-operator-row">
+                <span className="mv-operator">{ruta.operador?.nombre || '—'}</span>
+            </div>
 
             {/* Próximas salidas */}
             <div className="mv-departures">
@@ -180,6 +213,13 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
                             <div className="mv-next-bus normal secondary">
                                 <span className="mv-next-label">SIGUIENTE</span>
                                 <span className="mv-next-time">{resumen.siguiente}</span>
+                            </div>
+                        )}
+                        {/* Tiempo de viaje para INDIRECTO */}
+                        {tipo === 'INDIRECTO' && resumen.horaLlegada && (
+                            <div className="mv-card-llegada">
+                                <span className="mv-next-label">LLEGA</span>
+                                <span className="mv-llegada-time">{resumen.horaLlegada}</span>
                             </div>
                         )}
                     </>
@@ -360,6 +400,8 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
                             const esProximo = idx === idxProximo;
                             const minRestantes = tabHorario === 'hoy' ? minutosHasta(h.horaSalida) : null;
                             const esDirecto = (h.tipo || '').toUpperCase() === 'DIRECTO';
+                            const esIndirecto = (h.tipo || '').toUpperCase() === 'INDIRECTO';
+                            const tieneHoraLlegada = esIndirecto && h.horaLlegada;
 
                             return (
                                 <div key={idx} className={`mv-horario-row ${yaPartio ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}>
@@ -370,9 +412,23 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
                                         {!esProximo && !yaPartio && <div className="mv-normal-dot"></div>}
                                     </div>
 
-                                    {/* Hora */}
+                                    {/* Hora(s) — para INDIRECTO muestra salida + llegada */}
                                     <div className="mv-horario-hora">
-                                        <span className="mv-hora-big">{formatHora(h.horaSalida)}</span>
+                                        {tieneHoraLlegada ? (
+                                            <div className="mv-horario-doble">
+                                                <div className="mv-horario-doble-item">
+                                                    <span className="mv-doble-label">🚌 Sale</span>
+                                                    <span className="mv-hora-big">{formatHora(h.horaSalida)}</span>
+                                                </div>
+                                                <div className="mv-horario-doble-sep">→</div>
+                                                <div className="mv-horario-doble-item">
+                                                    <span className="mv-doble-label">📍 Llega</span>
+                                                    <span className="mv-hora-big llegada">{formatHora(h.horaLlegada)}</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="mv-hora-big">{formatHora(h.horaSalida)}</span>
+                                        )}
                                         {esProximo && minRestantes >= 0 && (
                                             <span className="mv-proximo-badge">
                                                 {formatearTiempoRestante(minRestantes)}
@@ -383,7 +439,7 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
 
                                     {/* Info adicional */}
                                     <div className="mv-horario-info">
-                                        <span className={`mv-tipo-badge ${esDirecto ? 'directo' : 'regular'}`}>
+                                        <span className={`mv-tipo-badge ${esDirecto ? 'directo' : esIndirecto ? 'indirecto' : 'regular'}`}>
                                             {h.tipo || 'REGULAR'}
                                         </span>
                                         {tabHorario === 'semana' && (
@@ -510,7 +566,7 @@ function PaginaBuses() {
         <div className="buses-page">
             <RutaDetalle
                 ruta={rutaSeleccionada}
-                esFavorito={favoritos.includes(rutaSeleccionada.id)}
+                esFavorito={favoritos.includes(String(rutaSeleccionada.id))}
                 onToggleFavorito={toggleFavorito}
                 onCompartir={handleCompartir}
                 onVolver={() => setRutaSeleccionada(null)}
@@ -588,7 +644,7 @@ function PaginaBuses() {
                                 key={ruta.id}
                                 ruta={ruta}
                                 onSelect={setRutaSeleccionada}
-                                esFavorito={favoritos.includes(ruta.id)}
+                                esFavorito={favoritos.includes(String(ruta.id))}
                                 onToggleFavorito={toggleFavorito}
                             />
                         ))

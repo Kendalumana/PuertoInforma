@@ -184,6 +184,23 @@
   box-shadow: 0 3px 10px rgba(232,98,26,0.35);
 }
 
+/* En desktop, las chips se envuelven y siempre son interactivas */
+@media (min-width: 680px) {
+  .mv-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    overflow-y: visible;
+    padding-bottom: 0.75rem;
+    pointer-events: auto;
+  }
+  .mv-chip {
+    flex-shrink: unset;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+}
+
+
 /* ─── Route Card ─── */
 .mv-routes-list {
   display: flex;
@@ -206,6 +223,47 @@
 }
 .mv-route-card.urgente { border-left: 3px solid #E8621A; }
 .mv-route-card.pronto  { border-left: 3px solid #FFB300; }
+
+/* ── Franja de tipo (visible desde la lista) ── */
+.mv-card-tipo-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.7rem;
+  border-radius: 6px 6px 0 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  margin: -1rem -1.1rem 0.75rem;
+  width: calc(100% + 2.2rem);
+}
+.mv-card-tipo-strip.directo {
+  background: rgba(232,98,26,0.13);
+  color: #E8621A;
+  border-bottom: 1px solid rgba(232,98,26,0.2);
+}
+.mv-card-tipo-strip.indirecto {
+  background: rgba(99,179,237,0.1);
+  color: #63b3ed;
+  border-bottom: 1px solid rgba(99,179,237,0.18);
+}
+
+/* Tiempo de llegada INDIRECTO en la card */
+.mv-card-llegada {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 70px;
+  border-left: 1.5px solid rgba(99,179,237,0.25);
+  padding-left: 0.75rem;
+  margin-left: 0.25rem;
+}
+.mv-llegada-time {
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #63b3ed;
+}
 
 .mv-card-header {
   display: flex;
@@ -584,11 +642,39 @@
   letter-spacing: 0.04em;
   width: fit-content;
 }
-.mv-tipo-badge.directo { background: rgba(232,98,26,0.15); color: #E8621A; }
-.mv-tipo-badge.regular { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); }
+.mv-tipo-badge.directo   { background: rgba(232,98,26,0.15); color: #E8621A; }
+.mv-tipo-badge.indirecto { background: rgba(99,179,237,0.12); color: #63b3ed; }
+.mv-tipo-badge.regular   { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); }
 .mv-dias-badge {
   font-size: 0.65rem;
   color: rgba(255,255,255,0.35);
+}
+
+/* ── Horario doble (INDIRECTO: salida + llegada) ── */
+.mv-horario-doble {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.mv-horario-doble-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.mv-doble-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.04em;
+}
+.mv-hora-big.llegada {
+  color: #63b3ed;
+}
+.mv-horario-doble-sep {
+  color: rgba(99,179,237,0.5);
+  font-size: 1rem;
+  font-weight: 900;
+  margin-top: 0.5rem;
 }
 
 /* Botones acción */
