@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './styles/Index.css';
@@ -49,6 +49,7 @@ function MapaView() {
 
     const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
+    const location = useLocation();
 
     useEffect(() => {
         const saved = localStorage.getItem('favoritos');
@@ -108,6 +109,21 @@ function MapaView() {
         return () => instance.remove();
     }, []);
 
+    // Leer el state enviado desde "VER EN MAPA" en PaginaBuses
+    useEffect(() => {
+        if (!map || !location.state?.flyTo) return;
+        const { lat, lng } = location.state.flyTo;
+        const label = location.state.label || '';
+        // Volar a las coordenadas de la terminal
+        map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
+        // Mostrar el nombre en el buscador para que el usuario sepa dónde está
+        if (label) setSearchQuery(label);
+        // Filtrar por categoría Transporte (id 7) para mostrar el marcador
+        setActiveChip(7);
+        // Limpiar el state para que no se repita si el usuario navega internamente
+        window.history.replaceState({}, document.title);
+    }, [map, location.state]);
+
     const suggestions = useMemo(() => {
         if (!searchQuery.trim() || allPlaces.length === 0) return [];
         const queryLower = searchQuery.toLowerCase();
@@ -143,13 +159,12 @@ function MapaView() {
                 iconAnchor: [14, 28],
                 popupAnchor: [0, -32]
             });
-            const m = L.marker([p.latitud, p.longitud], { icon })
-                .bindPopup(`<b>${p.nombre}</b>`);
+            const m = L.marker([p.latitud, p.longitud], { icon });
             m.addTo(markersLayer.current);
             m.on('click', () => {
                 map.flyTo([p.latitud, p.longitud], 16);
-                m.openPopup();
-                setSelectedPlace(p);
+                setPreviewPlace(p);
+                setSelectedPlace(null);
             });
             newMarkers[p.id] = m;
         });
@@ -161,6 +176,7 @@ function MapaView() {
             map.flyTo([p.latitud, p.longitud], 16);
             markers[p.id]?.openPopup();
         }
+        setPreviewPlace(null);
         setSelectedPlace(p);
     };
 
@@ -306,6 +322,16 @@ function MapaView() {
             <button className="immersive-recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
                 📍
             </button>
+
+            {/* MiniCard: preview flotante al tocar un pin */}
+            <MiniCard
+                place={previewPlace}
+                onVerMas={() => {
+                    setSelectedPlace(previewPlace);
+                    setPreviewPlace(null);
+                }}
+                onClose={() => setPreviewPlace(null)}
+            />
 
             {/* Panel lateral de detalles del lugar */}
             <PlaceModal
