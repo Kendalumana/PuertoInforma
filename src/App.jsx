@@ -50,6 +50,8 @@ function MapaView() {
     const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
     const location = useLocation();
+    // Capturamos el state UNA VEZ al montar para no usarlo como dependency
+    const flyToStateRef = useRef(location.state);
 
     useEffect(() => {
         const saved = localStorage.getItem('favoritos');
@@ -109,20 +111,17 @@ function MapaView() {
         return () => instance.remove();
     }, []);
 
-    // Leer el state enviado desde "VER EN MAPA" en PaginaBuses
+    // Leer el state de "VER EN MAPA" — solo se ejecuta cuando el mapa está listo
+    // Usamos ref en vez de location.state como dependency para evitar re-renders infinitos
     useEffect(() => {
-        if (!map || !location.state?.flyTo) return;
-        const { lat, lng } = location.state.flyTo;
-        const label = location.state.label || '';
-        // Volar a las coordenadas de la terminal
+        if (!map || !flyToStateRef.current?.flyTo) return;
+        const { lat, lng } = flyToStateRef.current.flyTo;
+        const label = flyToStateRef.current.label || '';
+        flyToStateRef.current = null; // consumimos el state una sola vez
         map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
-        // Mostrar el nombre en el buscador para que el usuario sepa dónde está
         if (label) setSearchQuery(label);
-        // Filtrar por categoría Transporte (id 7) para mostrar el marcador
         setActiveChip(7);
-        // Limpiar el state para que no se repita si el usuario navega internamente
-        window.history.replaceState({}, document.title);
-    }, [map, location.state]);
+    }, [map]); // solo depende del mapa, no de location.state
 
     const suggestions = useMemo(() => {
         if (!searchQuery.trim() || allPlaces.length === 0) return [];
@@ -172,10 +171,7 @@ function MapaView() {
     }, [map, filteredPlaces]);
 
     const handlePlaceClick = (p) => {
-        if (map) {
-            map.flyTo([p.latitud, p.longitud], 16);
-            markers[p.id]?.openPopup();
-        }
+        if (map) map.flyTo([p.latitud, p.longitud], 16);
         setPreviewPlace(null);
         setSelectedPlace(p);
     };

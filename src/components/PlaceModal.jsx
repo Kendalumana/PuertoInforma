@@ -73,8 +73,6 @@ function PlaceModal({ place, onClose }) {
         }
     };
 
-    if (!place) return null;
-
     // ── Funciones con useCallback para evitar re-renders innecesarios ──
     const toggleFavorite = useCallback(() => {
         const favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
@@ -105,6 +103,8 @@ function PlaceModal({ place, onClose }) {
     const openInMaps = useCallback((lat, lng) => {
         window.open(`https://www.google.com/maps?q=${lat},${lng}`);
     }, []);
+
+    if (!place) return null;
 
     return (
         <>
