@@ -88,7 +88,7 @@ function MapaView() {
 
     useEffect(() => {
         if (!mapRef.current) return;
-        
+
         // Solución al error de "Map container is already initialized" al volver de otra vista
         if (mapRef.current._leaflet_id) {
             mapRef.current._leaflet_id = null;
@@ -102,7 +102,7 @@ function MapaView() {
         }).addTo(instance);
         markersLayer.current.addTo(instance);
         setMap(instance);
-        
+
         // Forzar a Leaflet a recalcular el tamaño una vez que el DOM está listo
         setTimeout(() => {
             instance.invalidateSize();
