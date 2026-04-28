@@ -505,4 +505,242 @@
     .info-card {
         flex-direction: column;
     }
+}
+
+/* ============================================================
+   Badges adicionales
+   ============================================================ */
+.badge-orange {
+    background-color: rgba(232, 98, 26, 0.2);
+    color: #E8621A;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ============================================================
+   Estado sin salidas (big card vacía)
+   ============================================================ */
+.ferry-no-salidas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 2rem 0;
+    z-index: 2;
+}
+
+.ferry-no-salidas p {
+    color: #888;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.ferry-ultima-hint {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Estado de error
+   ============================================================ */
+.ferry-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    color: #666;
+    text-align: center;
+}
+
+.ferry-error-state p {
+    font-size: 1rem;
+    max-width: 300px;
+}
+
+/* ============================================================
+   Enlace de reserva (botón-link)
+   ============================================================ */
+.ferry-reserve-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #fff;
+    width: 100%;
+    background: transparent;
+    border: 1px solid #444;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.ferry-reserve-link:hover {
+    background: rgba(232, 98, 26, 0.1);
+    border-color: #E8621A;
+    color: #E8621A;
+}
+
+/* ============================================================
+   Lista completa de horarios del día
+   ============================================================ */
+.ferry-horarios-full {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.ferry-horarios-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.ferry-horarios-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ferry-horario-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    padding: 0.9rem 1.2rem;
+    transition: background 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.ferry-horario-row.proximo {
+    border-left-color: #E8621A;
+    background-color: #221a12;
+}
+
+.ferry-horario-row.pasado {
+    opacity: 0.4;
+}
+
+.ferry-row-hora {
+    font-size: 1.2rem;
+    font-weight: 800;
+    min-width: 60px;
+    letter-spacing: -0.5px;
+}
+
+.ferry-row-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.ferry-row-nombre {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ddd;
+}
+
+.ferry-row-badge {
+    font-size: 0.7rem;
+}
+
+.ferry-row-estado {
+    margin-left: auto;
+    text-align: right;
+}
+
+.ferry-row-restante {
+    font-size: 0.85rem;
+    color: #E8621A;
+    font-weight: 600;
+}
+
+.ferry-row-salido {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.ferry-row-link {
+    color: #666;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    padding: 0.25rem;
+}
+
+.ferry-row-link:hover {
+    color: #E8621A;
+}
+
+/* ============================================================
+   Skeleton Loader
+   ============================================================ */
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+}
+
+.skeleton-card {
+    pointer-events: none;
+}
+
+.sk-line, .sk-time, .sk-box, .sk-bar, .sk-boarding {
+    border-radius: 8px;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.sk-label  { height: 14px; width: 40%; margin-bottom: 1rem; }
+.sk-time   { height: 80px; width: 55%; margin-bottom: 1rem; border-radius: 12px; }
+.sk-sub    { height: 14px; width: 65%; margin-bottom: 2rem; }
+.sk-title  { height: 28px; width: 70%; margin-bottom: 0.5rem; margin-top: auto; }
+.sk-btn    { height: 44px; width: 100%; }
+.sk-bar    { height: 6px; width: 100%; margin-bottom: 1.5rem; }
+.sk-t1     { height: 16px; width: 80%; margin-bottom: 0.5rem; }
+.sk-t2     { height: 12px; width: 90%; margin-bottom: 0.4rem; }
+
+.sk-boarding {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    background: none;
+    animation: none;
+}
+
+.sk-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.sk-texts {
+    flex: 1;
+}
+
+@media (max-width: 600px) {
+    .ferry-horario-row {
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
+    }
+    .ferry-row-hora {
+        font-size: 1rem;
+        min-width: 48px;
+    }
+    .ferry-horarios-title {
+        font-size: 1.2rem;
+    }
 }
