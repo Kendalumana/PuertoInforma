@@ -1,120 +1,508 @@
 /* ============================================================
-   Ferry.css — PuertoInforma
+   Ferry.css — PuertoInforma (Redesign)
    ============================================================ */
 
-.ferry-page {
-  min-height: 100vh;
-  background-color: var(--negro);
-  color: var(--blanco);
-  padding-bottom: 2rem;
+.ferry-layout {
+    min-height: 100vh;
+    background-color: #121212;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* Space for bottom nav */
 }
 
-.ferry-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  background-color: var(--negro);
-  border-bottom: 2px solid var(--naranja);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+/* Typography & Colors */
+.text-orange { color: #E8621A; }
+.logo-white { font-weight: 700; color: #fff; }
+.logo-orange { font-weight: 700; color: #E8621A; }
+
+/* Top Navbar */
+.ferry-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background-color: transparent;
 }
 
-.ferry-back-btn {
-  background: transparent;
-  border: none;
-  color: var(--blanco);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 8px;
-  transition: background 0.2s;
-  flex-shrink: 0;
+.ferry-logo {
+    font-size: 1.4rem;
+    cursor: pointer;
 }
 
-.ferry-back-btn:hover { background: rgba(255,255,255,0.08); }
-
-.ferry-titulo {
-  font-size: 1.2rem;
-  font-weight: 700;
-  flex: 1;
+.ferry-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.ferry-badge-pronto {
-  padding: 0.2rem 0.65rem;
-  background: rgba(232, 98, 26, 0.15);
-  border: 1px solid rgba(232, 98, 26, 0.4);
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--naranja);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
+.ferry-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #1E1E1E;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    width: 250px;
 }
 
-.ferry-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 2.5rem 1.25rem 1.5rem;
+.ferry-search-wrapper input {
+    background: none;
+    border: none;
+    color: #fff;
+    margin-left: 0.5rem;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
 }
 
-.ferry-placeholder-icono { font-size: 3.5rem; opacity: 0.35; }
-
-.ferry-placeholder-texto { text-align: center; }
-.ferry-placeholder-texto h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--blanco);
-  margin-bottom: 0.5rem;
-}
-.ferry-placeholder-texto p {
-  font-size: 0.88rem;
-  color: rgba(255,255,255,0.45);
-  line-height: 1.6;
-  max-width: 300px;
+.ferry-search-wrapper input::placeholder {
+    color: #666;
 }
 
-.ferry-preview-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  width: 100%;
-  max-width: 500px;
+.icon-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background 0.2s;
 }
 
-.ferry-preview-card {
-  background: var(--gris-oscuro);
-  border-radius: 14px;
-  padding: 1rem;
-  border: 1px solid rgba(255,255,255,0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  transition: border-color 0.2s;
+.icon-btn:hover {
+    background: rgba(255,255,255,0.1);
 }
 
-.ferry-preview-card:hover { border-color: rgba(232,98,26,0.3); }
-
-.ferry-preview-icono  { font-size: 1.4rem; }
-.ferry-preview-titulo { font-size: 0.85rem; font-weight: 700; color: var(--blanco); }
-.ferry-preview-desc   { font-size: 0.75rem; color: rgba(255,255,255,0.4); line-height: 1.4; }
-
-.ferry-footer-aviso {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  padding: 1rem 1.25rem;
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.3);
-  border-top: 1px solid rgba(255,255,255,0.06);
-  margin-top: 1rem;
-  text-align: center;
+/* Main Content */
+.ferry-main {
+    padding: 0 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
 }
 
-.ferry-footer-aviso span { color: var(--naranja); font-weight: 600; }
+.ferry-hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    letter-spacing: -1px;
+}
+
+/* Route Chips */
+.ferry-route-chips {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+}
+
+.ferry-route-chips::-webkit-scrollbar {
+    display: none;
+}
+
+.ferry-chip {
+    background-color: #2A2A2A;
+    color: #ccc;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.ferry-chip:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.ferry-chip.active {
+    background-color: #E8621A;
+    color: #fff;
+}
+
+/* Section Header */
+.ferry-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+}
+
+.ferry-section-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.ferry-section-header p {
+    color: #888;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.live-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #E8621A;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #E8621A;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(232, 98, 26, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(232, 98, 26, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(232, 98, 26, 0); }
+}
+
+/* Grid Layout */
+.ferry-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.ferry-card {
+    background-color: #1E1E1E;
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.big-card {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    background: linear-gradient(145deg, #222, #181818);
+}
+
+.right-card {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    background-color: #242424;
+}
+
+.bottom-left-card {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    background-color: #1A1A1A;
+}
+
+.info-card {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    background: linear-gradient(135deg, #3A2010, #1E1108);
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+/* Card Elements */
+.card-top {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.flex-between { justify-content: space-between; }
+
+.siguiente-label {
+    color: #E8621A;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    margin-right: 1rem;
+}
+
+.badge-green {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ECC71;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-gray {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.card-time {
+    font-size: 6rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -2px;
+}
+
+.time-small {
+    font-size: 0.9rem;
+    color: #aaa;
+    font-weight: 600;
+}
+
+.card-subtitle {
+    color: #888;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    margin-top: 0;
+}
+
+.card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.mt-auto { margin-top: auto; }
+.mb-4 { margin-bottom: 1.5rem; }
+
+/* Big Card specific */
+.boarding-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 2;
+}
+
+.mins-box {
+    background-color: #E8621A;
+    color: #fff;
+    border-radius: 12px;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mins-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.mins-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.boarding-text h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.boarding-text p {
+    color: #888;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.watermark-ship, .watermark-moon {
+    position: absolute;
+    opacity: 0.05;
+    z-index: 1;
+}
+
+.watermark-ship {
+    right: -20px;
+    bottom: -40px;
+    transform: rotate(-10deg);
+}
+
+.watermark-moon {
+    right: -20px;
+    bottom: -20px;
+    transform: rotate(15deg);
+}
+
+/* Right Card specific */
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: #333;
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    width: 25%;
+    height: 100%;
+    background-color: #555;
+}
+
+.ferry-btn-outline {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ferry-btn-outline:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: #666;
+}
+
+/* Info Card specific */
+.info-icon {
+    flex-shrink: 0;
+}
+
+.info-card h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+.info-card p {
+    color: #aaa;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Bottom Navigation */
+.ferry-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #161616;
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    border-top: 1px solid #2A2A2A;
+    z-index: 1000;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.nav-item span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.nav-item:hover {
+    color: #999;
+}
+
+.nav-item.active {
+    color: #E8621A;
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+    .ferry-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .big-card, .right-card, .bottom-left-card, .info-card {
+        grid-column: 1 / -1;
+        grid-row: auto;
+    }
+
+    .ferry-hero-title {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .ferry-topbar {
+        padding: 1rem;
+    }
+    
+    .ferry-search-wrapper {
+        display: none;
+    }
+
+    .ferry-main {
+        padding: 0 1rem;
+    }
+
+    .ferry-hero-title {
+        font-size: 2.5rem;
+    }
+
+    .card-time {
+        font-size: 4rem;
+    }
+
+    .watermark-ship {
+        right: -40px;
+        bottom: -20px;
+    }
+    
+    .ferry-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .ferry-card {
+        padding: 1.5rem;
+    }
+    
+    .boarding-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .info-card {
+        flex-direction: column;
+    }
+}
