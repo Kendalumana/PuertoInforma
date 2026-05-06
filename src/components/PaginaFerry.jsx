@@ -127,7 +127,7 @@ function PaginaFerry() {
     useEffect(() => {
         setLoading(true);
         setError(null);
-        axiosPrivate.get('/horarios-ferry')
+        axiosPrivate.get('/ferry')
             .then(res => {
                 const data = Array.isArray(res.data) ? res.data : [];
                 const normalizados = data.map(normalizarHorario);
