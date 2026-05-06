@@ -117,16 +117,44 @@
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .ferry-chip:hover {
     background-color: #333;
     color: #fff;
+    transform: translateY(-1px);
+}
+
+.ferry-chip:active {
+    transform: scale(0.97);
 }
 
 .ferry-chip.active {
     background-color: #E8621A;
     color: #fff;
+    box-shadow: 0 4px 14px rgba(232, 98, 26, 0.35);
+}
+
+.ferry-chip-icon {
+    opacity: 0.6;
+}
+
+.ferry-chip.active .ferry-chip-icon {
+    opacity: 1;
+}
+
+.ferry-chip-skeleton {
+    height: 44px;
+    width: 180px;
+    border-radius: 30px;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+    flex-shrink: 0;
 }
 
 /* Section Header */
@@ -193,6 +221,12 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ferry-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 .big-card {
@@ -461,8 +495,12 @@
 }
 
 @media (max-width: 600px) {
+    .ferry-layout {
+        padding-bottom: 70px;
+    }
+
     .ferry-topbar {
-        padding: 1rem;
+        padding: 0.8rem 1rem;
     }
     
     .ferry-search-wrapper {
@@ -470,15 +508,16 @@
     }
 
     .ferry-main {
-        padding: 0 1rem;
+        padding: 0 0.8rem;
     }
 
     .ferry-hero-title {
-        font-size: 2.5rem;
+        font-size: 2rem;
+        margin-bottom: 1rem;
     }
 
     .card-time {
-        font-size: 4rem;
+        font-size: 3.5rem;
     }
 
     .watermark-ship {
@@ -491,19 +530,78 @@
         align-items: flex-start;
         gap: 0.5rem;
     }
+
+    .ferry-section-header h2 {
+        font-size: 1.3rem;
+    }
     
     .ferry-card {
-        padding: 1.5rem;
+        padding: 1.2rem;
+    }
+
+    .ferry-card:hover {
+        transform: none;
+        box-shadow: none;
     }
     
     .boarding-info {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 0.8rem;
     }
     
     .info-card {
         flex-direction: column;
+    }
+
+    .ferry-route-chips {
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0 0 0.5rem 0;
+    }
+
+    .ferry-chip {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .ferry-grid {
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.4rem;
+    }
+
+    .card-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .mins-box {
+        padding: 0.6rem 1rem;
+    }
+
+    .mins-num {
+        font-size: 1.6rem;
+    }
+
+    .ferry-bottom-nav {
+        padding: 0.7rem 0;
+    }
+
+    .nav-item span {
+        font-size: 0.6rem;
+    }
+
+    .live-status {
+        font-size: 0.75rem;
+    }
+
+    .ferry-btn-outline {
+        padding: 0.8rem;
+        font-size: 0.9rem;
     }
 }
 

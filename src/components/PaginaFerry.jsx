@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search, Bell, User, Clock,
-    Info, Compass, Ship, Ticket, Bookmark, ExternalLink
+    Info, Compass, Ship, Ticket, Bookmark, ExternalLink, Anchor
 } from 'lucide-react';
-import axiosPublic from '../api/axios';
+import { axiosPrivate } from '../api/axios';
 import '../styles/Ferry.css';
 
 // ═══════════════════════════════════════════════════════════
@@ -39,6 +39,26 @@ function formatearRestante(min) {
     const h = Math.floor(min / 60);
     const m = min % 60;
     return m > 0 ? `En ${h}h ${m}m` : `En ${h}h`;
+}
+
+/**
+ * Normaliza un objeto de horario de ferry.
+ * El backend Spring Boot usa camelCase (horaSalida, embarcacionNombre, etc.)
+ * Pero si por alguna razón llega en snake_case, también lo soportamos.
+ */
+function normalizarHorario(h) {
+    return {
+        id: h.id,
+        horaSalida: h.horaSalida || h.hora_salida || '',
+        origen: h.origen || '',
+        destino: h.destino || '',
+        embarcacionNombre: h.embarcacionNombre || h.embarcacion_nombre || '',
+        embarcacionTipo: h.embarcacionTipo || h.embarcacion_tipo || '',
+        enlaceReserva: h.enlaceReserva || h.enlace_reserva || '',
+        esNocturno: h.esNocturno ?? h.es_nocturno ?? false,
+        estado: h.estado || 'ACTIVO',
+        terminalNombre: h.terminalNombre || h.terminal_nombre || '',
+    };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -89,7 +109,7 @@ function FerrySkeletonGrid() {
 function PaginaFerry() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('SCHEDULES');
-    const [activeRoute, setActiveRoute] = useState('Puntarenas → Paquera');
+    const [activeRoute, setActiveRoute] = useState('');
 
     // Estado de datos
     const [horarios, setHorarios] = useState([]);
@@ -99,7 +119,7 @@ function PaginaFerry() {
     // Reloj vivo — recalcula "próxima salida" cada minuto
     const [ahora, setAhora] = useState(new Date());
     useEffect(() => {
-        const t = setInterval(() => setAhora(new Date()), 60000);
+        const t = setInterval(() => setAhora(new Date()), 30000);
         return () => clearInterval(t);
     }, []);
 
@@ -107,8 +127,12 @@ function PaginaFerry() {
     useEffect(() => {
         setLoading(true);
         setError(null);
-        axiosPublic.get('/horarios-ferry')
-            .then(res => setHorarios(res.data))
+        axiosPrivate.get('/horarios-ferry')
+            .then(res => {
+                const data = Array.isArray(res.data) ? res.data : [];
+                const normalizados = data.map(normalizarHorario);
+                setHorarios(normalizados);
+            })
             .catch(err => {
                 console.error('[PaginaFerry] Error cargando horarios:', err);
                 setError('No se pudieron cargar los horarios. Intenta de nuevo.');
@@ -125,24 +149,25 @@ function PaginaFerry() {
         return [...set];
     }, [horarios]);
 
-    // Si la ruta activa ya no existe en la BD, seleccionar la primera
+    // Seleccionar primera ruta al cargar
     useEffect(() => {
-        if (routes.length > 0 && !routes.includes(activeRoute)) {
+        if (routes.length > 0 && (!activeRoute || !routes.includes(activeRoute))) {
             setActiveRoute(routes[0]);
         }
     }, [routes]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Horarios filtrados por ruta activa ─────────────────
     const horariosFiltrados = useMemo(() => {
+        if (!activeRoute) return [];
         const [origen, destino] = activeRoute.split(' → ');
         return horarios
             .filter(h => h.origen === origen && h.destino === destino)
-            .sort((a, b) => horaEnMinutos(a.hora_salida) - horaEnMinutos(b.hora_salida));
-    }, [horarios, activeRoute, ahora]); // ahora en deps para recalcular cada minuto
+            .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
+    }, [horarios, activeRoute, ahora]);
 
     // ── Próximas salidas (futuras) ─────────────────────────
     const proximasSalidas = useMemo(() => {
-        return horariosFiltrados.filter(h => minutosHasta(h.hora_salida) >= 0);
+        return horariosFiltrados.filter(h => minutosHasta(h.horaSalida) >= 0);
     }, [horariosFiltrados]);
 
     // Siguiente salida (big card)
@@ -151,7 +176,7 @@ function PaginaFerry() {
     const ultima = horariosFiltrados[horariosFiltrados.length - 1] || null;
 
     // Minutos restantes para la siguiente salida
-    const minsRestantes = siguiente ? minutosHasta(siguiente.hora_salida) : null;
+    const minsRestantes = siguiente ? minutosHasta(siguiente.horaSalida) : null;
     const textoRestante = minsRestantes !== null ? formatearRestante(minsRestantes) : null;
 
     // ── Estado vivo de la big card ─────────────────────────
@@ -190,18 +215,21 @@ function PaginaFerry() {
                 {/* Route Chips — dinámicos desde la BD */}
                 <div className="ferry-route-chips">
                     {loading
-                        ? ['Cargando...'].map(r => (
-                            <button key={r} className="ferry-chip active">{r}</button>
+                        ? [1, 2].map(i => (
+                            <div key={i} className="ferry-chip-skeleton" />
                         ))
-                        : routes.map(r => (
-                            <button
-                                key={r}
-                                className={`ferry-chip ${activeRoute === r ? 'active' : ''}`}
-                                onClick={() => setActiveRoute(r)}
-                            >
-                                {r}
-                            </button>
-                        ))
+                        : routes.length === 0
+                            ? <button className="ferry-chip active">Sin rutas</button>
+                            : routes.map(r => (
+                                <button
+                                    key={r}
+                                    className={`ferry-chip ${activeRoute === r ? 'active' : ''}`}
+                                    onClick={() => setActiveRoute(r)}
+                                >
+                                    <Anchor size={14} className="ferry-chip-icon" />
+                                    {r}
+                                </button>
+                            ))
                     }
                 </div>
 
@@ -212,7 +240,7 @@ function PaginaFerry() {
                         <p>
                             {loading
                                 ? 'Cargando horarios...'
-                                : `Actualizado en tiempo real • ${activeRoute.split(' → ')[0]}`
+                                : `Actualizado en tiempo real • ${activeRoute ? activeRoute.split(' → ')[0] : 'Puerto Puntarenas'}`
                             }
                         </p>
                     </div>
@@ -251,10 +279,10 @@ function PaginaFerry() {
 
                             {siguiente ? (
                                 <>
-                                    <div className="card-time">{formatHora(siguiente.hora_salida)}</div>
+                                    <div className="card-time">{formatHora(siguiente.horaSalida)}</div>
                                     <div className="card-subtitle">
-                                        {siguiente.embarcacion_nombre || 'Naviera Tambor'} •{' '}
-                                        {siguiente.embarcacion_tipo || 'Ferry Convencional'}
+                                        {siguiente.embarcacionNombre || 'Naviera Tambor'} •{' '}
+                                        {siguiente.embarcacionTipo || 'Ferry Convencional'}
                                     </div>
 
                                     <div className="boarding-info">
@@ -265,7 +293,7 @@ function PaginaFerry() {
                                             </div>
                                         )}
                                         <div className="boarding-text">
-                                            <h4>{siguiente.terminal_nombre || siguiente.origen + ' Terminal'}</h4>
+                                            <h4>{siguiente.terminalNombre || siguiente.origen + ' Terminal'}</h4>
                                             <p>
                                                 {abordajeMin !== null && abordajeMin > 0
                                                     ? `Abordaje inicia en ${abordajeMin} minutos`
@@ -283,7 +311,7 @@ function PaginaFerry() {
                                     <p>No hay más salidas hoy para esta ruta.</p>
                                     {ultima && (
                                         <p className="ferry-ultima-hint">
-                                            Última salida fue a las {formatHora(ultima.hora_salida)}
+                                            Última salida fue a las {formatHora(ultima.horaSalida)}
                                         </p>
                                     )}
                                 </div>
@@ -297,26 +325,26 @@ function PaginaFerry() {
                             <div className="card-top flex-between">
                                 <Clock size={20} className="text-orange" />
                                 <span className="time-small">
-                                    {proxima2 ? `${formatHora(proxima2.hora_salida)}` : '—'}
+                                    {proxima2 ? formatHora(proxima2.horaSalida) : '—'}
                                 </span>
                             </div>
 
                             {proxima2 ? (
                                 <>
-                                    <h3 className="card-title mt-auto">{proxima2.embarcacion_nombre || 'Naviera Tambor'}</h3>
-                                    <p className="card-subtitle mb-4">{proxima2.embarcacion_tipo || 'Ferry Convencional'}</p>
+                                    <h3 className="card-title mt-auto">{proxima2.embarcacionNombre || 'Naviera Tambor'}</h3>
+                                    <p className="card-subtitle mb-4">{proxima2.embarcacionTipo || 'Ferry Convencional'}</p>
                                     <div className="progress-bar-container">
                                         <div
                                             className="progress-bar-fill"
                                             style={{
-                                                width: `${Math.min(100, Math.max(5, 100 - (minutosHasta(proxima2.hora_salida) / 60) * 20))}%`,
+                                                width: `${Math.min(100, Math.max(5, 100 - (minutosHasta(proxima2.horaSalida) / 60) * 20))}%`,
                                                 backgroundColor: '#E8621A'
                                             }}
                                         />
                                     </div>
-                                    {proxima2.enlace_reserva ? (
+                                    {proxima2.enlaceReserva ? (
                                         <a
-                                            href={proxima2.enlace_reserva}
+                                            href={proxima2.enlaceReserva}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="ferry-btn-outline ferry-reserve-link"
@@ -345,9 +373,9 @@ function PaginaFerry() {
                         <div className="ferry-card bottom-left-card">
                             <div className="card-top flex-between">
                                 <span className="time-small">
-                                    {ultima ? formatHora(ultima.hora_salida) : '--:--'}
+                                    {ultima ? formatHora(ultima.horaSalida) : '--:--'}
                                 </span>
-                                {ultima?.es_nocturno
+                                {ultima?.esNocturno
                                     ? <span className="badge-gray">NOCTURNO</span>
                                     : ultima
                                         ? <span className="badge-gray">ÚLTIMA</span>
@@ -355,7 +383,7 @@ function PaginaFerry() {
                                 }
                             </div>
                             <h3 className="card-title mt-auto">
-                                {ultima?.embarcacion_nombre || 'Naviera Tambor'}
+                                {ultima?.embarcacionNombre || 'Naviera Tambor'}
                             </h3>
                             <p className="card-subtitle">
                                 {ultima ? 'Última salida del día' : 'Sin datos disponibles'}
@@ -381,23 +409,25 @@ function PaginaFerry() {
                 {/* ── Lista completa de horarios del día ── */}
                 {!loading && !error && horariosFiltrados.length > 0 && (
                     <div className="ferry-horarios-full">
-                        <h3 className="ferry-horarios-title">Todos los horarios del día</h3>
+                        <h3 className="ferry-horarios-title">
+                            🚢 Todos los horarios — {activeRoute}
+                        </h3>
                         <div className="ferry-horarios-list">
                             {horariosFiltrados.map((h, idx) => {
-                                const min = minutosHasta(h.hora_salida);
+                                const min = minutosHasta(h.horaSalida);
                                 const pasado = min < 0;
                                 const esProximo = !pasado && proximasSalidas[0] === h;
                                 return (
                                     <div
-                                        key={idx}
+                                        key={h.id || idx}
                                         className={`ferry-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
                                     >
-                                        <div className="ferry-row-hora">{formatHora(h.hora_salida)}</div>
+                                        <div className="ferry-row-hora">{formatHora(h.horaSalida)}</div>
                                         <div className="ferry-row-info">
                                             <span className="ferry-row-nombre">
-                                                {h.embarcacion_nombre || 'Naviera Tambor'}
+                                                {h.embarcacionNombre || 'Naviera Tambor'}
                                             </span>
-                                            {h.es_nocturno && (
+                                            {h.esNocturno && (
                                                 <span className="badge-gray ferry-row-badge">Nocturno</span>
                                             )}
                                             {esProximo && (
@@ -410,9 +440,9 @@ function PaginaFerry() {
                                                 : <span className="ferry-row-restante">{formatearRestante(min)}</span>
                                             }
                                         </div>
-                                        {h.enlace_reserva && !pasado && (
+                                        {h.enlaceReserva && !pasado && (
                                             <a
-                                                href={h.enlace_reserva}
+                                                href={h.enlaceReserva}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="ferry-row-link"

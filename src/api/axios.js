@@ -2,7 +2,7 @@ import axios from 'axios';
 import { supabase } from '../lib/supabase';
 
 
-const BASE_URL = 'https://puertoInforma-backend-production.up.railway.app/api/v1';
+const BASE_URL = 'https://puertoinforma-backend-production.up.railway.app/api/v1';
 
 // Instancia pública (sin token)
 export default axios.create({

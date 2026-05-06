@@ -370,7 +370,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Registro />} />
             <Route path="/noticias" element={<PaginaNoticias />} />
-            <Route path="/ferry" element={<PaginaFerry />} />
+            <Route path="/ferry" element={<RutaProtegida><PaginaFerry /></RutaProtegida>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<RutaProtegida><MapaView /></RutaProtegida>} />
             <Route path="/perfil" element={<RutaProtegida><PaginaPerfil /></RutaProtegida>} />
