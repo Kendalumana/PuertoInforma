@@ -696,7 +696,7 @@
 /* Botones acción */
 .mv-detail-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   padding: 1.25rem;
   border-top: 1px solid rgba(255,255,255,0.05);
@@ -814,4 +814,193 @@
   border-color: #E8621A;
   color: #fff;
   box-shadow: 0 2px 8px rgba(232,98,26,0.35);
+}
+
+/* ═══════════════════════════════════════════
+   BUS MAP MODAL — Trazado de ruta
+═══════════════════════════════════════════ */
+.busmap-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: busmap-fade-in 0.25s ease;
+}
+@keyframes busmap-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.busmap-modal {
+  width: 100%;
+  max-width: 680px;
+  height: 85vh;
+  background: #111;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: busmap-slide-up 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+@keyframes busmap-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Header del modal */
+.busmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+.busmap-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+.busmap-route-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.busmap-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.busmap-dot.origin  { background: #E8621A; box-shadow: 0 0 6px rgba(232,98,26,0.6); }
+.busmap-dot.dest    { background: #22C55E; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.busmap-arrow {
+  color: rgba(255,255,255,0.35);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.busmap-close {
+  background: rgba(255,255,255,0.07);
+  border: none;
+  color: rgba(255,255,255,0.6);
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.busmap-close:hover { background: rgba(232,98,26,0.2); color: #E8621A; }
+
+/* Contenedor del mapa */
+.busmap-map-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.busmap-map-wrapper .leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #0f0f0f;
+}
+
+/* Estado de carga / error */
+.busmap-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.9rem;
+  z-index: 5;
+  background: #111;
+}
+.busmap-state.error { color: #ef5350; }
+.busmap-spin {
+  animation: spin 1s linear infinite;
+  color: #E8621A;
+}
+
+/* Footer con leyenda y stats */
+.busmap-footer {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  background: rgba(15,15,15,0.97);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.busmap-legend {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+}
+.busmap-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+  font-weight: 600;
+}
+.busmap-legend-line {
+  display: inline-block;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+.busmap-legend-line.orange { background: #E8621A; }
+.busmap-legend-line.blue   { background: #4A90E2; }
+.busmap-legend-line.dashed {
+  background: repeating-linear-gradient(
+    to right,
+    #4A90E2 0, #4A90E2 4px,
+    transparent 4px, transparent 8px
+  );
+}
+.busmap-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.busmap-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+}
+.busmap-stat.orange {
+  background: rgba(232,98,26,0.12);
+  color: #E8621A;
+  border: 1px solid rgba(232,98,26,0.2);
+}
+.busmap-stat.blue {
+  background: rgba(74,144,226,0.12);
+  color: #4A90E2;
+  border: 1px solid rgba(74,144,226,0.2);
+}
+
+/* Animación pulso del marcador de usuario */
+@keyframes pulseUser {
+  0%   { box-shadow: 0 0 0 0   rgba(74,144,226,0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(74,144,226,0); }
+  100% { box-shadow: 0 0 0 0   rgba(74,144,226,0); }
 }

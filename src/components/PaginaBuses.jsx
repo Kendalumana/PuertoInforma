@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../api/axios';
 import {
     Search, Bus, Bookmark, BookmarkCheck,
-    Share2, MapPin, ArrowLeft, Clock, Star,
+    MapPin, ArrowLeft, Clock, Star,
     ChevronRight, CalendarDays, ListFilter, Navigation
 } from 'lucide-react';
 import '../styles/Buses.css';
+import BusMapModal from './BusMapModal';
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL
@@ -262,8 +263,8 @@ function formatearRangoDia(h) {
 // ═══════════════════════════════════════════════════════════
 // COMPONENTE: Vista de detalle — estilo Move It
 // ═══════════════════════════════════════════════════════════
-function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver }) {
-    const navigate = useNavigate();
+function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
+    const [mapaAbierto, setMapaAbierto] = useState(false);
     const [tabHorario,  setTabHorario]  = useState('hoy');   // 'hoy' | 'manana' | 'semana'
     const [tipoFiltro,  setTipoFiltro]  = useState('TODOS'); // 'TODOS' | 'DIRECTO' | 'INDIRECTO'
     const [diaSemana,   setDiaSemana]   = useState(null);    // 0-6 | null = todos
@@ -470,25 +471,19 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver
             <div className="mv-detail-actions">
                 <button
                     className="mv-btn-primary"
-                    onClick={() => {
-                        const lat = ruta.lugarOrigen?.latitud;
-                        const lng = ruta.lugarOrigen?.longitud;
-                        onVolver(); // vuelve a la lista primero
-                        // Navega al mapa con coordenadas del origen si existen
-                        navigate('/', {
-                            state: {
-                                flyTo: lat && lng ? { lat, lng } : null,
-                                label: ruta.lugarOrigen?.nombre || ruta.nombre
-                            }
-                        });
-                    }}
+                    onClick={() => setMapaAbierto(true)}
                 >
                     <MapPin size={18} /> VER EN MAPA
                 </button>
-                <button className="mv-btn-secondary" onClick={() => onCompartir(ruta)}>
-                    <Share2 size={18} /> COMPARTIR
-                </button>
             </div>
+
+            {/* ── Modal de mapa con ruta ── */}
+            {mapaAbierto && (
+                <BusMapModal
+                    ruta={ruta}
+                    onClose={() => setMapaAbierto(false)}
+                />
+            )}
         </div>
     );
 }
@@ -567,15 +562,7 @@ function PaginaBuses() {
             .finally(() => setLoading(false));
     }, []);
 
-    // Compartir ruta
-    const handleCompartir = useCallback((ruta) => {
-        const p = parsearParadas(ruta);
-        const origen  = p[0];
-        const destino = p[p.length - 1];
-        const txt = `🚌 ${origen} → ${destino}\n${ruta.operador?.nombre || ''}\n⏱ ${ruta.duracion || '—'} | ${ruta.frecuencia || '—'}\nPuertoInforma`;
-        if (navigator.share) navigator.share({ title: ruta.nombre, text: txt }).catch(() => {});
-        else navigator.clipboard?.writeText(txt);
-    }, []);
+
 
     // Mapa de coordenadas por nombre de terminal
     const terminalCoordsMap = useMemo(() => {
@@ -647,7 +634,6 @@ function PaginaBuses() {
                 ruta={rutaSeleccionada}
                 esFavorito={favoritos.includes(String(rutaSeleccionada.id))}
                 onToggleFavorito={toggleFavorito}
-                onCompartir={handleCompartir}
                 onVolver={() => setRutaSeleccionada(null)}
             />
             <BusesBottomBar
