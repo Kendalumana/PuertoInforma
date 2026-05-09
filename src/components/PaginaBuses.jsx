@@ -263,6 +263,7 @@ function formatearRangoDia(h) {
 // COMPONENTE: Vista de detalle — estilo Move It
 // ═══════════════════════════════════════════════════════════
 function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onCompartir, onVolver }) {
+    const navigate = useNavigate();
     const [tabHorario,  setTabHorario]  = useState('hoy');   // 'hoy' | 'manana' | 'semana'
     const [tipoFiltro,  setTipoFiltro]  = useState('TODOS'); // 'TODOS' | 'DIRECTO' | 'INDIRECTO'
     const [diaSemana,   setDiaSemana]   = useState(null);    // 0-6 | null = todos
@@ -793,10 +794,11 @@ function BusesBottomBar({ tab, setTab, rutaSeleccionada, setRutaSeleccionada }) 
             <button
                 className={`bbar-tab ${!!rutaSeleccionada ? 'active' : ''}`}
                 onClick={() => {
-                    // Si hay ruta seleccionada, muestra su detalle; si no, no hace nada
+                    // Si hay ruta seleccionada, permanece en el detalle (ya está activo)
+                    // Si no hay ruta, no hace nada visualmente: mostrar tip
                     if (!rutaSeleccionada) return;
                 }}
-                style={{ opacity: rutaSeleccionada ? 1 : 0.35 }}
+                style={{ opacity: rutaSeleccionada ? 1 : 0.35, cursor: rutaSeleccionada ? 'pointer' : 'not-allowed' }}
             >
                 <Clock size={22} />
                 <span>Horarios</span>

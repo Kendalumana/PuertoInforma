@@ -841,4 +841,70 @@
     .ferry-horarios-title {
         font-size: 1.2rem;
     }
-}
+}
+
+/* ─── Tabs HOY / MAÑANA — A-I3 ────────────────────────── */
+.ferry-dia-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.ferry-dia-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #1E1E1E;
+    border: 1px solid #333;
+    color: #888;
+    padding: 0.45rem 1.1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ferry-dia-tab:hover { border-color: #555; color: #ccc; }
+.ferry-dia-tab.active {
+    background: #E8621A;
+    border-color: #E8621A;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(232,98,26,0.4);
+}
+
+/* ─── Panel GUARDADOS — A-N2 ───────────────────────────── */
+.ferry-saved-panel {
+    padding: 0 2rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.ferry-saved-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; }
+
+.ferry-saved-empty {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1rem; padding: 3rem 2rem; color: #555; text-align: center;
+}
+
+.ferry-saved-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.ferry-saved-item {
+    display: flex; align-items: center; gap: 1rem;
+    background: #1E1E1E; border-radius: 12px;
+    padding: 1rem 1.2rem; cursor: pointer;
+    transition: background 0.2s; border-left: 3px solid #E8621A;
+}
+.ferry-saved-item:hover { background: #252525; }
+.ferry-saved-route { flex: 1; font-weight: 700; font-size: 0.95rem; }
+.ferry-saved-next { display: flex; align-items: center; }
+
+.ferry-saved-remove {
+    background: none; border: none; color: #555;
+    cursor: pointer; font-size: 1rem; padding: 0.25rem 0.5rem;
+    border-radius: 6px; transition: color 0.2s;
+}
+.ferry-saved-remove:hover { color: #E8621A; }
+

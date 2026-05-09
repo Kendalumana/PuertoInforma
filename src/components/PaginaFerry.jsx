@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Search, Bell, User, Clock,
-    Info, Compass, Ship, Ticket, Bookmark, ExternalLink, Anchor
+    Search, Clock, CalendarDays,
+    Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck, ExternalLink, Anchor
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Ferry.css';
@@ -110,6 +110,12 @@ function PaginaFerry() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('SCHEDULES');
     const [activeRoute, setActiveRoute] = useState('');
+    const [tabDia, setTabDia] = useState('hoy');           // A-I3: 'hoy' | 'manana'
+    const [busquedaFerry, setBusquedaFerry] = useState(''); // A-I1
+    const [ferrySaved, setFerrySaved] = useState(() => {   // A-N2
+        try { return JSON.parse(localStorage.getItem('ferryGuardados') || '[]'); }
+        catch { return []; }
+    });
 
     // Estado de datos
     const [horarios, setHorarios] = useState([]);
@@ -122,6 +128,16 @@ function PaginaFerry() {
         const t = setInterval(() => setAhora(new Date()), 30000);
         return () => clearInterval(t);
     }, []);
+
+    // Persistir rutas guardadas — A-N2
+    useEffect(() => {
+        localStorage.setItem('ferryGuardados', JSON.stringify(ferrySaved));
+    }, [ferrySaved]);
+
+    const toggleFerrySaved = (route) =>
+        setFerrySaved(prev =>
+            prev.includes(route) ? prev.filter(r => r !== route) : [...prev, route]
+        );
 
     // ── Fetch de horarios ──────────────────────────────────
     useEffect(() => {
@@ -156,6 +172,13 @@ function PaginaFerry() {
         }
     }, [routes]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Rutas filtradas por búsqueda — A-I1
+    const routesFiltradas = useMemo(() => {
+        if (!busquedaFerry.trim()) return routes;
+        const q = busquedaFerry.toLowerCase();
+        return routes.filter(r => r.toLowerCase().includes(q));
+    }, [routes, busquedaFerry]);
+
     // ── Horarios filtrados por ruta activa ─────────────────
     const horariosFiltrados = useMemo(() => {
         if (!activeRoute) return [];
@@ -165,10 +188,11 @@ function PaginaFerry() {
             .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
     }, [horarios, activeRoute, ahora]);
 
-    // ── Próximas salidas (futuras) ─────────────────────────
+    // ── Próximas salidas (futuras) — A-I3: en MAÑANA todas son "próximas"
     const proximasSalidas = useMemo(() => {
+        if (tabDia === 'manana') return horariosFiltrados;
         return horariosFiltrados.filter(h => minutosHasta(h.horaSalida) >= 0);
-    }, [horariosFiltrados]);
+    }, [horariosFiltrados, tabDia]);
 
     // Siguiente salida (big card)
     const siguiente = proximasSalidas[0] || null;
@@ -199,7 +223,18 @@ function PaginaFerry() {
                 <div className="ferry-topbar-right">
                     <div className="ferry-search-wrapper">
                         <Search size={16} className="search-icon" />
-                        <input type="text" placeholder="Search routes..." readOnly />
+                        <input
+                            type="text"
+                            placeholder="Buscar rutas..."
+                            value={busquedaFerry}
+                            onChange={e => setBusquedaFerry(e.target.value)}
+                        />
+                        {busquedaFerry && (
+                            <button
+                                onClick={() => setBusquedaFerry('')}
+                                style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1rem', padding: '0 4px' }}
+                            >✕</button>
+                        )}
                     </div>
                     <button className="icon-btn"><Bell size={20} /></button>
                     <button className="icon-btn" onClick={() => navigate('/perfil')}><User size={20} /></button>
@@ -212,15 +247,15 @@ function PaginaFerry() {
                     Horarios de <span className="text-orange">Ferry</span>
                 </h1>
 
-                {/* Route Chips — dinámicos desde la BD */}
+                {/* Route Chips — A-I1: filtrados por búsqueda */}
                 <div className="ferry-route-chips">
                     {loading
                         ? [1, 2].map(i => (
                             <div key={i} className="ferry-chip-skeleton" />
                         ))
-                        : routes.length === 0
-                            ? <button className="ferry-chip active">Sin rutas</button>
-                            : routes.map(r => (
+                        : routesFiltradas.length === 0
+                            ? <button className="ferry-chip active">Sin resultados</button>
+                            : routesFiltradas.map(r => (
                                 <button
                                     key={r}
                                     className={`ferry-chip ${activeRoute === r ? 'active' : ''}`}
@@ -228,24 +263,51 @@ function PaginaFerry() {
                                 >
                                     <Anchor size={14} className="ferry-chip-icon" />
                                     {r}
+                                    <span
+                                        onClick={e => { e.stopPropagation(); toggleFerrySaved(r); }}
+                                        style={{ marginLeft: '6px', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        {ferrySaved.includes(r)
+                                            ? <BookmarkCheck size={13} color="#fff" />
+                                            : <Bookmark size={13} style={{ opacity: 0.5 }} />}
+                                    </span>
                                 </button>
                             ))
                     }
                 </div>
 
+                {/* ── Tabs HOY / MAÑANA — A-I3 ── */}
+                {!loading && !error && (
+                    <div className="ferry-dia-tabs">
+                        <button
+                            className={`ferry-dia-tab ${tabDia === 'hoy' ? 'active' : ''}`}
+                            onClick={() => setTabDia('hoy')}
+                        >
+                            <Clock size={13} /> HOY
+                        </button>
+                        <button
+                            className={`ferry-dia-tab ${tabDia === 'manana' ? 'active' : ''}`}
+                            onClick={() => setTabDia('manana')}
+                        >
+                            <CalendarDays size={13} /> MAÑANA
+                        </button>
+                    </div>
+                )}
+
                 {/* Section Header */}
                 <div className="ferry-section-header">
                     <div>
-                        <h2>Próximas Salidas</h2>
+                        <h2>{tabDia === 'manana' ? 'Salidas Mañana' : 'Próximas Salidas'}</h2>
                         <p>
                             {loading
                                 ? 'Cargando horarios...'
-                                : `Actualizado en tiempo real • ${activeRoute ? activeRoute.split(' → ')[0] : 'Puerto Puntarenas'}`
+                                : `${tabDia === 'manana' ? 'Mismo horario diario' : 'Tiempo real'} • ${activeRoute ? activeRoute.split(' → ')[0] : 'Puerto Puntarenas'}`
                             }
                         </p>
                     </div>
                     <div className="live-status">
-                        <span className="pulse-dot"></span> LIVE STATUS
+                        <span className={tabDia === 'manana' ? '' : 'pulse-dot'}></span>
+                        {tabDia === 'manana' ? '📅 MAÑANA' : 'LIVE STATUS'}
                     </div>
                 </div>
 
@@ -415,7 +477,8 @@ function PaginaFerry() {
                         <div className="ferry-horarios-list">
                             {horariosFiltrados.map((h, idx) => {
                                 const min = minutosHasta(h.horaSalida);
-                                const pasado = min < 0;
+                                // En tab MAÑANA nada está "pasado" — A-I3
+                                const pasado = tabDia === 'hoy' && min < 0;
                                 const esProximo = !pasado && proximasSalidas[0] === h;
                                 return (
                                     <div
@@ -437,7 +500,9 @@ function PaginaFerry() {
                                         <div className="ferry-row-estado">
                                             {pasado
                                                 ? <span className="ferry-row-salido">Salió</span>
-                                                : <span className="ferry-row-restante">{formatearRestante(min)}</span>
+                                                : tabDia === 'manana'
+                                                    ? <span className="ferry-row-restante">Mañana</span>
+                                                    : <span className="ferry-row-restante">{formatearRestante(min)}</span>
                                             }
                                         </div>
                                         {h.enlaceReserva && !pasado && (
@@ -460,21 +525,56 @@ function PaginaFerry() {
 
             </main>
 
-            {/* Bottom Tab Bar */}
+            {/* ── Panel GUARDADOS — A-N2 ── */}
+            {activeTab === 'SAVED' && (
+                <div className="ferry-saved-panel">
+                    <h3 className="ferry-saved-title">⚓ Rutas Guardadas</h3>
+                    {ferrySaved.length === 0 ? (
+                        <div className="ferry-saved-empty">
+                            <Ship size={40} style={{ opacity: 0.3 }} />
+                            <p>Guardá rutas tocando el 🔖 en los chips de arriba.</p>
+                        </div>
+                    ) : (
+                        <div className="ferry-saved-list">
+                            {ferrySaved.map(r => {
+                                const [orig, dest] = r.split(' → ');
+                                const hsFiltrados = horarios
+                                    .filter(h => h.origen === orig && h.destino === dest)
+                                    .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
+                                const proxima = hsFiltrados.find(h => minutosHasta(h.horaSalida) >= 0);
+                                return (
+                                    <div key={r} className="ferry-saved-item" onClick={() => { setActiveRoute(r); setActiveTab('SCHEDULES'); }}>
+                                        <div className="ferry-saved-route">{r}</div>
+                                        <div className="ferry-saved-next">
+                                            {proxima
+                                                ? <><span className="ferry-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
+                                                : <span style={{ color: '#555', fontSize: '0.85rem' }}>Sin salidas hoy</span>
+                                            }
+                                        </div>
+                                        <button className="ferry-saved-remove" onClick={e => { e.stopPropagation(); toggleFerrySaved(r); }}>✕</button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Bottom Tab Bar — A-N4: idioma en español */}
             <nav className="ferry-bottom-nav">
                 <button
                     className={`nav-item ${activeTab === 'EXPLORE' ? 'active' : ''}`}
                     onClick={() => { setActiveTab('EXPLORE'); navigate('/'); }}
                 >
                     <Compass size={24} />
-                    <span>EXPLORE</span>
+                    <span>EXPLORAR</span>
                 </button>
                 <button
                     className={`nav-item ${activeTab === 'SCHEDULES' ? 'active' : ''}`}
                     onClick={() => setActiveTab('SCHEDULES')}
                 >
                     <Ship size={24} />
-                    <span>SCHEDULES</span>
+                    <span>HORARIOS</span>
                 </button>
                 <button
                     className={`nav-item ${activeTab === 'TICKETS' ? 'active' : ''}`}
@@ -487,8 +587,8 @@ function PaginaFerry() {
                     className={`nav-item ${activeTab === 'SAVED' ? 'active' : ''}`}
                     onClick={() => setActiveTab('SAVED')}
                 >
-                    <Bookmark size={24} />
-                    <span>SAVED</span>
+                    {ferrySaved.length > 0 ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
+                    <span>GUARDADOS{ferrySaved.length > 0 ? ` (${ferrySaved.length})` : ''}</span>
                 </button>
             </nav>
         </div>

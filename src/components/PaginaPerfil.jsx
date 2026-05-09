@@ -343,6 +343,53 @@ function PaginaPerfil() {
               })}
             </div>
           </div>
+
+          {/* ── Historial de Actividad — A-I2 ── */}
+          {historial.length > 0 && (
+            <div className="perfil-historial-card">
+              <h3 className="badges-title">📍 Historial de Actividad</h3>
+              <div className="perfil-historial-list">
+                {historial.slice(0, 5).map((item, i) => (
+                  <div key={i} className="perfil-historial-item">
+                    <span className="perfil-historial-icon">✓</span>
+                    <div className="perfil-historial-info">
+                      <span className="perfil-historial-nombre">
+                        {item.mision?.titulo || item.titulo || 'Actividad'}
+                      </span>
+                      <span className="perfil-historial-fecha">
+                        {formatearFecha(item.fechaCompletado || item.fecha)}
+                      </span>
+                    </div>
+                    {(item.xpGanado || item.mision?.xpRecompensa) && (
+                      <span className="perfil-historial-xp">
+                        +{item.xpGanado || item.mision?.xpRecompensa} XP
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Sitios Visitados — A-I2 ── */}
+          {sitiosVisitados.length > 0 && (
+            <div className="perfil-historial-card">
+              <h3 className="badges-title">🏖️ Sitios Visitados ({sitiosVisitados.length})</h3>
+              <div className="perfil-sitios-grid">
+                {sitiosVisitados.slice(0, 6).map((sitio, i) => (
+                  <div key={i} className="perfil-sitio-chip">
+                    <span className="perfil-sitio-icono">📍</span>
+                    <span className="perfil-sitio-nombre">
+                      {sitio.lugar?.nombre || sitio.nombre || 'Lugar'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {sitiosVisitados.length > 6 && (
+                <p className="perfil-sitios-mas">+{sitiosVisitados.length - 6} más</p>
+              )}
+            </div>
+          )}
         </aside>
 
         {/* MAIN CONTENT */}
@@ -404,10 +451,23 @@ function PaginaPerfil() {
                     <div className="mission-progress-container">
                       <div className="mission-progress-header">
                         <span>Progreso</span>
-                        <span>{completada ? '1/1' : '0/1'}</span>
+                        <span>
+                          {completada
+                            ? (mision.meta ? `${mision.meta}/${mision.meta}` : '1/1')
+                            : (mision.progreso && mision.meta
+                                ? `${mision.progreso}/${mision.meta}`
+                                : '0/1')
+                          }
+                        </span>
                       </div>
                       <div className="xp-barra">
-                        <div className="xp-relleno" style={{ width: completada ? '100%' : '0%' }}></div>
+                        <div className="xp-relleno" style={{
+                          width: completada
+                            ? '100%'
+                            : mision.progreso && mision.meta
+                              ? `${Math.min(100, (mision.progreso / mision.meta) * 100)}%`
+                              : '0%'
+                        }}></div>
                       </div>
                     </div>
                   </div>

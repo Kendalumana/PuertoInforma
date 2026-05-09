@@ -46,6 +46,9 @@ function MapaView() {
     const [showAboutModal, setShowAboutModal] = useState(false);
     const [favorites, setFavorites] = useState([]);
     const [showFavorites, setShowFavorites] = useState(false);
+    const [resultadosVisibles, setResultadosVisibles] = useState(20); // A-N1
+    const [aboutNombre, setAboutNombre] = useState('');               // A-I5
+    const [aboutTelefono, setAboutTelefono] = useState('');           // A-I5
 
     const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -86,11 +89,18 @@ function MapaView() {
             .finally(() => setLoading(false));
     }, []);
 
+    // Reset paginación al cambiar filtros — A-N1
+    useEffect(() => { setResultadosVisibles(20); }, [searchQuery, activeChip, showFavorites]);
+
     useEffect(() => {
         if (!mapRef.current) return;
 
-        // Solución al error de "Map container is already initialized" al volver de otra vista
+        // Limpiar instancia previa si existe (fix robusto para StrictMode)
         if (mapRef.current._leaflet_id) {
+            try {
+                const old = mapRef.current._leaflet;
+                if (old && typeof old.remove === 'function') old.remove();
+            } catch (_) {}
             mapRef.current._leaflet_id = null;
         }
 
@@ -280,31 +290,42 @@ function MapaView() {
                         {!loading && !error && (
                             <div className="results-list">
                                 {filteredPlaces.length > 0 ? (
-                                    filteredPlaces.map(p => (
-                                        <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                            <div
-                                                className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
-                                                onClick={(e) => toggleFavorite(p.id, e)}
+                                    <>
+                                        {filteredPlaces.slice(0, resultadosVisibles).map(p => (
+                                            <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
+                                                <div
+                                                    className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
+                                                    onClick={(e) => toggleFavorite(p.id, e)}
+                                                >
+                                                    {favorites.includes(p.id) ? '❤️' : '🤍'}
+                                                </div>
+                                                {p.urlImagen ? (
+                                                    <img src={p.urlImagen} alt={p.nombre} className="result-card-img" loading="lazy" />
+                                                ) : (
+                                                    <div className="result-card-img-placeholder">🏖️</div>
+                                                )}
+                                                <div className="result-card-body">
+                                                    <div className="result-card-top">
+                                                        <span className="result-name">{p.nombre}</span>
+                                                        {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
+                                                    </div>
+                                                    {p.descripcion && <p className="result-description">{p.descripcion}</p>}
+                                                    <div className="result-footer">
+                                                        <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {/* Botón Ver más — A-N1 */}
+                                        {filteredPlaces.length > resultadosVisibles && (
+                                            <button
+                                                className="results-ver-mas"
+                                                onClick={() => setResultadosVisibles(v => v + 20)}
                                             >
-                                                {favorites.includes(p.id) ? '❤️' : '🤍'}
-                                            </div>
-                                            {p.urlImagen ? (
-                                                <img src={p.urlImagen} alt={p.nombre} className="result-card-img" loading="lazy" />
-                                            ) : (
-                                                <div className="result-card-img-placeholder">🏖️</div>
-                                            )}
-                                            <div className="result-card-body">
-                                                <div className="result-card-top">
-                                                    <span className="result-name">{p.nombre}</span>
-                                                    {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
-                                                </div>
-                                                {p.descripcion && <p className="result-description">{p.descripcion}</p>}
-                                                <div className="result-footer">
-                                                    <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
+                                                Ver más ({filteredPlaces.length - resultadosVisibles} restantes)
+                                            </button>
+                                        )}
+                                    </>
                                 ) : (
                                     <p style={{ color: 'rgba(255,255,255,0.5)', padding: '1rem' }}>No se encontraron lugares.</p>
                                 )}
@@ -335,7 +356,7 @@ function MapaView() {
                 onClose={() => setSelectedPlace(null)}
             />
 
-            {/* Modal "Acerca de" (se mantiene la estructura original) */}
+            {/* Modal "Acerca de" — A-I5: formulario conectado a WhatsApp */}
             {showAboutModal && (
                 <div className="modal-overlay about-overlay" onClick={() => setShowAboutModal(false)} style={{ display: 'flex' }}>
                     <div className="modal-content about-modal" onClick={(e) => e.stopPropagation()}>
@@ -348,16 +369,47 @@ function MapaView() {
                                 PuertoInforma es un directorio interactivo de comercios, lugares culturales y servicios de Puntarenas, Costa Rica.
                             </p>
                             <h3 style={{ color: 'var(--naranja)', marginBottom: '0.5rem' }}>¿Sos dueño de un negocio?</h3>
-                            <p>Contactanos para aparecer en nuestra plataforma.</p>
+                            <p>Contáctanos para aparecer en nuestra plataforma.</p>
                             <div className="contact-form">
                                 <div className="form-group">
-                                    <input type="text" className="form-input" placeholder="Nombre del negocio / Servicio" />
-                                    <input type="text" className="form-input" placeholder="Tu número de contacto" />
+                                    <input
+                                        id="about-nombre"
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Nombre del negocio / Servicio"
+                                        value={aboutNombre}
+                                        onChange={e => setAboutNombre(e.target.value)}
+                                    />
+                                    <input
+                                        id="about-telefono"
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Tu número de contacto"
+                                        value={aboutTelefono}
+                                        onChange={e => setAboutTelefono(e.target.value)}
+                                    />
                                 </div>
-                                <button className="submit-btn">Enviar Información</button>
+                                <button
+                                    className="submit-btn"
+                                    onClick={() => {
+                                        if (!aboutNombre.trim()) return;
+                                        // TODO: reemplazá el número con el de PuertoInforma
+                                        const msg = encodeURIComponent(
+                                            `🏢 Hola PuertoInforma!\nMe interesa registrar mi negocio.\n\nNombre: ${aboutNombre}\nTeléfono: ${aboutTelefono}`
+                                        );
+                                        window.open(`https://wa.me/50699999999?text=${msg}`, '_blank');
+                                        setAboutNombre('');
+                                        setAboutTelefono('');
+                                        setShowAboutModal(false);
+                                    }}
+                                >
+                                    💬 Enviar por WhatsApp
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
+            )}</div>
                 </div>
             )}
         </div>

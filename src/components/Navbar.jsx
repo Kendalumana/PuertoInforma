@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, MoreVertical } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 function Navbar({ onOpenAbout }) {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try { await supabase.auth.signOut(); } catch (_) { /* ignorar */ }
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
 
     return (
         <header className="navbar-header immersive-navbar">
@@ -16,7 +23,7 @@ function Navbar({ onOpenAbout }) {
                     <Link to="/ferry" className="nav-link">Ferry</Link>
                     <Link to="/buses" className="nav-link">Buses</Link>
                     <Link to="/perfil" className="nav-link">Perfil</Link>
-                    <button className="nav-link btn-logout-nav" onClick={() => { localStorage.removeItem('token'); navigate('/login'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Cerrar Sesión</button>
+                    <button className="nav-link btn-logout-nav" onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Cerrar Sesión</button>
                 </nav>
             </div>
 
@@ -38,7 +45,7 @@ function Navbar({ onOpenAbout }) {
                             <Link to="/ferry" className="dropdown-item" onClick={() => setMenuAbierto(false)}>⛵ Ferry</Link>
                             <button className="dropdown-item about-item" onClick={() => { setMenuAbierto(false); if (onOpenAbout) onOpenAbout(); }}>📰 Acerca de</button>
                             <div className="dropdown-divider"></div>
-                            <button className="dropdown-item dropdown-logout" onClick={() => { setMenuAbierto(false); localStorage.removeItem('token'); navigate('/login'); }}>🚪 Cerrar Sesión</button>
+                            <button className="dropdown-item dropdown-logout" onClick={() => { setMenuAbierto(false); handleLogout(); }}>🚪 Cerrar Sesión</button>
                         </div>
                     )}
                 </div>
