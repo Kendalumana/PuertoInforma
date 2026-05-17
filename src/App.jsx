@@ -397,8 +397,7 @@ function MapaView() {
                                         const msg = encodeURIComponent(
                                             `🏢 Hola PuertoInforma!\nMe interesa registrar mi negocio.\n\nNombre: ${aboutNombre}\nTeléfono: ${aboutTelefono}`
                                         );
-                                        // ⚠️ B-I2: Cambiá 50688888888 por el número real de PuertoInforma
-                                        window.open(`https://wa.me/50688888888?text=${msg}`, '_blank');
+                                        window.open(`https://wa.me/50684748707?text=${msg}`, '_blank');
                                         setAboutNombre('');
                                         setAboutTelefono('');
                                         setShowAboutModal(false);
