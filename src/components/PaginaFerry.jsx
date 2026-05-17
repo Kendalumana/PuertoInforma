@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search, Clock, CalendarDays,
-    Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck, ExternalLink, Anchor
+    Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck, ExternalLink, Anchor,
+    Bell, User
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Ferry.css';

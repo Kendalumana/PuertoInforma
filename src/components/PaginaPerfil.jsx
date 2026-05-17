@@ -424,6 +424,11 @@ function PaginaPerfil() {
               const completada = estaCompletada(mision.id);
               if (tabActiva === 'pendientes' && completada) return null;
 
+              // Buscar el perfilMision correspondiente para leer el progreso real
+              const pm = perfilMisiones.find(p => p.mision?.id === mision.id);
+              const progresoReal = pm?.progreso ?? pm?.contadorVisitas ?? null;
+              const metaReal     = pm?.meta ?? mision.meta ?? null;
+
               // Generar un gradiente o color estético basado en el index
               const gradients = [
                 'linear-gradient(45deg, #2D2D2D, #4a5568)',
@@ -432,6 +437,20 @@ function PaginaPerfil() {
                 'linear-gradient(45deg, #2D2D2D, #805AD5)'
               ];
               const bgGradient = gradients[i % gradients.length];
+
+              // Porcentaje de la barra de progreso
+              const pct = completada
+                ? 100
+                : (progresoReal !== null && metaReal)
+                  ? Math.min(100, Math.round((progresoReal / metaReal) * 100))
+                  : 0;
+
+              // Texto del contador (ej: "3/5")
+              const contadorTexto = completada
+                ? (metaReal ? `${metaReal}/${metaReal}` : '1/1')
+                : (progresoReal !== null && metaReal)
+                  ? `${progresoReal}/${metaReal}`
+                  : '0/1';
 
               return (
                 <div key={mision.id} className="mission-card">
@@ -451,23 +470,10 @@ function PaginaPerfil() {
                     <div className="mission-progress-container">
                       <div className="mission-progress-header">
                         <span>Progreso</span>
-                        <span>
-                          {completada
-                            ? (mision.meta ? `${mision.meta}/${mision.meta}` : '1/1')
-                            : (mision.progreso && mision.meta
-                                ? `${mision.progreso}/${mision.meta}`
-                                : '0/1')
-                          }
-                        </span>
+                        <span>{contadorTexto}</span>
                       </div>
                       <div className="xp-barra">
-                        <div className="xp-relleno" style={{
-                          width: completada
-                            ? '100%'
-                            : mision.progreso && mision.meta
-                              ? `${Math.min(100, (mision.progreso / mision.meta) * 100)}%`
-                              : '0%'
-                        }}></div>
+                        <div className="xp-relleno" style={{ width: `${pct}%` }}></div>
                       </div>
                     </div>
                   </div>
