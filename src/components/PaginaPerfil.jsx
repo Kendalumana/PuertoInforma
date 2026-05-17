@@ -16,6 +16,26 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
+// ✅ Sube imagen al bucket 'avatars' de Supabase y guarda la URL en el backend
+async function subirAvatarImagen(file, usuarioId) {
+  // 1. Subir al bucket 'avatars' (carpeta por usuario, reemplaza si ya existe)
+  const ext = file.name.split('.').pop();
+  const path = `${usuarioId}/avatar.${ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (uploadError) throw new Error(`Error al subir imagen: ${uploadError.message}`);
+
+  // 2. Obtener URL pública
+  const { data: { publicUrl } } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(path);
+
+  // 3. Guardar URL en el backend
+  await guardarAvatar('imagen', publicUrl, usuarioId);
+  return publicUrl;
+}
+
 // ✅ Función para guardar avatar (con usuarioId explícito, usando fetch)
 async function guardarAvatar(tipo, valor, usuarioId) {
   try {
@@ -23,7 +43,7 @@ async function guardarAvatar(tipo, valor, usuarioId) {
     const token = session?.access_token;
     if (!token) throw new Error('No hay token de autenticación');
 
-    const url = 'https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar';
+    const url = 'https://puertoinforma-backend-production.up.railway.app/api/v1/perfil/avatar';
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
@@ -182,10 +202,48 @@ function PaginaPerfil() {
     }
   };
 
-  const handleSubirImagen = (e) => {
-    e.preventDefault();
-    setAvatarError('🚧 Subida de imágenes: Próximamente disponible');
-    e.target.value = '';
+  const handleSubirImagen = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo y tamaño (máx 3MB)
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!tiposPermitidos.includes(file.type)) {
+      setAvatarError('Solo se permiten imágenes JPG, PNG, WEBP o GIF.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setAvatarError('La imagen no puede superar 3MB.');
+      e.target.value = '';
+      return;
+    }
+
+    const userId = session?.user?.id;
+    if (!userId) {
+      setAvatarError('No hay sesión activa. Iniciá sesión nuevamente.');
+      return;
+    }
+
+    setGuardandoAvatar(true);
+    setAvatarError(null);
+    // Preview local inmediato mientras sube
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarImagen(previewUrl);
+    setAvatarTipo('subido');
+
+    try {
+      const publicUrl = await subirAvatarImagen(file, userId);
+      setAvatarImagen(publicUrl); // reemplaza preview con URL real
+    } catch (err) {
+      setAvatarError(err.message || 'No se pudo subir la imagen.');
+      // Revertir a emoji si falla
+      setAvatarTipo('prediseñado');
+      setAvatarImagen(null);
+    } finally {
+      setGuardandoAvatar(false);
+      e.target.value = '';
+    }
   };
 
   const formatearFecha = (isoString) => {
@@ -285,6 +343,27 @@ function PaginaPerfil() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Subir foto propia */}
+                  <div className="avatar-upload-section">
+                    <label htmlFor="avatar-file-input" className="avatar-upload-btn">
+                      {guardandoAvatar ? '⏳ Subiendo...' : '📷 Subir foto'}
+                    </label>
+                    <input
+                      id="avatar-file-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      style={{ display: 'none' }}
+                      onChange={handleSubirImagen}
+                      disabled={guardandoAvatar}
+                    />
+                    <p className="avatar-upload-hint">JPG, PNG, WEBP · Máx 3MB</p>
+                  </div>
+
+                  {/* Error de avatar */}
+                  {avatarError && (
+                    <p className="avatar-error-msg">⚠️ {avatarError}</p>
+                  )}
                 </div>
               )}
             </div>
