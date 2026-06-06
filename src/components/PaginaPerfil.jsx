@@ -133,8 +133,7 @@ function PaginaPerfil() {
           }
         } catch (perfilErr) {
           console.warn('⚠️ No se pudo cargar perfil (puede no existir aún):', perfilErr.message);
-          // Crear un perfil temporal para que la UI no se rompa
-          setPerfil({ nombreUsuario: 'Explorador', puntosTotales: 0, experienciaXp: 0 });
+          // Si no existe perfil en el backend, se queda como null para no mostrar datos falsos
         }
 
         // ── Cargar rangos y misiones (independientes del perfil) ──

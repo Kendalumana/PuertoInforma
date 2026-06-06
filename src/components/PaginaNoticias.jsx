@@ -5,7 +5,7 @@
 // tenga GET /noticia, solo hay que descomentar el fetch.
 // ============================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Search, Newspaper, CalendarDays,
@@ -13,75 +13,8 @@ import {
 } from 'lucide-react';
 import '../styles/Noticias.css';
 
-// ── Datos de ejemplo (reemplazar con fetch cuando el backend tenga /noticia) ──
-const NOTICIAS_EJEMPLO = [
-    {
-        id: 1,
-        categoria: 'Eventos',
-        titulo: 'Festival del Mar — Puntarenas 2025',
-        descripcion: 'El tradicional festival del mar regresa este año con música en vivo, feria gastronómica y actividades para toda la familia en el malecón.',
-        fecha: '2025-07-15',
-        imagen: null,
-        destacado: true,
-        icono: '🎉',
-        color: '#E8621A',
-    },
-    {
-        id: 2,
-        categoria: 'Noticias',
-        titulo: 'Nueva ruta de buses hacia La Punta inaugurada',
-        descripcion: 'TRACOPA inaugura una nueva ruta directa desde la Terminal Central hasta La Punta con 8 salidas diarias a partir del próximo lunes.',
-        fecha: '2025-06-28',
-        imagen: null,
-        destacado: false,
-        icono: '🚌',
-        color: '#2196F3',
-    },
-    {
-        id: 3,
-        categoria: 'Ferry',
-        titulo: 'Cambio de horarios del Ferry a Paquera',
-        descripcion: 'A partir del 1 de julio, el ferry añade una salida nocturna a las 21:30 hrs. Se recomienda reservar espacio con anticipación para vehículos.',
-        fecha: '2025-06-20',
-        imagen: null,
-        destacado: false,
-        icono: '⛵',
-        color: '#4CAF50',
-    },
-    {
-        id: 4,
-        categoria: 'Turismo',
-        titulo: 'Temporada de avistamiento de delfines',
-        descripcion: 'La temporada de avistamiento de delfines y ballenas jorobadas inicia en julio. Tours disponibles desde el muelle principal con guías certificados.',
-        fecha: '2025-06-18',
-        imagen: null,
-        destacado: false,
-        icono: '🐬',
-        color: '#9C27B0',
-    },
-    {
-        id: 5,
-        categoria: 'Noticias',
-        titulo: 'Mejoras al malecón de Puntarenas',
-        descripcion: 'La municipalidad anuncia inversión de ₡800 millones para la renovación del malecón turístico, incluyendo nuevos parques y zonas de descanso.',
-        fecha: '2025-06-10',
-        imagen: null,
-        destacado: false,
-        icono: '🏗️',
-        color: '#FF9800',
-    },
-    {
-        id: 6,
-        categoria: 'Eventos',
-        titulo: 'Feria de Artesanos del Puerto — Junio',
-        descripcion: 'Cada domingo de junio, artesanos locales exhiben sus obras en la plaza central. Entrada libre. Parking disponible en avenida primera.',
-        fecha: '2025-06-07',
-        imagen: null,
-        destacado: false,
-        icono: '🎨',
-        color: '#E91E63',
-    },
-];
+// ── Fetch desde backend ──
+import { axiosPrivate } from '../api/axios';
 
 const CATEGORIAS = ['Todas', 'Eventos', 'Noticias', 'Ferry', 'Turismo'];
 
@@ -161,9 +94,21 @@ function PaginaNoticias() {
     const navigate = useNavigate();
     const [categoriaActiva, setCategoriaActiva] = useState('Todas');
     const [busqueda, setBusqueda] = useState('');
-    // Cuando el backend tenga /noticia, cambiar a useState([]) + useEffect fetch
-    const [noticias] = useState(NOTICIAS_EJEMPLO);
-    const [loading] = useState(false);
+    const [noticias, setNoticias] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        axiosPrivate.get('/noticia')
+            .then(res => {
+                setNoticias(res.data);
+            })
+            .catch(err => {
+                console.error("Error cargando noticias:", err);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, []);
 
     const destacada = noticias.find(n => n.destacado);
 
@@ -258,11 +203,6 @@ function PaginaNoticias() {
                     )}
                 </div>
 
-                {/* Aviso backend */}
-                <div className="noticias-backend-hint">
-                    <ExternalLink size={13} />
-                    Contenido de ejemplo — se conectará al backend cuando el endpoint esté disponible.
-                </div>
 
             </div>
         </div>
