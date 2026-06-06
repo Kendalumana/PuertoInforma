@@ -43,7 +43,7 @@ async function guardarAvatar(tipo, valor, usuarioId) {
     const token = session?.access_token;
     if (!token) throw new Error('No hay token de autenticación');
 
-    const url = 'https://puertoinforma-backend-production.up.railway.app/api/v1/perfil/avatar';
+    const url = 'https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar';
     const response = await fetch(url, {
       method: 'PUT',
       headers: {

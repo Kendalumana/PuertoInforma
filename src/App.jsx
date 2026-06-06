@@ -409,8 +409,6 @@ function MapaView() {
                         </div>
                     </div>
                 </div>
-            )}</div>
-                </div>
             )}
         </div>
     );
