@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { supabase } from '../lib/supabase';
 
-
-const BASE_URL = 'https://puertoinforma-backend.onrender.com/api/v1';
+// Descomentar la línea correspondiente según el entorno a utilizar:
+//const BASE_URL = 'http://localhost:8080/api/v1'; // Local (IntelliJ)
+const BASE_URL = 'https://puertoinforma-backend.onrender.com/api/v1'; // Producción (Render)
 
 // Instancia pública (sin token)
 export default axios.create({

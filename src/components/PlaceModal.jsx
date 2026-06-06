@@ -156,12 +156,30 @@ function PlaceModal({ place, onClose }) {
                                     )}
                                     {place.urlImagen && <span className="gallery-tap-hint">Tocar para ampliar</span>}
                                 </div>
-                                <div className="gallery-thumb placeholder">
-                                    <span>📷</span>
-                                </div>
-                                <div className="gallery-thumb placeholder">
-                                    <span>📷</span>
-                                </div>
+                                {place.urlImagen2 ? (
+                                    <div className="gallery-thumb" onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreenImg(place.urlImagen2);
+                                    }}>
+                                        <img src={place.urlImagen2} alt={`${place.nombre} 2`} draggable="false" />
+                                    </div>
+                                ) : (
+                                    <div className="gallery-thumb placeholder">
+                                        <span>📷</span>
+                                    </div>
+                                )}
+                                {place.urlImagen3 ? (
+                                    <div className="gallery-thumb" onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreenImg(place.urlImagen3);
+                                    }}>
+                                        <img src={place.urlImagen3} alt={`${place.nombre} 3`} draggable="false" />
+                                    </div>
+                                ) : (
+                                    <div className="gallery-thumb placeholder">
+                                        <span>📷</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
