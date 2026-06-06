@@ -279,6 +279,25 @@ function MapaView() {
                     </button>
                 </div>
 
+                {error && (
+                    <div style={{
+                        background: 'rgba(220, 38, 38, 0.2)',
+                        border: '1px solid rgba(220, 38, 38, 0.5)',
+                        backdropFilter: 'blur(12px)',
+                        color: '#FFF',
+                        padding: '1rem',
+                        borderRadius: '12px',
+                        fontSize: '0.9rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                    }}>
+                        <span>⚠️</span>
+                        <span>{error}</span>
+                    </div>
+                )}
+
                 {/* Lista de resultados flotante (visible si hay búsqueda/filtros y NO hay un lugar seleccionado) */}
                 {(searchQuery || activeChip || showFavorites) && !selectedPlace && (
                     <div className="immersive-results-panel">

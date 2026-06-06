@@ -26,11 +26,11 @@
   height: 100%;
 }
 
-/* Filtro oscuro opcional para el mapa (estilo dark-mode) */
+/* Filtro opcional comentado, ya que el mapa base ahora es dark nativo */
 .leaflet-layer,
 .leaflet-control-zoom-pane,
 .leaflet-control-attribution {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+  /* filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); */
 }
 
 /* ── NAVBAR INMERSIVO ────────────────────────────────────── */
@@ -640,14 +640,14 @@
 }
 
 .gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 4px;
   width: 100%;
-  height: 240px;
+  height: 320px;
 }
 
 .gallery-main, .gallery-thumb {
+  flex: 1;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -947,12 +947,11 @@
   }
 
   .gallery-grid {
-    height: 160px;
-    grid-template-columns: 1fr 50px 50px;
-    gap: 3px;
+    height: 200px;
+    display: flex;
+    gap: 4px;
     margin: 0 0.75rem;
     border-radius: 12px;
-    overflow: hidden;
   }
 
   .gallery-main img {

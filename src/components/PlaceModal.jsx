@@ -141,46 +141,40 @@ function PlaceModal({ place, onClose }) {
                             <button className="aesthetic-back-btn" onClick={onClose} aria-label="Volver">
                                 <ArrowLeft size={20} />
                             </button>
-                            <div className="gallery-grid">
-                                <div
-                                    className="gallery-main"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (place.urlImagen) setFullscreenImg(place.urlImagen);
-                                    }}
-                                >
-                                    {place.urlImagen ? (
-                                        <img src={place.urlImagen} alt={place.nombre} draggable="false" />
-                                    ) : (
-                                        <div className="aesthetic-no-img">Sin imagen</div>
+                            {(place.urlImagen || place.urlImagen2 || place.urlImagen3) && (
+                                <div className="gallery-grid">
+                                    {place.urlImagen && (
+                                        <div
+                                            className="gallery-main"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFullscreenImg(place.urlImagen);
+                                            }}
+                                        >
+                                            <img src={place.urlImagen} alt={place.nombre} draggable="false" />
+                                            <span className="gallery-tap-hint">Tocar para ampliar</span>
+                                        </div>
                                     )}
-                                    {place.urlImagen && <span className="gallery-tap-hint">Tocar para ampliar</span>}
+                                    {place.urlImagen2 && (
+                                        <div className="gallery-thumb" onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFullscreenImg(place.urlImagen2);
+                                        }}>
+                                            <img src={place.urlImagen2} alt={`${place.nombre} 2`} draggable="false" />
+                                            <span className="gallery-tap-hint">Tocar para ampliar</span>
+                                        </div>
+                                    )}
+                                    {place.urlImagen3 && (
+                                        <div className="gallery-thumb" onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFullscreenImg(place.urlImagen3);
+                                        }}>
+                                            <img src={place.urlImagen3} alt={`${place.nombre} 3`} draggable="false" />
+                                            <span className="gallery-tap-hint">Tocar para ampliar</span>
+                                        </div>
+                                    )}
                                 </div>
-                                {place.urlImagen2 ? (
-                                    <div className="gallery-thumb" onClick={(e) => {
-                                        e.stopPropagation();
-                                        setFullscreenImg(place.urlImagen2);
-                                    }}>
-                                        <img src={place.urlImagen2} alt={`${place.nombre} 2`} draggable="false" />
-                                    </div>
-                                ) : (
-                                    <div className="gallery-thumb placeholder">
-                                        <span>📷</span>
-                                    </div>
-                                )}
-                                {place.urlImagen3 ? (
-                                    <div className="gallery-thumb" onClick={(e) => {
-                                        e.stopPropagation();
-                                        setFullscreenImg(place.urlImagen3);
-                                    }}>
-                                        <img src={place.urlImagen3} alt={`${place.nombre} 3`} draggable="false" />
-                                    </div>
-                                ) : (
-                                    <div className="gallery-thumb placeholder">
-                                        <span>📷</span>
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </div>
 
@@ -191,32 +185,33 @@ function PlaceModal({ place, onClose }) {
                                 <div className="aesthetic-category-badge">
                                     {place.categoria?.nombre?.toUpperCase() || 'PUNTO DE INTERÉS'}
                                 </div>
-                                <div className="aesthetic-xp-badge">
-                                    <Award size={16} color="#E8621A" />
-                                    <span>{place.puntosQueOtorga || 0} XP</span>
-                                </div>
+                                {place.puntosQueOtorga > 0 && (
+                                    <div className="aesthetic-xp-badge">
+                                        <Award size={16} color="#E8621A" />
+                                        <span>{place.puntosQueOtorga} XP</span>
+                                    </div>
+                                )}
                             </div>
                             
                             <h2 className="aesthetic-title">{place.nombre}</h2>
 
-                            <p className="aesthetic-description">
-                                {place.descripcion || "Un espacio perfecto para pasear, disfrutar de la brisa marina y capturar los mejores atardeceres en el puerto."}
-                            </p>
+                            {place.descripcion && (
+                                <p className="aesthetic-description">
+                                    {place.descripcion}
+                                </p>
+                            )}
 
                             <div className="aesthetic-info-grid">
-                                <div className="info-item">
-                                    <Clock size={16} color="#E8621A" />
-                                    <span>Abierto 24h</span>
-                                </div>
-                                {place.direccion ? (
+                                {place.horario && (
+                                    <div className="info-item">
+                                        <Clock size={16} color="#E8621A" />
+                                        <span>{place.horario}</span>
+                                    </div>
+                                )}
+                                {place.direccion && (
                                     <div className="info-item">
                                         <MapPin size={16} color="#E8621A" />
                                         <span>{place.direccion}</span>
-                                    </div>
-                                ) : (
-                                    <div className="info-item">
-                                        <MapPin size={16} color="#E8621A" />
-                                        <span>Ubicación en el mapa</span>
                                     </div>
                                 )}
                                 {place.telefono && (
