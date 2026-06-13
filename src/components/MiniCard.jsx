@@ -1,4 +1,5 @@
 import '../styles/MiniCard.css';
+import LazyImage from './LazyImage';
 
 function MiniCard({ place, onVerMas, onClose }) {
     if (!place) return null;
@@ -8,7 +9,7 @@ function MiniCard({ place, onVerMas, onClose }) {
             <button className="minicard-close" onClick={onClose}>✕</button>
 
             {place.urlImagen
-                ? <img src={place.urlImagen} alt={place.nombre} className="minicard-img" />
+                ? <LazyImage src={place.urlImagen} alt={place.nombre} className="minicard-img" />
                 : <div className="minicard-img-placeholder">🏖️</div>
             }
 
