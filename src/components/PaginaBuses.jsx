@@ -238,225 +238,216 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
                 ) : (
                     <div className="mv-no-buses">
                         <span>{resumen.label}</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-// Nombres cortos de días para la UI (orden JS: 0=Dom)
-const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-
-// Formatea el rango de días de un horario de manera legible
-function formatearRangoDia(h) {
-    const ini = normalizarDia(h.diaInicio);
-    const fin = normalizarDia(h.diaFin);
-    const idxIni = DIA_NUM[ini] ?? -1;
-    const idxFin = DIA_NUM[fin] ?? -1;
-    if (idxIni === -1) return '';
-    if (ini === fin) return `Solo ${DIA_CORTO[idxIni]}`;
-    if ((ini === 'LUNES' && fin === 'DOMINGO') || (ini === 'DOMINGO' && fin === 'SABADO'))
-        return 'Todos los días';
-    return `${DIA_CORTO[idxIni]} – ${DIA_CORTO[idxFin]}`;
-}
-
-// ═══════════════════════════════════════════════════════════
-// COMPONENTE: Vista de detalle — estilo Move It
+  // ═══════════════════════════════════════════════════════════
+// COMPONENTE: Vista de detalle — Matriz de Horarios
 // ═══════════════════════════════════════════════════════════
 function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
     const [mapaAbierto, setMapaAbierto] = useState(false);
-    const [tabHorario,  setTabHorario]  = useState('hoy');   // 'hoy' | 'manana' | 'semana'
-    const [tipoFiltro,  setTipoFiltro]  = useState('TODOS'); // 'TODOS' | 'DIRECTO' | 'INDIRECTO'
-    const [diaSemana,   setDiaSemana]   = useState(null);    // 0-6 | null = todos
+    const [tabHorario,  setTabHorario]  = useState('hoy');
+    const [tipoFiltro,  setTipoFiltro]  = useState('TODOS');
+    const [diaSemana,   setDiaSemana]   = useState(null);
     const hoy    = new Date().getDay();
     const manana = (hoy + 1) % 7;
 
-    // Reset diaSemana al cambiar de tab
     const cambiarTab = (tab) => {
         setTabHorario(tab);
         if (tab !== 'semana') setDiaSemana(null);
     };
 
-    // Paradas parseadas correctamente (string JSON → array)
     const paradas = useMemo(() => parsearParadas(ruta), [ruta]);
 
-    // Tipos disponibles en esta ruta
     const tiposDisponibles = useMemo(() => {
         if (!ruta.horarios?.length) return [];
         return [...new Set(ruta.horarios.map(h => (h.tipo || 'REGULAR').toUpperCase()))];
     }, [ruta.horarios]);
 
-    // Horarios según tab + filtros
     const horariosTab = useMemo(() => {
         if (!ruta.horarios?.length) return [];
         let base = ruta.horarios;
-
-        // Filtro por día de la semana
-        if (tabHorario === 'hoy') {
-            base = base.filter(h => correEnDia(h, hoy));
-        } else if (tabHorario === 'manana') {
-            base = base.filter(h => correEnDia(h, manana));
-        } else if (tabHorario === 'semana' && diaSemana !== null) {
-            base = base.filter(h => correEnDia(h, diaSemana));
-        }
-
-        // Filtro por tipo (DIRECTO / INDIRECTO)
-        if (tipoFiltro !== 'TODOS') {
-            base = base.filter(h => (h.tipo || '').toUpperCase() === tipoFiltro);
-        }
-
+        if (tabHorario === 'hoy')         base = base.filter(h => correEnDia(h, hoy));
+        else if (tabHorario === 'manana') base = base.filter(h => correEnDia(h, manana));
+        else if (tabHorario === 'semana' && diaSemana !== null) base = base.filter(h => correEnDia(h, diaSemana));
+        if (tipoFiltro !== 'TODOS') base = base.filter(h => (h.tipo || '').toUpperCase() === tipoFiltro);
         return [...base].sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
     }, [ruta.horarios, tabHorario, hoy, manana, diaSemana, tipoFiltro]);
 
-    // Índice del próximo bus (solo en tab HOY)
     const idxProximo = tabHorario === 'hoy'
         ? horariosTab.findIndex(h => minutosHasta(h.horaSalida) >= 0)
         : -1;
 
+    const horariosAgrupados = useMemo(() => {
+        const grupos = [
+            { label: '🌅 Madrugada', key: 'madrugada', desde: 0,  hasta: 5,  items: [] },
+            { label: '🌄 Mañana',    key: 'manana',    desde: 5,  hasta: 12, items: [] },
+            { label: '☀️ Tarde',     key: 'tarde',     desde: 12, hasta: 18, items: [] },
+            { label: '🌙 Noche',     key: 'noche',     desde: 18, hasta: 24, items: [] },
+        ];
+        horariosTab.forEach(h => {
+            const hora = parseInt(h.horaSalida?.split(':')[0] || '0', 10);
+            const g = grupos.find(gr => hora >= gr.desde && hora < gr.hasta);
+            if (g) g.items.push(h);
+        });
+        return grupos.filter(g => g.items.length > 0);
+    }, [horariosTab]);
+
+    const origen  = paradas[0];
+    const destino = paradas[paradas.length - 1];
+
     return (
         <div className="mv-detail-page">
-            {/* ── Navbar compacto ── */}
-            <header className="mv-detail-nav">
-                <button className="mv-back-btn" onClick={onVolver}>
-                    <ArrowLeft size={20} />
-                    <span>Rutas</span>
-                </button>
-                <button className="mv-fav-btn" onClick={e => onToggleFavorito(ruta.id, e)}>
-                    {esFavorito ? <BookmarkCheck size={20} color="#E8621A" /> : <Bookmark size={20} />}
-                </button>
-            </header>
-
-            {/* ── Info principal ── */}
-            <div className="mv-detail-hero">
-                <h2 className="mv-detail-title">
-                    {paradas[0]} <span className="mv-arrow-big">→</span> {paradas[paradas.length - 1]}
-                </h2>
-                <p className="mv-detail-operator">{ruta.operador?.nombre}</p>
-                <div className="mv-detail-pills">
-                    <span className="mv-pill">{ruta.nombre}</span>
-                    {ruta.frecuencia && <span className="mv-pill">{ruta.frecuencia}</span>}
-                    {ruta.duracion && <span className="mv-pill">⏱ {ruta.duracion}</span>}
-                </div>
-            </div>
-
-            {/* ── Recorrido visual ── */}
-            <div className="mv-recorrido">
-                <p className="mv-section-label">📍 RECORRIDO</p>
-                <div className="mv-stops-track">
-                    {paradas.map((p, i) => (
-                        <div key={i} className="mv-stop-item">
-                            <div className={`mv-stop-dot ${i === 0 ? 'origin' : i === paradas.length - 1 ? 'destination' : ''}`}></div>
-                            {i < paradas.length - 1 && <div className="mv-stop-line"></div>}
-                            <span className="mv-stop-name">{p}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── Tabs de horario ── */}
-            <div className="mv-horario-section">
-                <div className="mv-tabs">
-                    <button className={`mv-tab ${tabHorario === 'hoy' ? 'active' : ''}`} onClick={() => cambiarTab('hoy')}>
-                        <Clock size={14} /> HOY
+            {/* ══ HEADER ══ */}
+            <div className="mvd-header">
+                <div className="mvd-header-top">
+                    <button className="mv-back-btn" onClick={onVolver}>
+                        <ArrowLeft size={20} /><span>Rutas</span>
                     </button>
-                    <button className={`mv-tab ${tabHorario === 'manana' ? 'active' : ''}`} onClick={() => cambiarTab('manana')}>
-                        <CalendarDays size={14} /> MAÑANA
-                    </button>
-                    <button className={`mv-tab ${tabHorario === 'semana' ? 'active' : ''}`} onClick={() => cambiarTab('semana')}>
-                        <ListFilter size={14} /> SEMANA
-                    </button>
+                    <div className="mvd-header-actions">
+                        <button className="mv-fav-btn" onClick={e => onToggleFavorito(ruta.id, e)}>
+                            {esFavorito ? <BookmarkCheck size={20} color="#E8621A" /> : <Bookmark size={20} />}
+                        </button>
+                        <button className="mvd-map-btn" onClick={() => setMapaAbierto(true)}>
+                            <MapPin size={16} /><span>Mapa</span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Filtros de tipo (si hay más de uno disponible) */}
-                {tiposDisponibles.length > 1 && (
-                    <div className="mv-tipo-chips">
-                        {['TODOS', ...tiposDisponibles].map(t => (
-                            <button
-                                key={t}
-                                className={`mv-tipo-chip ${tipoFiltro === t ? 'active' : ''}`}
-                                onClick={() => setTipoFiltro(t)}
-                            >
-                                {t === 'TODOS' ? 'Todos' : t.charAt(0) + t.slice(1).toLowerCase()}
-                            </button>
+                {/* Origen → Destino */}
+                <div className="mvd-route-display">
+                    <div className="mvd-terminal">
+                        <span className="mvd-terminal-label">SALIDA</span>
+                        <span className="mvd-terminal-name">{origen}</span>
+                    </div>
+                    <div className="mvd-route-arrow-wrap">
+                        <div className="mvd-arrow-line" />
+                        <Bus size={18} className="mvd-arrow-bus" />
+                    </div>
+                    <div className="mvd-terminal mvd-terminal-dest">
+                        <span className="mvd-terminal-label">DESTINO</span>
+                        <span className="mvd-terminal-name">{destino}</span>
+                    </div>
+                </div>
+
+                {/* Meta info */}
+                <div className="mvd-meta-row">
+                    <span className="mvd-meta-item">
+                        <Bus size={13} />{ruta.operador?.nombre || 'Operador desconocido'}
+                    </span>
+                    {ruta.nombre && <span className="mvd-meta-item mvd-meta-ruta">{ruta.nombre}</span>}
+                    {ruta.duracion && <span className="mvd-meta-item"><Clock size={13} />{ruta.duracion}</span>}
+                    {ruta.frecuencia && <span className="mvd-meta-item"><Clock size={13} />{ruta.frecuencia}</span>}
+                </div>
+
+                {/* Paradas intermedias */}
+                {paradas.length > 2 && (
+                    <div className="mvd-stops-track">
+                        {paradas.map((p, i) => (
+                            <div key={i} className="mvd-stop-item">
+                                <div className={`mvd-stop-dot ${i === 0 ? 'origin' : i === paradas.length - 1 ? 'dest' : ''}`} />
+                                {i < paradas.length - 1 && <div className="mvd-stop-connector" />}
+                                <span className="mvd-stop-label">{p}</span>
+                            </div>
                         ))}
                     </div>
                 )}
+            </div>
 
-                {/* Selector de día (solo en tab SEMANA) */}
-                {tabHorario === 'semana' && (
-                    <div className="mv-dia-selector">
-                        <button
-                            className={`mv-dia-chip ${diaSemana === null ? 'active' : ''}`}
-                            onClick={() => setDiaSemana(null)}
-                        >Todos</button>
-                        {DIA_CORTO.map((d, i) => (
-                            <button
-                                key={i}
-                                className={`mv-dia-chip ${diaSemana === i ? 'active' : ''}`}
-                                onClick={() => setDiaSemana(diaSemana === i ? null : i)}
-                            >{d}</button>
-                        ))}
-                    </div>
-                )}
+            {/* ══ TABS HOY / MAÑANA / SEMANA ══ */}
+            <div className="mvd-tabs-bar">
+                {[
+                    { key: 'hoy',    icon: <Clock size={14} />,       label: 'HOY' },
+                    { key: 'manana', icon: <CalendarDays size={14} />, label: 'MAÑANA' },
+                    { key: 'semana', icon: <ListFilter size={14} />,   label: 'SEMANA' },
+                ].map(t => (
+                    <button key={t.key} className={`mvd-tab ${tabHorario === t.key ? 'active' : ''}`} onClick={() => cambiarTab(t.key)}>
+                        {t.icon} {t.label}
+                    </button>
+                ))}
+            </div>
 
-                {/* Lista de horarios */}
-                <div className="mv-horarios-list">
-                    {horariosTab.length === 0 ? (
-                        <div className="mv-no-horarios">
-                            <Bus size={32} />
-                            <p>{tabHorario === 'hoy' ? 'No hay más salidas hoy' : 'No opera este día'}</p>
+            {/* Sub-filtros */}
+            {(tiposDisponibles.length > 1 || tabHorario === 'semana') && (
+                <div className="mvd-filters-row">
+                    {tiposDisponibles.length > 1 && (
+                        <div className="mvd-filter-group">
+                            {['TODOS', ...tiposDisponibles].map(t => (
+                                <button key={t} className={`mvd-filter-chip ${tipoFiltro === t ? 'active' : ''}`} onClick={() => setTipoFiltro(t)}>
+                                    {t === 'TODOS' ? 'Todos' : t === 'DIRECTO' ? '⚡ Directo' : '🔄 Indirecto'}
+                                </button>
+                            ))}
                         </div>
-                    ) : (
-                        horariosTab.map((h, idx) => {
-                            const yaPartio = tabHorario === 'hoy' && minutosHasta(h.horaSalida) < 0;
-                            const esProximo = idx === idxProximo;
-                            const minRestantes = tabHorario === 'hoy' ? minutosHasta(h.horaSalida) : null;
-                            const esDirecto = (h.tipo || '').toUpperCase() === 'DIRECTO';
-                            const esIndirecto = (h.tipo || '').toUpperCase() === 'INDIRECTO';
-                            const tieneHoraLlegada = esIndirecto && h.horaLlegada;
+                    )}
+                    {tabHorario === 'semana' && (
+                        <div className="mvd-filter-group">
+                            <button className={`mvd-filter-chip ${diaSemana === null ? 'active' : ''}`} onClick={() => setDiaSemana(null)}>Todos</button>
+                            {DIA_CORTO.map((d, i) => (
+                                <button key={i} className={`mvd-filter-chip ${diaSemana === i ? 'active' : ''}`} onClick={() => setDiaSemana(diaSemana === i ? null : i)}>{d}</button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
-                            return (
-                                <div key={idx} className={`mv-horario-row ${yaPartio ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}>
-                                    {/* Indicador lateral */}
-                                    <div className="mv-horario-indicator">
-                                        {esProximo && <div className="mv-proximo-dot"></div>}
-                                        {yaPartio && <div className="mv-pasado-dot"></div>}
-                                        {!esProximo && !yaPartio && <div className="mv-normal-dot"></div>}
-                                    </div>
+            {/* ══ MATRIZ DE HORARIOS ══ */}
+            <div className="mvd-schedule-container">
+                {horariosTab.length === 0 ? (
+                    <div className="mv-no-horarios">
+                        <Bus size={32} />
+                        <p>{tabHorario === 'hoy' ? 'No hay más salidas hoy' : 'No opera este día'}</p>
+                    </div>
+                ) : (
+                    horariosAgrupados.map(grupo => (
+                        <div key={grupo.key} className="mvd-period-group">
+                            <div className="mvd-period-header">
+                                <span className="mvd-period-label">{grupo.label}</span>
+                                <span className="mvd-period-count">{grupo.items.length} salida{grupo.items.length !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div className="mvd-schedule-grid">
+                                {grupo.items.map((h, idx) => {
+                                    const globalIdx = horariosTab.indexOf(h);
+                                    const yaPartio  = tabHorario === 'hoy' && minutosHasta(h.horaSalida) < 0;
+                                    const esProximo = globalIdx === idxProximo;
+                                    const minRest   = tabHorario === 'hoy' ? minutosHasta(h.horaSalida) : null;
+                                    const esDirecto = (h.tipo || '').toUpperCase() === 'DIRECTO';
+                                    const esInd     = (h.tipo || '').toUpperCase() === 'INDIRECTO';
 
-                                    {/* Hora(s) — para INDIRECTO muestra salida + llegada */}
-                                    <div className="mv-horario-hora">
-                                        {tieneHoraLlegada ? (
-                                            <div className="mv-horario-doble">
-                                                <div className="mv-horario-doble-item">
-                                                    <span className="mv-doble-label">🚌 Sale</span>
-                                                    <span className="mv-hora-big">{formatHora(h.horaSalida)}</span>
-                                                </div>
-                                                <div className="mv-horario-doble-sep">→</div>
-                                                <div className="mv-horario-doble-item">
-                                                    <span className="mv-doble-label">📍 Llega</span>
-                                                    <span className="mv-hora-big llegada">{formatHora(h.horaLlegada)}</span>
-                                                </div>
+                                    return (
+                                        <div key={idx} className={`mvd-schedule-cell ${yaPartio ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}>
+                                            {esProximo && <div className="mvd-cell-badge-next">PRÓXIMO</div>}
+                                            <div className="mvd-cell-departure">
+                                                <span className="mvd-cell-time">{formatHora(h.horaSalida)}</span>
+                                                {esInd && h.horaLlegada && (
+                                                    <div className="mvd-cell-arrival">
+                                                        <span className="mvd-cell-arrow-small">→</span>
+                                                        <span className="mvd-cell-time-arr">{formatHora(h.horaLlegada)}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <span className="mv-hora-big">{formatHora(h.horaSalida)}</span>
-                                        )}
-                                        {esProximo && minRestantes >= 0 && (
-                                            <span className="mv-proximo-badge">
-                                                {formatearTiempoRestante(minRestantes)}
-                                            </span>
-                                        )}
-                                        {yaPartio && <span className="mv-pasado-label">Salió</span>}
-                                    </div>
+                                            <div className="mvd-cell-meta">
+                                                <span className={`mvd-cell-tipo ${esDirecto ? 'directo' : esInd ? 'indirecto' : 'regular'}`}>
+                                                    {esDirecto ? '⚡' : esInd ? '🔄' : '🚌'} {h.tipo || 'REGULAR'}
+                                                </span>
+                                                {tabHorario === 'semana' && (
+                                                    <span className="mvd-cell-dias">{formatearRangoDia(h)}</span>
+                                                )}
+                                                {esProximo && minRest >= 0 && (
+                                                    <span className="mvd-cell-countdown">{formatearTiempoRestante(minRest)}</span>
+                                                )}
+                                                {yaPartio && <span className="mvd-cell-salio">Salió</span>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
 
-                                    {/* Info adicional */}
-                                    <div className="mv-horario-info">
-                                        <span className={`mv-tipo-badge ${esDirecto ? 'directo' : esIndirecto ? 'indirecto' : 'regular'}`}>
-                                            {h.tipo || 'REGULAR'}
-                                        </span>
-                                        {tabHorario === 'semana' && (
-                                            <span className="mv-dias-badge">
+            {mapaAbierto && <BusMapModal ruta={ruta} onClose={() => setMapaAbierto(false)} />}
+        </div>
+    );
+}
+                   <span className="mv-dias-badge">
                                                 {formatearRangoDia(h)}
                                             </span>
                                         )}

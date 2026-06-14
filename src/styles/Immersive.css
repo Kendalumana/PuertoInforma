@@ -93,6 +93,29 @@
   opacity: 1;
 }
 
+/* Botón "← Volver al Mapa" dentro del navbar */
+.nav-back-map-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(232, 98, 26, 0.12);
+  border: 1px solid rgba(232, 98, 26, 0.35);
+  color: #E8621A;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.nav-back-map-btn:hover {
+  background: rgba(232, 98, 26, 0.25);
+  border-color: #E8621A;
+  transform: translateX(-2px);
+}
+
 .icon-btn {
   background: none;
   border: none;

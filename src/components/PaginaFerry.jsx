@@ -209,7 +209,7 @@ function PaginaFerry() {
     const estadoBigCard = (() => {
         if (!siguiente) return { badge: 'SIN SALIDAS', badgeClass: 'badge-gray' };
         if (minsRestantes <= 10) return { badge: 'ABORDANDO', badgeClass: 'badge-orange' };
-        return { badge: 'ON TIME', badgeClass: 'badge-green' };
+        return { badge: 'EN HORARIO', badgeClass: 'badge-green' };
     })();
 
     // ── Abordaje estimado ──────────────────────────────────
@@ -285,7 +285,7 @@ function PaginaFerry() {
                     </div>
                     <div className="live-status">
                         <span className={tabDia === 'manana' ? '' : 'pulse-dot'}></span>
-                        {tabDia === 'manana' ? '📅 MAÑANA' : 'LIVE STATUS'}
+                        {tabDia === 'manana' ? '📅 MAÑANA' : '🟢 EN VIVO'}
                     </div>
                 </div>
 

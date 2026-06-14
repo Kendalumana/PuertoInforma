@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { MoreVertical } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { MoreVertical, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function Navbar({ onOpenAbout }) {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const esMapa = location.pathname === '/';
 
     const handleLogout = async () => {
         try { await supabase.auth.signOut(); } catch (_) { /* ignorar */ }
@@ -21,6 +23,12 @@ function Navbar({ onOpenAbout }) {
                 </Link>
 
                 <nav className="navbar-links">
+                    {!esMapa && (
+                        <button className="nav-back-map-btn" onClick={() => navigate('/')}>
+                            <ArrowLeft size={15} />
+                            Volver al Mapa
+                        </button>
+                    )}
                     <Link to="/noticias" className="nav-link">Noticias y Eventos</Link>
                     <Link to="/ferry" className="nav-link">Ferry</Link>
                     <Link to="/buses" className="nav-link">Buses</Link>
