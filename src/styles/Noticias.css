@@ -18,6 +18,7 @@
   display: flex;
   flex-direction: column;
   padding-bottom: 3rem;
+  padding-top: 80px;
 }
 
 /* ── Header ──────────────────────────────────────────────── */

@@ -112,7 +112,7 @@ function PlaceModal({ place, onClose }) {
             {fullscreenImg && (
                 <div className="fullscreen-img-overlay" onClick={() => setFullscreenImg(null)}>
                     <button className="fullscreen-close-btn" onClick={() => setFullscreenImg(null)}>
-                        <X size={24} />
+                        <ArrowLeft size={24} />
                     </button>
                     <img src={fullscreenImg} alt={place.nombre} className="fullscreen-img" />
                 </div>
