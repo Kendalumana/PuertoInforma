@@ -13,6 +13,31 @@ import { SkeletonList } from './Skeleton';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
+function createUserIcon() {
+    return L.divIcon({
+        className: '',
+        html: `
+            <div style="
+                width:20px; height:20px;
+                background:#4A90E2;
+                border:3px solid white;
+                border-radius:50%;
+                box-shadow:0 0 0 4px rgba(74,144,226,0.3);
+                animation: pulseUser 2s infinite;
+            "></div>
+            <style>
+                @keyframes pulseUser {
+                    0% { box-shadow: 0 0 0 0 rgba(74,144,226, 0.7); }
+                    70% { box-shadow: 0 0 0 15px rgba(74,144,226, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(74,144,226, 0); }
+                }
+            </style>
+        `,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+    });
+}
+
 const categoryColors = {
     1: '#9C27B0', 2: '#4CAF50', 3: '#FFB300',
     4: '#795548', 5: '#FF5722', 6: '#2196F3',
@@ -40,6 +65,7 @@ function MapaView() {
 
     const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
+    const userMarkerLayer = useRef(L.layerGroup());
     const location = useLocation();
     // Capturamos el state UNA VEZ al montar para no usarlo como dependency
     const flyToStateRef = useRef(location.state);
@@ -99,6 +125,7 @@ function MapaView() {
             maxZoom: 19
         }).addTo(instance);
         markersLayer.current.addTo(instance);
+        userMarkerLayer.current.addTo(instance);
         setMap(instance);
 
         // Forzar a Leaflet a recalcular el tamaño una vez que el DOM está listo
@@ -126,6 +153,34 @@ function MapaView() {
         if (label) setSearchQuery(label);
         setActiveChip(7);
     }, [map]); // solo depende del mapa, no de location.state
+
+    // Obtener y actualizar en tiempo real la ubicación del usuario
+    useEffect(() => {
+        if (!map) return;
+        
+        let watchId;
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    
+                    userMarkerLayer.current.clearLayers();
+                    const userMarker = L.marker([lat, lng], { icon: createUserIcon() });
+                    userMarker.bindPopup('<b>📍 Tu ubicación actual</b><br/>En tiempo real');
+                    userMarkerLayer.current.addLayer(userMarker);
+                },
+                (error) => {
+                    console.warn("No se pudo obtener la ubicación en tiempo real:", error);
+                },
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+            );
+        }
+
+        return () => {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+        };
+    }, [map]);
 
     const suggestions = useMemo(() => {
         if (!searchQuery.trim() || allPlaces.length === 0) return [];

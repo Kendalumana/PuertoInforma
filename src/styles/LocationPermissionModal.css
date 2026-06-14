@@ -1,0 +1,186 @@
+.location-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.location-modal-content {
+  background-color: #38312b; /* Dark brownish gray similar to the image */
+  border-radius: 24px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px 20px;
+  color: #f3f2f1;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.location-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.location-icon-wrapper {
+  background-color: #5c4224;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.location-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.location-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.location-option {
+  display: flex;
+  align-items: center;
+  background-color: #2b2520;
+  border-radius: 16px;
+  padding: 16px;
+  gap: 16px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.location-option.selected {
+  border-color: #38312b; /* Subtle indication or we can just rely on the checkmark */
+  background-color: #302924;
+}
+
+.option-icon-bg {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.precise-bg {
+  background-color: #1e293b;
+  /* Mock map background */
+  background-image: radial-gradient(circle at 50% 50%, #334155 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+.approx-bg {
+  background-color: #1e293b;
+  background-image: radial-gradient(circle at 50% 50%, #334155 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+/* Simulate the blue circle/zone */
+.precise-bg::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #3b82f6;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+.approx-bg::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(59, 130, 246, 0.3);
+  border: 1px solid #60a5fa;
+  border-radius: 50%;
+}
+
+.option-text {
+  flex-grow: 1;
+}
+
+.option-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.option-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #a19c98;
+}
+
+.option-check {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.location-warning {
+  background-color: rgba(249, 168, 38, 0.1);
+  color: #fbd38d;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  border: 1px solid rgba(249, 168, 38, 0.2);
+}
+
+.location-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.location-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  color: #f3f2f1;
+}
+
+.location-btn:active {
+  opacity: 0.8;
+}
+
+.allow-btn {
+  background-color: #8c531d; /* Warm amber/brown from image */
+}
+
+.deny-btn {
+  background-color: #8c531d; /* Same color for all buttons in that UI */
+}
