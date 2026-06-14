@@ -132,7 +132,11 @@ function PaginaPerfil() {
             }
           }
         } catch (perfilErr) {
-          console.warn('⚠️ No se pudo cargar perfil (puede no existir aún):', perfilErr.message);
+          if (perfilErr.response && perfilErr.response.status === 404) {
+            // Silenciado: es normal si el usuario aún no tiene perfil
+          } else {
+            console.warn('⚠️ No se pudo cargar perfil:', perfilErr.message);
+          }
           // Si no existe perfil en el backend, se queda como null para no mostrar datos falsos
         }
 

@@ -4,7 +4,6 @@
 
 .ferry-layout {
     min-height: 100vh;
-    background-color: #121212;
     color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -206,15 +205,17 @@
 
 /* Grid Layout */
 .ferry-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: auto auto;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.5rem;
     margin-bottom: 3rem;
 }
 
 .ferry-card {
-    background-color: #1E1E1E;
+    background: rgba(30, 30, 30, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 2rem;
     position: relative;
@@ -222,35 +223,33 @@
     display: flex;
     flex-direction: column;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
+    flex: 1 1 300px;
 }
 
 .ferry-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    border-color: rgba(232, 98, 26, 0.2);
 }
 
 .big-card {
-    grid-column: 1 / 2;
-    grid-row: 1 / 2;
-    background: linear-gradient(145deg, #222, #181818);
+    flex: 2 1 500px;
+    background: linear-gradient(145deg, rgba(34,34,34,0.7), rgba(24,24,24,0.7));
 }
 
 .right-card {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-    background-color: #242424;
+    flex: 1 1 300px;
+    background-color: rgba(36, 36, 36, 0.7);
 }
 
 .bottom-left-card {
-    grid-column: 1 / 2;
-    grid-row: 2 / 3;
-    background-color: #1A1A1A;
+    flex: 1 1 300px;
+    background-color: rgba(26, 26, 26, 0.7);
 }
 
 .info-card {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-    background: linear-gradient(135deg, #3A2010, #1E1108);
+    flex: 1 1 300px;
+    background: linear-gradient(135deg, rgba(58,32,16,0.7), rgba(30,17,8,0.7));
     flex-direction: row;
     align-items: flex-start;
     gap: 1rem;
@@ -443,11 +442,13 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: #161616;
+    background: rgba(22, 22, 22, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     justify-content: space-around;
     padding: 1rem 0;
-    border-top: 1px solid #2A2A2A;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     z-index: 1000;
 }
 

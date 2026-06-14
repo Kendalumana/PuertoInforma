@@ -124,7 +124,7 @@ function PaginaNoticias() {
     }, [noticias, categoriaActiva, busqueda]);
 
     return (
-        <div className="noticias-page">
+        <div className="app-wrapper immersive-layout noticias-page">
 
             {/* Header */}
             <header className="noticias-header-page">

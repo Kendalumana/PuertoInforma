@@ -215,7 +215,7 @@ function PaginaFerry() {
     const abordajeMin = siguiente ? Math.max(0, minsRestantes - 10) : null;
 
     return (
-        <div className="ferry-layout">
+        <div className="app-wrapper immersive-layout ferry-layout">
             {/* Top Navbar */}
             <header className="ferry-topbar">
                 <div className="ferry-logo" onClick={() => navigate('/')}>
@@ -384,53 +384,40 @@ function PaginaFerry() {
                         </div>
 
                         {/* ── Right Card: 2ª SALIDA ── */}
-                        <div className="ferry-card right-card">
-                            <div className="card-top flex-between">
-                                <Clock size={20} className="text-orange" />
-                                <span className="time-small">
-                                    {proxima2 ? formatHora(proxima2.horaSalida) : '—'}
-                                </span>
-                            </div>
+                        {proxima2 && (
+                            <div className="ferry-card right-card">
+                                <div className="card-top flex-between">
+                                    <Clock size={20} className="text-orange" />
+                                    <span className="time-small">
+                                        {formatHora(proxima2.horaSalida)}
+                                    </span>
+                                </div>
 
-                            {proxima2 ? (
-                                <>
-                                    <h3 className="card-title mt-auto">{proxima2.embarcacionNombre || 'Naviera Tambor'}</h3>
-                                    <p className="card-subtitle mb-4">{proxima2.embarcacionTipo || 'Ferry Convencional'}</p>
-                                    <div className="progress-bar-container">
-                                        <div
-                                            className="progress-bar-fill"
-                                            style={{
-                                                width: `${Math.min(100, Math.max(5, 100 - (minutosHasta(proxima2.horaSalida) / 60) * 20))}%`,
-                                                backgroundColor: '#E8621A'
-                                            }}
-                                        />
-                                    </div>
-                                    {proxima2.enlaceReserva ? (
-                                        <a
-                                            href={proxima2.enlaceReserva}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="ferry-btn-outline ferry-reserve-link"
-                                        >
-                                            <ExternalLink size={14} /> Reservar Espacio
-                                        </a>
-                                    ) : (
-                                        <button className="ferry-btn-outline">Reservar Espacio</button>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <h3 className="card-title mt-auto" style={{ color: '#555' }}>Sin salida</h3>
-                                    <p className="card-subtitle mb-4">No hay 2ª salida disponible</p>
-                                    <div className="progress-bar-container">
-                                        <div className="progress-bar-fill" style={{ width: '0%' }} />
-                                    </div>
-                                    <button className="ferry-btn-outline" disabled style={{ opacity: 0.4 }}>
-                                        Reservar Espacio
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                                <h3 className="card-title mt-auto">{proxima2.embarcacionNombre || 'Naviera Tambor'}</h3>
+                                <p className="card-subtitle mb-4">{proxima2.embarcacionTipo || 'Ferry Convencional'}</p>
+                                <div className="progress-bar-container">
+                                    <div
+                                        className="progress-bar-fill"
+                                        style={{
+                                            width: `${Math.min(100, Math.max(5, 100 - (minutosHasta(proxima2.horaSalida) / 60) * 20))}%`,
+                                            backgroundColor: '#E8621A'
+                                        }}
+                                    />
+                                </div>
+                                {proxima2.enlaceReserva ? (
+                                    <a
+                                        href={proxima2.enlaceReserva}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ferry-btn-outline ferry-reserve-link"
+                                    >
+                                        <ExternalLink size={14} /> Reservar Espacio
+                                    </a>
+                                ) : (
+                                    <button className="ferry-btn-outline">Reservar Espacio</button>
+                                )}
+                            </div>
+                        )}
 
                         {/* ── Bottom Left Card: ÚLTIMA / NOCTURNA ── */}
                         <div className="ferry-card bottom-left-card">

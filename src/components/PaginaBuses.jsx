@@ -614,14 +614,14 @@ function PaginaBuses() {
 
     // ── Pantalla de carga ──
     if (loading) return (
-        <div className="buses-page">
+        <div className="app-wrapper immersive-layout buses-page">
             <BusesNavbar onBack={() => navigate('/')} />
             <div className="buses-loading"><div className="buses-spinner"></div><p>Cargando rutas...</p></div>
         </div>
     );
 
     if (error) return (
-        <div className="buses-page">
+        <div className="app-wrapper immersive-layout buses-page">
             <BusesNavbar onBack={() => navigate('/')} />
             <div className="buses-error"><p>{error}</p><button className="buses-retry" onClick={() => window.location.reload()}>Reintentar</button></div>
         </div>
@@ -629,7 +629,7 @@ function PaginaBuses() {
 
     // ── Vista detalle ──
     if (rutaSeleccionada) return (
-        <div className="buses-page">
+        <div className="app-wrapper immersive-layout buses-page">
             <RutaDetalle
                 ruta={rutaSeleccionada}
                 esFavorito={favoritos.includes(String(rutaSeleccionada.id))}
@@ -647,7 +647,7 @@ function PaginaBuses() {
 
     // ── Vista lista ──
     return (
-        <div className="buses-page">
+        <div className="app-wrapper immersive-layout buses-page">
             <BusesNavbar onBack={() => navigate('/')} />
 
             <div className="mv-main-content">
