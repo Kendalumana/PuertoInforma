@@ -10,6 +10,7 @@ import Navbar from './Navbar';
 import PlaceModal from './PlaceModal';
 import LazyImage from './LazyImage';
 import { SkeletonList } from './Skeleton';
+import LocationPermissionModal from './LocationPermissionModal';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
@@ -57,6 +58,7 @@ function MapaView() {
     const [previewPlace, setPreviewPlace] = useState(null);
     const [mapaVisible, setMapaVisible] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
     const [favorites, setFavorites] = useState([]);
     const [showFavorites, setShowFavorites] = useState(false);
     const [resultadosVisibles, setResultadosVisibles] = useState(20); // A-N1
@@ -159,9 +161,10 @@ function MapaView() {
         if (!map) return;
         
         let watchId;
-        if (navigator.geolocation) {
+
+        const startWatching = () => {
             watchId = navigator.geolocation.watchPosition(
-                (pos) => {
+                async (pos) => {
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
                     
@@ -169,12 +172,52 @@ function MapaView() {
                     const userMarker = L.marker([lat, lng], { icon: createUserIcon() });
                     userMarker.bindPopup('<b>📍 Tu ubicación actual</b><br/>En tiempo real');
                     userMarkerLayer.current.addLayer(userMarker);
+
+                    // A-N2: Enviar ubicación al backend
+                    try {
+                        const localToken = localStorage.getItem('token');
+                        if (localToken) {
+                            const payload = JSON.parse(atob(localToken.split('.')[1]));
+                            const userId = payload.id || payload.sub || payload.usuarioId || payload.userId;
+                            if (userId) {
+                                await axiosPrivate.put(`/usuario/${userId}/ubicacion`, { latitud: lat, longitud: lng });
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("No se pudo actualizar la ubicación en el backend", e);
+                    }
                 },
                 (error) => {
                     console.warn("No se pudo obtener la ubicación en tiempo real:", error);
+                    setError("Permiso de ubicación denegado. No podrás ver tu posición en el mapa.");
                 },
                 { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
             );
+        };
+
+        if (navigator.geolocation && navigator.permissions) {
+            navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                if (result.state === 'granted') {
+                    startWatching();
+                } else if (result.state === 'prompt') {
+                    setShowLocationModal(true);
+                } else if (result.state === 'denied') {
+                    setError("Permiso de ubicación denegado. Activalo en tu navegador para ver tu posición.");
+                }
+                
+                result.onchange = () => {
+                    if (result.state === 'granted') {
+                        startWatching();
+                        setShowLocationModal(false);
+                        setError(null);
+                    } else if (result.state === 'denied') {
+                        setError("Permiso de ubicación denegado. Activalo en tu navegador para ver tu posición.");
+                    }
+                };
+            });
+        } else if (navigator.geolocation) {
+            // Fallback
+            startWatching();
         }
 
         return () => {
@@ -481,6 +524,27 @@ function MapaView() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Modal de Permiso de Ubicación */}
+            {showLocationModal && (
+                <LocationPermissionModal
+                    onAllow={(accuracy) => {
+                        setShowLocationModal(false);
+                        // Al ocultar el modal, intentamos obtener la ubicación
+                        // Lo que activará el prompt del navegador
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                () => {}, // el watchPosition del useEffect atrapará el cambio
+                                () => setError("Permiso denegado por el navegador.")
+                            );
+                        }
+                    }}
+                    onDeny={() => {
+                        setShowLocationModal(false);
+                        setError("Has denegado el acceso a tu ubicación. Algunas funciones no estarán disponibles.");
+                    }}
+                />
             )}
         </div>
     );

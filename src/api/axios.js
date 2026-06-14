@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 
 // Descomentar la línea correspondiente según el entorno a utilizar:
 //const BASE_URL = 'http://localhost:8080/api/v1'; // Local (IntelliJ)
-const BASE_URL = 'https://puertoinforma-backend.onrender.com/api/v1'; // Producción (Render)
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://puertoinforma-backend.onrender.com/api/v1'; // Producción (Render)
 
 // Instancia pública (sin token)
 export default axios.create({
@@ -79,6 +79,13 @@ axiosPrivate.interceptors.response.use(
             // Si el refresh falló → mandar al login
             localStorage.removeItem('token');
             window.location.href = '/login';
+        }
+
+        // Si es 403 (autenticado pero sin permisos)
+        if (status === 403) {
+            console.warn('[axiosPrivate] Acceso denegado (403)');
+            // Opcional: mostrar un toast o alerta aquí
+            // alert('No tienes permisos para realizar esta acción');
         }
 
         return Promise.reject(error);

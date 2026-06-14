@@ -39,25 +39,9 @@ async function subirAvatarImagen(file, usuarioId) {
 // ✅ Función para guardar avatar (con usuarioId explícito, usando fetch)
 async function guardarAvatar(tipo, valor, usuarioId) {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error('No hay token de autenticación');
-
-    const url = 'https://puertoinforma-backend.onrender.com/api/v1/perfil/avatar';
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ tipo, valor, usuarioId })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-    console.log('✅ Avatar guardado correctamente');
+    const url = '/perfil/avatar'; // axiosPrivate maneja el baseURL
+    const response = await axiosPrivate.put(url, { tipo, valor, usuarioId });
+    console.log('✅ Avatar guardado correctamente', response.data);
   } catch (error) {
     console.error('❌ Error al guardar avatar:', error);
     throw new Error('No se pudo guardar el avatar');
