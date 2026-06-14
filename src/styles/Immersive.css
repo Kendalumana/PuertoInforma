@@ -228,6 +228,31 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-back:hover {
+  background: rgba(232, 98, 26, 0.1);
+  border-color: #E8621A;
+  color: #E8621A;
+}
+
 .immersive-categories {
   display: flex;
   flex-wrap: wrap;

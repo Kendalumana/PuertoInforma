@@ -129,6 +129,10 @@ function PaginaNoticias() {
 
             <Navbar />
 
+            <div style={{ padding: '0 1.25rem', marginTop: '1rem' }}>
+                <button className="btn-back" onClick={() => navigate('/')}>← Volver al Mapa</button>
+            </div>
+
             {/* Buscador */}
             <div className="noticias-search-wrapper">
                 <Search size={16} className="noticias-search-icon" />
