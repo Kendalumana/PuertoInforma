@@ -499,6 +499,17 @@
 
 /* ── RESPONSIVE MOBILE ───────────────────────────────────── */
 @media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  .nav-back-map-btn {
+    padding: 0.4rem; /* Solo icono en mobile */
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+  }
+
   .immersive-left-panel {
     top: 70px;
     left: 1rem;

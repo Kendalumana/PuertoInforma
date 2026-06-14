@@ -17,18 +17,18 @@ function Navbar({ onOpenAbout }) {
 
     return (
         <header className="navbar-header immersive-navbar">
-            <div className="header-left">
+            <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {!esMapa && (
+                    <button className="nav-back-map-btn" onClick={() => navigate('/')} title="Volver al Mapa">
+                        <ArrowLeft size={20} />
+                        <span className="hide-on-mobile">Mapa</span>
+                    </button>
+                )}
                 <Link to="/" style={{ textDecoration: 'none' }}>
                     <h1 className="navbar-logo-text"><span className="logo-brand">Puerto</span> <span className="logo-sub">Informa</span></h1>
                 </Link>
 
                 <nav className="navbar-links">
-                    {!esMapa && (
-                        <button className="nav-back-map-btn" onClick={() => navigate('/')}>
-                            <ArrowLeft size={15} />
-                            Volver al Mapa
-                        </button>
-                    )}
                     <Link to="/noticias" className="nav-link">Noticias y Eventos</Link>
                     <Link to="/ferry" className="nav-link">Ferry</Link>
                     <Link to="/buses" className="nav-link">Buses</Link>
@@ -49,6 +49,9 @@ function Navbar({ onOpenAbout }) {
 
                     {menuAbierto && (
                         <div className="dropdown-menu dropdown-menu-right">
+                            {!esMapa && (
+                                <Link to="/" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🗺️ Mapa Principal</Link>
+                            )}
                             <Link to="/perfil" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
                             <Link to="/buses" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🚌 Buses</Link>
                             <Link to="/noticias" className="dropdown-item" onClick={() => setMenuAbierto(false)}>📰 Noticias y Eventos</Link>
