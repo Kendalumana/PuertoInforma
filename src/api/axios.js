@@ -60,8 +60,8 @@ axiosPrivate.interceptors.response.use(
         const originalRequest = error.config;
         const status = error.response?.status;
 
-        // Si es 401 o 403 y no hemos reintentado ya
-        if ((status === 401 || status === 403) && !originalRequest._retry) {
+        // Si es 401 y no hemos reintentado ya
+        if (status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             try {

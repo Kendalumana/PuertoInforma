@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import '../styles/Buses.css';
 import BusMapModal from './BusMapModal';
+import Navbar from './Navbar';
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL
@@ -615,14 +616,14 @@ function PaginaBuses() {
     // ── Pantalla de carga ──
     if (loading) return (
         <div className="app-wrapper immersive-layout buses-page">
-            <BusesNavbar onBack={() => navigate('/')} />
+            <Navbar />
             <div className="buses-loading"><div className="buses-spinner"></div><p>Cargando rutas...</p></div>
         </div>
     );
 
     if (error) return (
         <div className="app-wrapper immersive-layout buses-page">
-            <BusesNavbar onBack={() => navigate('/')} />
+            <Navbar />
             <div className="buses-error"><p>{error}</p><button className="buses-retry" onClick={() => window.location.reload()}>Reintentar</button></div>
         </div>
     );
@@ -648,7 +649,7 @@ function PaginaBuses() {
     // ── Vista lista ──
     return (
         <div className="app-wrapper immersive-layout buses-page">
-            <BusesNavbar onBack={() => navigate('/')} />
+            <Navbar />
 
             <div className="mv-main-content">
                 {/* Hero + reloj */}
@@ -748,21 +749,7 @@ function PaginaBuses() {
     );
 }
 
-// ═══════════════════════════════════════════════════════════
-// Navbar de la sección buses
-// ═══════════════════════════════════════════════════════════
-function BusesNavbar({ onBack }) {
-    return (
-        <header className="buses-navbar">
-            <button className="buses-nav-back" onClick={onBack}>
-                <ArrowLeft size={20} />
-            </button>
-            <span className="buses-nav-logo">
-                <span className="logo-orange">Puerto</span> Informa
-            </span>
-        </header>
-    );
-}
+
 
 // ═══════════════════════════════════════════════════════════
 // Bottom Tab Bar

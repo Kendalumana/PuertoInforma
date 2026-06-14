@@ -768,6 +768,8 @@
   .mv-main-content { padding: 0 2rem 0.5rem; }
   .mv-route-card { border-radius: 18px; }
   .mv-detail-page { max-width: 680px; margin: 0 auto; }
+  .buses-bottom-bar { display: none !important; }
+  .buses-page { padding-bottom: 2rem; }
 }
 
 @media (max-width: 400px) {

@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
     Search, Clock, CalendarDays,
     Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck, ExternalLink, Anchor,
-    Bell, User
+    Bell, User, Map
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Ferry.css';
+import Navbar from './Navbar';
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL
@@ -216,31 +217,7 @@ function PaginaFerry() {
 
     return (
         <div className="app-wrapper immersive-layout ferry-layout">
-            {/* Top Navbar */}
-            <header className="ferry-topbar">
-                <div className="ferry-logo" onClick={() => navigate('/')}>
-                    <span className="logo-white">Puerto</span><span className="logo-orange">Informa</span>
-                </div>
-                <div className="ferry-topbar-right">
-                    <div className="ferry-search-wrapper">
-                        <Search size={16} className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Buscar rutas..."
-                            value={busquedaFerry}
-                            onChange={e => setBusquedaFerry(e.target.value)}
-                        />
-                        {busquedaFerry && (
-                            <button
-                                onClick={() => setBusquedaFerry('')}
-                                style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1rem', padding: '0 4px' }}
-                            >✕</button>
-                        )}
-                    </div>
-                    <button className="icon-btn"><Bell size={20} /></button>
-                    <button className="icon-btn" onClick={() => navigate('/perfil')}><User size={20} /></button>
-                </div>
-            </header>
+            <Navbar />
 
             <main className="ferry-main">
                 {/* Hero Title */}
@@ -548,14 +525,14 @@ function PaginaFerry() {
                 </div>
             )}
 
-            {/* Bottom Tab Bar — A-N4: idioma en español */}
+            {/* Bottom Tab Bar — Mobile solo */}
             <nav className="ferry-bottom-nav">
                 <button
                     className={`nav-item ${activeTab === 'EXPLORE' ? 'active' : ''}`}
                     onClick={() => { setActiveTab('EXPLORE'); navigate('/'); }}
                 >
-                    <Compass size={24} />
-                    <span>EXPLORAR</span>
+                    <Map size={24} />
+                    <span>RUTAS</span>
                 </button>
                 <button
                     className={`nav-item ${activeTab === 'SCHEDULES' ? 'active' : ''}`}
@@ -565,18 +542,11 @@ function PaginaFerry() {
                     <span>HORARIOS</span>
                 </button>
                 <button
-                    className={`nav-item ${activeTab === 'TICKETS' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('TICKETS')}
-                >
-                    <Ticket size={24} />
-                    <span>TICKETS</span>
-                </button>
-                <button
                     className={`nav-item ${activeTab === 'SAVED' ? 'active' : ''}`}
                     onClick={() => setActiveTab('SAVED')}
                 >
                     {ferrySaved.length > 0 ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
-                    <span>GUARDADOS{ferrySaved.length > 0 ? ` (${ferrySaved.length})` : ''}</span>
+                    <span>FAVORITOS</span>
                 </button>
             </nav>
         </div>

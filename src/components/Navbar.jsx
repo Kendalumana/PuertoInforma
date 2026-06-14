@@ -16,7 +16,9 @@ function Navbar({ onOpenAbout }) {
     return (
         <header className="navbar-header immersive-navbar">
             <div className="header-left">
-                <h1 className="navbar-logo-text"><span className="logo-brand">Puerto</span> <span className="logo-sub">Informa</span></h1>
+                <Link to="/" style={{ textDecoration: 'none' }}>
+                    <h1 className="navbar-logo-text"><span className="logo-brand">Puerto</span> <span className="logo-sub">Informa</span></h1>
+                </Link>
 
                 <nav className="navbar-links">
                     <Link to="/noticias" className="nav-link">Noticias y Eventos</Link>

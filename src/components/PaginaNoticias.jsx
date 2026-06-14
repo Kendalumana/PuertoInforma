@@ -12,6 +12,7 @@ import {
     Megaphone, Waves, Ship, Star, ExternalLink, Clock
 } from 'lucide-react';
 import '../styles/Noticias.css';
+import Navbar from './Navbar';
 
 // ── Fetch desde backend ──
 import { axiosPrivate } from '../api/axios';
@@ -126,17 +127,7 @@ function PaginaNoticias() {
     return (
         <div className="app-wrapper immersive-layout noticias-page">
 
-            {/* Header */}
-            <header className="noticias-header-page">
-                <button className="noticias-back-btn" onClick={() => navigate('/')}>
-                    <ArrowLeft size={20} />
-                </button>
-                <div className="noticias-header-titles">
-                    <h1 className="noticias-page-titulo">Noticias y Eventos</h1>
-                    <p className="noticias-header-sub">Puntarenas al día</p>
-                </div>
-                <Newspaper size={22} className="noticias-header-icon" />
-            </header>
+            <Navbar />
 
             {/* Buscador */}
             <div className="noticias-search-wrapper">

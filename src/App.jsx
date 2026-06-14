@@ -21,7 +21,7 @@ function App() {
         <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Registro />} />
-            <Route path="/noticias" element={<PaginaNoticias />} />
+            <Route path="/noticias" element={<RutaProtegida><PaginaNoticias /></RutaProtegida>} />
             <Route path="/ferry" element={<RutaProtegida><PaginaFerry /></RutaProtegida>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<RutaProtegida><MapaView /></RutaProtegida>} />

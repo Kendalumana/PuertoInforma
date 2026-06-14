@@ -4,6 +4,8 @@
 
 .ferry-layout {
     min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
     color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -479,6 +481,15 @@
 }
 
 /* Responsive Styles */
+@media (min-width: 768px) {
+    .ferry-bottom-nav {
+        display: none !important;
+    }
+    .ferry-layout {
+        padding-bottom: 2rem;
+    }
+}
+
 @media (max-width: 900px) {
     .ferry-grid {
         grid-template-columns: 1fr;
