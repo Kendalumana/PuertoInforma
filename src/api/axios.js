@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase';
 
 // Descomentar la línea correspondiente según el entorno a utilizar:
 //const BASE_URL = 'http://localhost:8080/api/v1'; // Local (IntelliJ)
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://puertoinforma-backend.onrender.com/api/v1'; // Producción (Render)
-
+const envUrl = import.meta.env.VITE_API_URL || 'https://puertoinforma-backend.onrender.com/api/v1';
+// Nos aseguramos de que siempre tenga /api/v1 al final, por si en Vercel lo configuraron sin esa parte
+const BASE_URL = envUrl.endsWith('/api/v1') ? envUrl : `${envUrl.replace(/\/$/, '')}/api/v1`;
 // Instancia pública (sin token)
 export default axios.create({
     baseURL: BASE_URL,
