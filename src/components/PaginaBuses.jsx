@@ -14,18 +14,15 @@ import Navbar from './Navbar';
 // HELPERS DE TIEMPO REAL
 // ═══════════════════════════════════════════════════════════
 
-// Días en el mismo formato que devuelve la DB (sin tildes)
 const DIA_ORDEN = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 const DIA_NUM   = Object.fromEntries(DIA_ORDEN.map((d, i) => [d, i]));
 
-// Normaliza un nombre de día eliminando tildes/espacios (robusto para SABADO y SÁBADO)
 function normalizarDia(dia) {
     if (!dia) return '';
     return dia.toUpperCase().trim()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quita tildes
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// Distancia entre dos coordenadas en km (Haversine)
 function haversineKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -35,7 +32,6 @@ function haversineKm(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Parsea paradas: la DB las guarda como string JSON "[\"A\",\"B\"]"
 function parsearParadas(ruta) {
     if (!ruta) return ['Origen', 'Destino'];
     const raw = ruta.paradas;
@@ -44,37 +40,32 @@ function parsearParadas(ruta) {
         try {
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed) && parsed.length >= 2) return parsed;
-        } catch (_) { /* continúa al fallback */ }
+        } catch (_) { /* fallback */ }
     }
     return [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
 }
 
-// ¿Corre esta ruta en el día numérico dado?
 function correEnDia(horario, diaNum) {
     const inicio = DIA_NUM[normalizarDia(horario.diaInicio)] ?? 1;
     const fin    = DIA_NUM[normalizarDia(horario.diaFin)]    ?? 5;
-    // Manejar rangos que cruzan el fin de semana (ej: V→L)
     if (inicio <= fin) return diaNum >= inicio && diaNum <= fin;
     return diaNum >= inicio || diaNum <= fin;
 }
 
-// Minutos transcurridos desde medianoche para "HH:MM:SS" o "HH:MM"
 function horaEnMinutos(hora) {
     if (!hora) return -1;
     const partes = hora.split(':').map(Number);
     return partes[0] * 60 + (partes[1] || 0);
 }
 
-// Minutos que faltan hasta esa hora (negativo = ya pasó)
 function minutosHasta(horaSalida) {
     const ahora = new Date();
     const ahoraMin = ahora.getHours() * 60 + ahora.getMinutes();
     return horaEnMinutos(horaSalida) - ahoraMin;
 }
 
-// Formato legible del tiempo restante
 function formatearTiempoRestante(minutos) {
-    if (minutos < 0) return null; // ya pasó
+    if (minutos < 0) return null;
     if (minutos === 0) return 'Ahora';
     if (minutos < 60) return `En ${minutos} min`;
     const h = Math.floor(minutos / 60);
@@ -82,13 +73,11 @@ function formatearTiempoRestante(minutos) {
     return m > 0 ? `En ${h}h ${m}m` : `En ${h}h`;
 }
 
-// Formato "HH:MM" desde "HH:MM:SS"
 function formatHora(hora) {
     if (!hora) return '--:--';
     return hora.substring(0, 5);
 }
 
-// Calcular los próximos buses de una ruta para el día indicado
 function proximosBuses(horarios, diaNum, limit = 3) {
     if (!horarios?.length) return [];
     return horarios
@@ -98,7 +87,6 @@ function proximosBuses(horarios, diaNum, limit = 3) {
         .slice(0, limit);
 }
 
-// Obtener el resumen de próxima salida para una card
 function resumenProximaSalida(horarios) {
     const hoy = new Date().getDay();
     const proximosHoy = proximosBuses(horarios, hoy, 2);
@@ -108,14 +96,12 @@ function resumenProximaSalida(horarios) {
         return {
             label: formatearTiempoRestante(min),
             hora: formatHora(primero.horaSalida),
-            // horaLlegada solo existe en INDIRECTO — se muestra en la card como referencia
             horaLlegada: primero.horaLlegada ? formatHora(primero.horaLlegada) : null,
             siguiente: proximosHoy[1] ? formatHora(proximosHoy[1].horaSalida) : null,
             estado: min < 15 ? 'urgente' : min < 60 ? 'pronto' : 'normal',
             hayHoy: true
         };
     }
-    // No hay más hoy → buscar mañana
     const manana = (hoy + 1) % 7;
     const mananaHorarios = (horarios || [])
         .filter(h => correEnDia(h, manana))
@@ -157,16 +143,13 @@ function RelojVivo() {
 // COMPONENTE: Card de ruta en la lista
 // ═══════════════════════════════════════════════════════════
 
-// Acorta nombres largos de terminales para que quepan en la card
 function acortarTerminal(nombre) {
     if (!nombre) return '?';
     const n = nombre.trim();
     if (n.length <= 22) return n;
-    // Quita prefijos verbosos comunes
     return n.replace(/Terminal (de buses de|Buses)/i, 'Term.').trim().substring(0, 24);
 }
 
-// Tipo dominante de una ruta según sus horarios
 function tipoRuta(ruta) {
     if (!ruta.horarios?.length) return null;
     const counts = {};
@@ -181,18 +164,16 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
     const resumen = useMemo(() => resumenProximaSalida(Array.isArray(ruta.horarios) ? ruta.horarios : []), [ruta.horarios]);
     const origen  = acortarTerminal(ruta.lugarOrigen?.nombre);
     const destino = acortarTerminal(ruta.lugarDestino?.nombre);
-    const tipo    = tipoRuta(ruta); // 'DIRECTO' | 'INDIRECTO' | null
+    const tipo    = tipoRuta(ruta);
 
     return (
         <div className={`mv-route-card ${resumen.estado}`} onClick={() => onSelect(ruta)}>
-            {/* Franja de tipo (arriba de la card) */}
             {tipo && (
                 <div className={`mv-card-tipo-strip ${tipo === 'DIRECTO' ? 'directo' : 'indirecto'}`}>
                     {tipo === 'DIRECTO' ? '⚡ DIRECTO' : '🔄 INDIRECTO'}
                 </div>
             )}
 
-            {/* Cabecera: origen → destino */}
             <div className="mv-card-header">
                 <div className="mv-route-direction">
                     <span className="mv-origin">{origen}</span>
@@ -207,12 +188,10 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
                 </button>
             </div>
 
-            {/* Operador */}
             <div className="mv-operator-row">
                 <span className="mv-operator">{ruta.operador?.nombre || '—'}</span>
             </div>
 
-            {/* Próximas salidas */}
             <div className="mv-departures">
                 {resumen.hayHoy ? (
                     <>
@@ -227,7 +206,6 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
                                 <span className="mv-next-time">{resumen.siguiente}</span>
                             </div>
                         )}
-                        {/* Tiempo de viaje para INDIRECTO */}
                         {tipo === 'INDIRECTO' && resumen.horaLlegada && (
                             <div className="mv-card-llegada">
                                 <span className="mv-next-label">LLEGA</span>
@@ -238,7 +216,29 @@ function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
                 ) : (
                     <div className="mv-no-buses">
                         <span>{resumen.label}</span>
-  // ═══════════════════════════════════════════════════════════
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Nombres cortos de días para la UI (orden JS: 0=Dom)
+const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+function formatearRangoDia(h) {
+    const ini = normalizarDia(h.diaInicio);
+    const fin = normalizarDia(h.diaFin);
+    const idxIni = DIA_NUM[ini] ?? -1;
+    const idxFin = DIA_NUM[fin] ?? -1;
+    if (idxIni === -1) return '';
+    if (ini === fin) return `Solo ${DIA_CORTO[idxIni]}`;
+    if ((ini === 'LUNES' && fin === 'DOMINGO') || (ini === 'DOMINGO' && fin === 'SABADO'))
+        return 'Todos los días';
+    return `${DIA_CORTO[idxIni]} – ${DIA_CORTO[idxFin]}`;
+}
+
+// ═══════════════════════════════════════════════════════════
 // COMPONENTE: Vista de detalle — Matriz de Horarios
 // ═══════════════════════════════════════════════════════════
 function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
@@ -311,7 +311,7 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
                     </div>
                 </div>
 
-                {/* Origen → Destino */}
+                {/* Origen → Destino visual */}
                 <div className="mvd-route-display">
                     <div className="mvd-terminal">
                         <span className="mvd-terminal-label">SALIDA</span>
@@ -327,14 +327,12 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
                     </div>
                 </div>
 
-                {/* Meta info */}
+                {/* Meta */}
                 <div className="mvd-meta-row">
-                    <span className="mvd-meta-item">
-                        <Bus size={13} />{ruta.operador?.nombre || 'Operador desconocido'}
-                    </span>
-                    {ruta.nombre && <span className="mvd-meta-item mvd-meta-ruta">{ruta.nombre}</span>}
-                    {ruta.duracion && <span className="mvd-meta-item"><Clock size={13} />{ruta.duracion}</span>}
-                    {ruta.frecuencia && <span className="mvd-meta-item"><Clock size={13} />{ruta.frecuencia}</span>}
+                    <span className="mvd-meta-item"><Bus size={13} /> {ruta.operador?.nombre || 'Operador desconocido'}</span>
+                    {ruta.nombre    && <span className="mvd-meta-item mvd-meta-ruta">{ruta.nombre}</span>}
+                    {ruta.duracion  && <span className="mvd-meta-item"><Clock size={13} /> {ruta.duracion}</span>}
+                    {ruta.frecuencia && <span className="mvd-meta-item"><Clock size={13} /> {ruta.frecuencia}</span>}
                 </div>
 
                 {/* Paradas intermedias */}
@@ -447,38 +445,6 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
         </div>
     );
 }
-                   <span className="mv-dias-badge">
-                                                {formatearRangoDia(h)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
-                </div>
-            </div>
-
-            {/* ── Botones de acción ── */}
-            <div className="mv-detail-actions">
-                <button
-                    className="mv-btn-primary"
-                    onClick={() => setMapaAbierto(true)}
-                >
-                    <MapPin size={18} /> VER EN MAPA
-                </button>
-            </div>
-
-            {/* ── Modal de mapa con ruta ── */}
-            {mapaAbierto && (
-                <BusMapModal
-                    ruta={ruta}
-                    onClose={() => setMapaAbierto(false)}
-                />
-            )}
-        </div>
-    );
-}
 
 // ═══════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
@@ -490,15 +456,13 @@ function PaginaBuses() {
     const [busqueda, setBusqueda]               = useState('');
     const [terminalActiva, setTerminalActiva]   = useState('Todas');
     const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
-    const [tabPrincipal, setTabPrincipal]       = useState('buses'); // 'buses' | 'favoritos'
+    const [tabPrincipal, setTabPrincipal]       = useState('buses');
     const [loading, setLoading]                 = useState(true);
     const [error, setError]                     = useState(null);
 
-    // Geolocalización
-    const [ubicacion, setUbicacion]   = useState(null);       // { lat, lng }
-    const [geoEstado, setGeoEstado]   = useState('idle');      // 'idle' | 'loading' | 'ok' | 'error'
+    const [ubicacion, setUbicacion]   = useState(null);
+    const [geoEstado, setGeoEstado]   = useState('idle');
 
-    // Favoritos — almacenamiento LOCAL (no se envía al backend)
     const [favoritos, setFavoritos] = useState(() => {
         try { return JSON.parse(localStorage.getItem('favoritosRutas') || '[]'); }
         catch { return []; }
@@ -510,14 +474,12 @@ function PaginaBuses() {
 
     const toggleFavorito = useCallback((rutaId, e) => {
         e?.stopPropagation();
-        // Normalizar a string para evitar discrepancias number vs string
         const id = String(rutaId);
         setFavoritos(prev =>
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
         );
     }, []);
 
-    // Geolocalización: pedir permiso al montar
     useEffect(() => {
         if (!navigator.geolocation) { setGeoEstado('error'); return; }
         setGeoEstado('loading');
@@ -531,7 +493,6 @@ function PaginaBuses() {
         );
     }, []);
 
-    // Auto-seleccionar la terminal más cercana cuando llega el GPS (solo si está en 'Todas')
     useEffect(() => {
         if (!ubicacion || rutas.length === 0 || terminalActiva !== 'Todas') return;
         let nearest = null;
@@ -546,7 +507,6 @@ function PaginaBuses() {
         if (nearest) setTerminalActiva(nearest);
     }, [ubicacion, rutas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Cargar rutas
     useEffect(() => {
         axiosPrivate.get('/ruta-transporte')
             .then(res => setRutas(res.data))
@@ -554,9 +514,6 @@ function PaginaBuses() {
             .finally(() => setLoading(false));
     }, []);
 
-
-
-    // Mapa de coordenadas por nombre de terminal
     const terminalCoordsMap = useMemo(() => {
         const m = {};
         rutas.forEach(r => {
@@ -570,7 +527,6 @@ function PaginaBuses() {
         return m;
     }, [rutas]);
 
-    // Terminales únicas — ordenadas por cercanía si GPS disponible
     const terminales = useMemo(() => {
         const nombres = [...new Set(rutas.map(r => r.lugarOrigen?.nombre).filter(Boolean))];
         if (!ubicacion) return ['Todas', ...nombres];
@@ -583,7 +539,6 @@ function PaginaBuses() {
         return ['Todas', ...sorted];
     }, [rutas, ubicacion, terminalCoordsMap]);
 
-    // Rutas filtradas
     const rutasFiltradas = useMemo(() => {
         const q = busqueda.toLowerCase();
         const base = tabPrincipal === 'favoritos'
@@ -643,7 +598,6 @@ function PaginaBuses() {
             <Navbar />
 
             <div className="mv-main-content">
-                {/* Hero + reloj */}
                 <div className="mv-hero">
                     <div>
                         <h1 className="mv-hero-title">
@@ -662,7 +616,6 @@ function PaginaBuses() {
                     <RelojVivo />
                 </div>
 
-                {/* Buscador */}
                 <div className="mv-search-box">
                     <Search size={17} className="mv-search-icon" />
                     <input
@@ -677,7 +630,6 @@ function PaginaBuses() {
                     )}
                 </div>
 
-                {/* Chips de terminal */}
                 {tabPrincipal !== 'favoritos' && (
                     <div className="mv-chips">
                         {terminales.map(t => {
@@ -709,7 +661,6 @@ function PaginaBuses() {
                     </div>
                 )}
 
-                {/* Lista de rutas */}
                 <div className="mv-routes-list">
                     {rutasFiltradas.length === 0 ? (
                         <div className="mv-empty">
@@ -740,8 +691,6 @@ function PaginaBuses() {
     );
 }
 
-
-
 // ═══════════════════════════════════════════════════════════
 // Bottom Tab Bar
 // ═══════════════════════════════════════════════════════════
@@ -758,8 +707,6 @@ function BusesBottomBar({ tab, setTab, rutaSeleccionada, setRutaSeleccionada }) 
             <button
                 className={`bbar-tab ${!!rutaSeleccionada ? 'active' : ''}`}
                 onClick={() => {
-                    // Si hay ruta seleccionada, permanece en el detalle (ya está activo)
-                    // Si no hay ruta, no hace nada visualmente: mostrar tip
                     if (!rutaSeleccionada) return;
                 }}
                 style={{ opacity: rutaSeleccionada ? 1 : 0.35, cursor: rutaSeleccionada ? 'pointer' : 'not-allowed' }}

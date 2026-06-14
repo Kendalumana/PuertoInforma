@@ -1013,3 +1013,441 @@
   70%  { box-shadow: 0 0 0 10px rgba(74,144,226,0); }
   100% { box-shadow: 0 0 0 0   rgba(74,144,226,0); }
 }
+
+/* ═══════════════════════════════════════════
+   NUEVA VISTA DETALLE — Matriz de Horarios
+═══════════════════════════════════════════ */
+
+/* ── Header del detalle ── */
+.mvd-header {
+  padding: 0.75rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(15,15,15,0.6);
+  backdrop-filter: blur(12px);
+}
+.mvd-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.mvd-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.mvd-map-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(232,98,26,0.12);
+  border: 1px solid rgba(232,98,26,0.3);
+  color: #E8621A;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.mvd-map-btn:hover {
+  background: rgba(232,98,26,0.25);
+  transform: translateY(-1px);
+}
+
+/* ── Ruta: Origen → Destino ── */
+.mvd-route-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.mvd-terminal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+.mvd-terminal-dest {
+  text-align: right;
+}
+.mvd-terminal-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.1em;
+}
+.mvd-terminal-name {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mvd-route-arrow-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  min-width: 50px;
+}
+.mvd-arrow-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, #E8621A, rgba(255,255,255,0.15));
+  border-radius: 1px;
+}
+.mvd-arrow-bus {
+  color: #E8621A;
+  filter: drop-shadow(0 0 4px rgba(232,98,26,0.4));
+}
+
+/* ── Meta info row ── */
+.mvd-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.mvd-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+}
+.mvd-meta-ruta {
+  color: #E8621A;
+  border-color: rgba(232,98,26,0.2);
+  background: rgba(232,98,26,0.08);
+}
+
+/* ── Paradas intermedias ── */
+.mvd-stops-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.6rem 0 0.25rem;
+}
+.mvd-stops-track::-webkit-scrollbar { display: none; }
+.mvd-stop-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+.mvd-stop-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.25);
+  flex-shrink: 0;
+  z-index: 1;
+}
+.mvd-stop-dot.origin {
+  background: #E8621A;
+  border-color: #E8621A;
+  box-shadow: 0 0 8px rgba(232,98,26,0.5);
+}
+.mvd-stop-dot.dest {
+  background: transparent;
+  border: 2px solid #555;
+  position: relative;
+}
+.mvd-stop-dot.dest::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #3399ff;
+}
+.mvd-stop-connector {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, #E8621A, rgba(80,80,80,0.4));
+  margin: 4px 0;
+  min-width: 30px;
+}
+.mvd-stop-label {
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+  margin-top: 0.3rem;
+  max-width: 70px;
+  word-break: break-word;
+}
+
+/* ── Tabs bar ── */
+.mvd-tabs-bar {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 0 0.75rem;
+  position: sticky;
+  top: 0;
+  background: rgba(15,15,15,0.97);
+  backdrop-filter: blur(12px);
+  z-index: 90;
+}
+.mvd-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+  padding: 0.9rem 0.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.mvd-tab:hover { color: rgba(255,255,255,0.7); }
+.mvd-tab.active {
+  color: #E8621A;
+  border-bottom-color: #E8621A;
+}
+
+/* ── Filtros row ── */
+.mvd-filters-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.mvd-filter-group {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mvd-filter-group::-webkit-scrollbar { display: none; }
+.mvd-filter-chip {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.mvd-filter-chip:hover {
+  border-color: rgba(232,98,26,0.4);
+  color: rgba(255,255,255,0.85);
+}
+.mvd-filter-chip.active {
+  background: #E8621A;
+  border-color: #E8621A;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(232,98,26,0.35);
+}
+
+/* ── Contenedor de la matriz ── */
+.mvd-schedule-container {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Grupo por periodo (Mañana, Tarde, Noche) ── */
+.mvd-period-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mvd-period-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+.mvd-period-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.65);
+}
+.mvd-period-count {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.04em;
+}
+
+/* ── Grid de celdas horarias ── */
+.mvd-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.5rem;
+}
+
+/* ── Celda individual ── */
+.mvd-schedule-cell {
+  background: rgba(30,30,30,0.65);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.mvd-schedule-cell:hover {
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(40,40,40,0.8);
+  transform: translateY(-1px);
+}
+.mvd-schedule-cell.pasado {
+  opacity: 0.35;
+}
+.mvd-schedule-cell.proximo {
+  border-color: rgba(232,98,26,0.5);
+  background: rgba(232,98,26,0.06);
+  box-shadow: 0 0 16px rgba(232,98,26,0.12);
+}
+
+/* Badge PRÓXIMO */
+.mvd-cell-badge-next {
+  position: absolute;
+  top: 0; right: 0;
+  background: #E8621A;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 900;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0 12px 0 8px;
+  letter-spacing: 0.06em;
+}
+
+/* Hora de salida */
+.mvd-cell-departure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.mvd-cell-time {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.mvd-cell-arrival {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+.mvd-cell-arrow-small {
+  color: rgba(99,179,237,0.6);
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+.mvd-cell-time-arr {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #63b3ed;
+  line-height: 1;
+}
+
+/* Meta info dentro de celda */
+.mvd-cell-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+.mvd-cell-tipo {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
+}
+.mvd-cell-tipo.directo {
+  background: rgba(232,98,26,0.15);
+  color: #E8621A;
+}
+.mvd-cell-tipo.indirecto {
+  background: rgba(99,179,237,0.12);
+  color: #63b3ed;
+}
+.mvd-cell-tipo.regular {
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.5);
+}
+.mvd-cell-dias {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.35);
+  font-weight: 600;
+}
+.mvd-cell-countdown {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #E8621A;
+}
+.mvd-cell-salio {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.3);
+  font-style: italic;
+}
+
+/* ── Responsive: celdas más grandes en desktop ── */
+@media (min-width: 680px) {
+  .mvd-schedule-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.6rem;
+  }
+  .mvd-schedule-container {
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .mvd-header {
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .mvd-schedule-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.4rem;
+  }
+  .mvd-cell-time {
+    font-size: 1.3rem;
+  }
+  .mvd-terminal-name {
+    font-size: 0.95rem;
+  }
+}
