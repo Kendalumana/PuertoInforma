@@ -1,17 +1,16 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { axiosPrivate } from '../api/axios';
 import {
-    Search, Bus, Bookmark, BookmarkCheck,
-    MapPin, ArrowLeft, Clock, Star,
-    ChevronRight, CalendarDays, ListFilter, Navigation
+    Search, Clock, CalendarDays,
+    Info, Compass, Bus, Ticket, Bookmark, BookmarkCheck, ExternalLink, MapPin,
+    Bell, User, Map
 } from 'lucide-react';
+import { axiosPrivate } from '../api/axios';
 import '../styles/Buses.css';
-import BusMapModal from './BusMapModal';
 import Navbar from './Navbar';
 
 // ═══════════════════════════════════════════════════════════
-// HELPERS DE TIEMPO REAL
+// HELPERS DE TIEMPO REAL Y FECHAS
 // ═══════════════════════════════════════════════════════════
 
 const DIA_ORDEN = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
@@ -23,28 +22,6 @@ function normalizarDia(dia) {
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2
-        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function parsearParadas(ruta) {
-    if (!ruta) return ['Origen', 'Destino'];
-    const raw = ruta.paradas;
-    if (Array.isArray(raw) && raw.length >= 2) return raw;
-    if (typeof raw === 'string') {
-        try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length >= 2) return parsed;
-        } catch (_) { /* fallback */ }
-    }
-    return [ruta.lugarOrigen?.nombre || 'Origen', ruta.lugarDestino?.nombre || 'Destino'];
-}
-
 function correEnDia(horario, diaNum) {
     const inicio = DIA_NUM[normalizarDia(horario.diaInicio)] ?? 1;
     const fin    = DIA_NUM[normalizarDia(horario.diaFin)]    ?? 5;
@@ -52,396 +29,74 @@ function correEnDia(horario, diaNum) {
     return diaNum >= inicio || diaNum <= fin;
 }
 
+/** "HH:MM:SS" o "HH:MM" → minutos desde medianoche */
 function horaEnMinutos(hora) {
     if (!hora) return -1;
-    const partes = hora.split(':').map(Number);
-    return partes[0] * 60 + (partes[1] || 0);
+    const [h, m] = hora.split(':').map(Number);
+    return h * 60 + (m || 0);
 }
 
+/** Minutos que faltan hasta esa hora (negativo = ya pasó) */
 function minutosHasta(horaSalida) {
     const ahora = new Date();
     const ahoraMin = ahora.getHours() * 60 + ahora.getMinutes();
     return horaEnMinutos(horaSalida) - ahoraMin;
 }
 
-function formatearTiempoRestante(minutos) {
-    if (minutos < 0) return null;
-    if (minutos === 0) return 'Ahora';
-    if (minutos < 60) return `En ${minutos} min`;
-    const h = Math.floor(minutos / 60);
-    const m = minutos % 60;
-    return m > 0 ? `En ${h}h ${m}m` : `En ${h}h`;
-}
-
+/** "HH:MM:SS" → "HH:MM" */
 function formatHora(hora) {
     if (!hora) return '--:--';
     return hora.substring(0, 5);
 }
 
-function proximosBuses(horarios, diaNum, limit = 3) {
-    if (!horarios?.length) return [];
-    return horarios
-        .filter(h => correEnDia(h, diaNum))
-        .filter(h => minutosHasta(h.horaSalida) >= 0)
-        .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida))
-        .slice(0, limit);
-}
-
-function resumenProximaSalida(horarios) {
-    const hoy = new Date().getDay();
-    const proximosHoy = proximosBuses(horarios, hoy, 2);
-    if (proximosHoy.length > 0) {
-        const primero = proximosHoy[0];
-        const min = minutosHasta(primero.horaSalida);
-        return {
-            label: formatearTiempoRestante(min),
-            hora: formatHora(primero.horaSalida),
-            horaLlegada: primero.horaLlegada ? formatHora(primero.horaLlegada) : null,
-            siguiente: proximosHoy[1] ? formatHora(proximosHoy[1].horaSalida) : null,
-            estado: min < 15 ? 'urgente' : min < 60 ? 'pronto' : 'normal',
-            hayHoy: true
-        };
-    }
-    const manana = (hoy + 1) % 7;
-    const mananaHorarios = (horarios || [])
-        .filter(h => correEnDia(h, manana))
-        .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
-    if (mananaHorarios.length > 0) {
-        return {
-            label: `Mañana ${formatHora(mananaHorarios[0].horaSalida)}`,
-            hora: formatHora(mananaHorarios[0].horaSalida),
-            horaLlegada: mananaHorarios[0].horaLlegada ? formatHora(mananaHorarios[0].horaLlegada) : null,
-            siguiente: null,
-            estado: 'manana',
-            hayHoy: false
-        };
-    }
-    return { label: 'Sin salidas próximas', hora: '--:--', horaLlegada: null, siguiente: null, estado: 'sinSalidas', hayHoy: false };
+/** Minutos → texto legible */
+function formatearRestante(min) {
+    if (min < 0) return null;
+    if (min === 0) return 'Ahora';
+    if (min < 60) return `En ${min} min`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m > 0 ? `En ${h}h ${m}m` : `En ${h}h`;
 }
 
 // ═══════════════════════════════════════════════════════════
-// COMPONENTE: Reloj en vivo
+// SKELETON LOADER
 // ═══════════════════════════════════════════════════════════
-function RelojVivo() {
-    const [ahora, setAhora] = useState(new Date());
-    useEffect(() => {
-        const t = setInterval(() => setAhora(new Date()), 30000);
-        return () => clearInterval(t);
-    }, []);
-    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const h = ahora.getHours().toString().padStart(2, '0');
-    const m = ahora.getMinutes().toString().padStart(2, '0');
+function BusesSkeletonGrid() {
     return (
-        <div className="buses-reloj">
-            <Clock size={14} />
-            <span>{dias[ahora.getDay()]} · {h}:{m}</span>
-        </div>
-    );
-}
-
-// ═══════════════════════════════════════════════════════════
-// COMPONENTE: Card de ruta en la lista
-// ═══════════════════════════════════════════════════════════
-
-function acortarTerminal(nombre) {
-    if (!nombre) return '?';
-    const n = nombre.trim();
-    if (n.length <= 22) return n;
-    return n.replace(/Terminal (de buses de|Buses)/i, 'Term.').trim().substring(0, 24);
-}
-
-function tipoRuta(ruta) {
-    if (!ruta.horarios?.length) return null;
-    const counts = {};
-    ruta.horarios.forEach(h => {
-        const t = (h.tipo || 'REGULAR').toUpperCase();
-        counts[t] = (counts[t] || 0) + 1;
-    });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-}
-
-function RutaCard({ ruta, onSelect, esFavorito, onToggleFavorito }) {
-    const resumen = useMemo(() => resumenProximaSalida(Array.isArray(ruta.horarios) ? ruta.horarios : []), [ruta.horarios]);
-    const origen  = acortarTerminal(ruta.lugarOrigen?.nombre);
-    const destino = acortarTerminal(ruta.lugarDestino?.nombre);
-    const tipo    = tipoRuta(ruta);
-
-    return (
-        <div className={`mv-route-card ${resumen.estado}`} onClick={() => onSelect(ruta)}>
-            {tipo && (
-                <div className={`mv-card-tipo-strip ${tipo === 'DIRECTO' ? 'directo' : 'indirecto'}`}>
-                    {tipo === 'DIRECTO' ? '⚡ DIRECTO' : '🔄 INDIRECTO'}
-                </div>
-            )}
-
-            <div className="mv-card-header">
-                <div className="mv-route-direction">
-                    <span className="mv-origin">{origen}</span>
-                    <ChevronRight size={14} className="mv-arrow" />
-                    <span className="mv-dest">{destino}</span>
-                </div>
-                <button
-                    className="mv-bookmark"
-                    onClick={e => { e.stopPropagation(); onToggleFavorito(ruta.id, e); }}
-                >
-                    {esFavorito ? <BookmarkCheck size={18} color="#E8621A" /> : <Bookmark size={18} />}
-                </button>
-            </div>
-
-            <div className="mv-operator-row">
-                <span className="mv-operator">{ruta.operador?.nombre || '—'}</span>
-            </div>
-
-            <div className="mv-departures">
-                {resumen.hayHoy ? (
-                    <>
-                        <div className={`mv-next-bus ${resumen.estado}`}>
-                            <span className="mv-next-label">PRÓXIMO</span>
-                            <span className="mv-next-time">{resumen.hora}</span>
-                            <span className="mv-countdown">{resumen.label}</span>
-                        </div>
-                        {resumen.siguiente && (
-                            <div className="mv-next-bus normal secondary">
-                                <span className="mv-next-label">SIGUIENTE</span>
-                                <span className="mv-next-time">{resumen.siguiente}</span>
-                            </div>
-                        )}
-                        {tipo === 'INDIRECTO' && resumen.horaLlegada && (
-                            <div className="mv-card-llegada">
-                                <span className="mv-next-label">LLEGA</span>
-                                <span className="mv-llegada-time">{resumen.horaLlegada}</span>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div className="mv-no-buses">
-                        <span>{resumen.label}</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-// Nombres cortos de días para la UI (orden JS: 0=Dom)
-const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-
-function formatearRangoDia(h) {
-    const ini = normalizarDia(h.diaInicio);
-    const fin = normalizarDia(h.diaFin);
-    const idxIni = DIA_NUM[ini] ?? -1;
-    const idxFin = DIA_NUM[fin] ?? -1;
-    if (idxIni === -1) return '';
-    if (ini === fin) return `Solo ${DIA_CORTO[idxIni]}`;
-    if ((ini === 'LUNES' && fin === 'DOMINGO') || (ini === 'DOMINGO' && fin === 'SABADO'))
-        return 'Todos los días';
-    return `${DIA_CORTO[idxIni]} – ${DIA_CORTO[idxFin]}`;
-}
-
-// ═══════════════════════════════════════════════════════════
-// COMPONENTE: Vista de detalle — Matriz de Horarios
-// ═══════════════════════════════════════════════════════════
-function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
-    const [mapaAbierto, setMapaAbierto] = useState(false);
-    const [tabHorario,  setTabHorario]  = useState('hoy');
-    const [tipoFiltro,  setTipoFiltro]  = useState('TODOS');
-    const [diaSemana,   setDiaSemana]   = useState(null);
-    const hoy    = new Date().getDay();
-    const manana = (hoy + 1) % 7;
-
-    const cambiarTab = (tab) => {
-        setTabHorario(tab);
-        if (tab !== 'semana') setDiaSemana(null);
-    };
-
-    const paradas = useMemo(() => parsearParadas(ruta), [ruta]);
-
-    const tiposDisponibles = useMemo(() => {
-        if (!ruta.horarios?.length) return [];
-        return [...new Set(ruta.horarios.map(h => (h.tipo || 'REGULAR').toUpperCase()))];
-    }, [ruta.horarios]);
-
-    const horariosTab = useMemo(() => {
-        if (!ruta.horarios?.length) return [];
-        let base = ruta.horarios;
-        if (tabHorario === 'hoy')         base = base.filter(h => correEnDia(h, hoy));
-        else if (tabHorario === 'manana') base = base.filter(h => correEnDia(h, manana));
-        else if (tabHorario === 'semana' && diaSemana !== null) base = base.filter(h => correEnDia(h, diaSemana));
-        if (tipoFiltro !== 'TODOS') base = base.filter(h => (h.tipo || '').toUpperCase() === tipoFiltro);
-        return [...base].sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
-    }, [ruta.horarios, tabHorario, hoy, manana, diaSemana, tipoFiltro]);
-
-    const idxProximo = tabHorario === 'hoy'
-        ? horariosTab.findIndex(h => minutosHasta(h.horaSalida) >= 0)
-        : -1;
-
-    const horariosAgrupados = useMemo(() => {
-        const grupos = [
-            { label: '🌅 Madrugada', key: 'madrugada', desde: 0,  hasta: 5,  items: [] },
-            { label: '🌄 Mañana',    key: 'manana',    desde: 5,  hasta: 12, items: [] },
-            { label: '☀️ Tarde',     key: 'tarde',     desde: 12, hasta: 18, items: [] },
-            { label: '🌙 Noche',     key: 'noche',     desde: 18, hasta: 24, items: [] },
-        ];
-        horariosTab.forEach(h => {
-            const hora = parseInt(h.horaSalida?.split(':')[0] || '0', 10);
-            const g = grupos.find(gr => hora >= gr.desde && hora < gr.hasta);
-            if (g) g.items.push(h);
-        });
-        return grupos.filter(g => g.items.length > 0);
-    }, [horariosTab]);
-
-    const origen  = paradas[0];
-    const destino = paradas[paradas.length - 1];
-
-    return (
-        <div className="mv-detail-page">
-            {/* ══ HEADER ══ */}
-            <div className="mvd-header">
-                <div className="mvd-header-top">
-                    <button className="mv-back-btn" onClick={onVolver}>
-                        <ArrowLeft size={20} /><span>Rutas</span>
-                    </button>
-                    <div className="mvd-header-actions">
-                        <button className="mv-fav-btn" onClick={e => onToggleFavorito(ruta.id, e)}>
-                            {esFavorito ? <BookmarkCheck size={20} color="#E8621A" /> : <Bookmark size={20} />}
-                        </button>
-                        <button className="mvd-map-btn" onClick={() => setMapaAbierto(true)}>
-                            <MapPin size={16} /><span>Mapa</span>
-                        </button>
+        <div className="buses-grid">
+            <div className="buses-card big-card skeleton-card">
+                <div className="sk-line sk-label" />
+                <div className="sk-time" />
+                <div className="sk-line sk-sub" />
+                <div className="sk-boarding">
+                    <div className="sk-box" />
+                    <div className="sk-texts">
+                        <div className="sk-line sk-t1" />
+                        <div className="sk-line sk-t2" />
                     </div>
                 </div>
-
-                {/* Origen → Destino visual */}
-                <div className="mvd-route-display">
-                    <div className="mvd-terminal">
-                        <span className="mvd-terminal-label">SALIDA</span>
-                        <span className="mvd-terminal-name">{origen}</span>
-                    </div>
-                    <div className="mvd-route-arrow-wrap">
-                        <div className="mvd-arrow-line" />
-                        <Bus size={18} className="mvd-arrow-bus" />
-                    </div>
-                    <div className="mvd-terminal mvd-terminal-dest">
-                        <span className="mvd-terminal-label">DESTINO</span>
-                        <span className="mvd-terminal-name">{destino}</span>
-                    </div>
-                </div>
-
-                {/* Meta */}
-                <div className="mvd-meta-row">
-                    <span className="mvd-meta-item"><Bus size={13} /> {ruta.operador?.nombre || 'Operador desconocido'}</span>
-                    {ruta.nombre    && <span className="mvd-meta-item mvd-meta-ruta">{ruta.nombre}</span>}
-                    {ruta.duracion  && <span className="mvd-meta-item"><Clock size={13} /> {ruta.duracion}</span>}
-                    {ruta.frecuencia && <span className="mvd-meta-item"><Clock size={13} /> {ruta.frecuencia}</span>}
-                </div>
-
-                {/* Paradas intermedias */}
-                {paradas.length > 2 && (
-                    <div className="mvd-stops-track">
-                        {paradas.map((p, i) => (
-                            <div key={i} className="mvd-stop-item">
-                                <div className={`mvd-stop-dot ${i === 0 ? 'origin' : i === paradas.length - 1 ? 'dest' : ''}`} />
-                                {i < paradas.length - 1 && <div className="mvd-stop-connector" />}
-                                <span className="mvd-stop-label">{p}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
-
-            {/* ══ TABS HOY / MAÑANA / SEMANA ══ */}
-            <div className="mvd-tabs-bar">
-                {[
-                    { key: 'hoy',    icon: <Clock size={14} />,       label: 'HOY' },
-                    { key: 'manana', icon: <CalendarDays size={14} />, label: 'MAÑANA' },
-                    { key: 'semana', icon: <ListFilter size={14} />,   label: 'SEMANA' },
-                ].map(t => (
-                    <button key={t.key} className={`mvd-tab ${tabHorario === t.key ? 'active' : ''}`} onClick={() => cambiarTab(t.key)}>
-                        {t.icon} {t.label}
-                    </button>
-                ))}
+            <div className="buses-card right-card skeleton-card">
+                <div className="sk-line sk-label" />
+                <div className="sk-line sk-title" />
+                <div className="sk-line sk-sub" />
+                <div className="sk-bar" />
+                <div className="sk-line sk-btn" />
             </div>
-
-            {/* Sub-filtros */}
-            {(tiposDisponibles.length > 1 || tabHorario === 'semana') && (
-                <div className="mvd-filters-row">
-                    {tiposDisponibles.length > 1 && (
-                        <div className="mvd-filter-group">
-                            {['TODOS', ...tiposDisponibles].map(t => (
-                                <button key={t} className={`mvd-filter-chip ${tipoFiltro === t ? 'active' : ''}`} onClick={() => setTipoFiltro(t)}>
-                                    {t === 'TODOS' ? 'Todos' : t === 'DIRECTO' ? '⚡ Directo' : '🔄 Indirecto'}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                    {tabHorario === 'semana' && (
-                        <div className="mvd-filter-group">
-                            <button className={`mvd-filter-chip ${diaSemana === null ? 'active' : ''}`} onClick={() => setDiaSemana(null)}>Todos</button>
-                            {DIA_CORTO.map((d, i) => (
-                                <button key={i} className={`mvd-filter-chip ${diaSemana === i ? 'active' : ''}`} onClick={() => setDiaSemana(diaSemana === i ? null : i)}>{d}</button>
-                            ))}
-                        </div>
-                    )}
+            <div className="buses-card bottom-left-card skeleton-card">
+                <div className="sk-line sk-label" />
+                <div className="sk-line sk-title" />
+                <div className="sk-line sk-sub" />
+            </div>
+            <div className="buses-card info-card skeleton-card" style={{ flexDirection: 'row', gap: '1rem' }}>
+                <div className="sk-box" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                    <div className="sk-line sk-t1" />
+                    <div className="sk-line sk-t2" />
+                    <div className="sk-line sk-t2" style={{ width: '60%' }} />
                 </div>
-            )}
-
-            {/* ══ MATRIZ DE HORARIOS ══ */}
-            <div className="mvd-schedule-container">
-                {horariosTab.length === 0 ? (
-                    <div className="mv-no-horarios">
-                        <Bus size={32} />
-                        <p>{tabHorario === 'hoy' ? 'No hay más salidas hoy' : 'No opera este día'}</p>
-                    </div>
-                ) : (
-                    horariosAgrupados.map(grupo => (
-                        <div key={grupo.key} className="mvd-period-group">
-                            <div className="mvd-period-header">
-                                <span className="mvd-period-label">{grupo.label}</span>
-                                <span className="mvd-period-count">{grupo.items.length} salida{grupo.items.length !== 1 ? 's' : ''}</span>
-                            </div>
-                            <div className="mvd-schedule-grid">
-                                {grupo.items.map((h, idx) => {
-                                    const globalIdx = horariosTab.indexOf(h);
-                                    const yaPartio  = tabHorario === 'hoy' && minutosHasta(h.horaSalida) < 0;
-                                    const esProximo = globalIdx === idxProximo;
-                                    const minRest   = tabHorario === 'hoy' ? minutosHasta(h.horaSalida) : null;
-                                    const esDirecto = (h.tipo || '').toUpperCase() === 'DIRECTO';
-                                    const esInd     = (h.tipo || '').toUpperCase() === 'INDIRECTO';
-
-                                    return (
-                                        <div key={idx} className={`mvd-schedule-cell ${yaPartio ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}>
-                                            {esProximo && <div className="mvd-cell-badge-next">PRÓXIMO</div>}
-                                            <div className="mvd-cell-departure">
-                                                <span className="mvd-cell-time">{formatHora(h.horaSalida)}</span>
-                                                {esInd && h.horaLlegada && (
-                                                    <div className="mvd-cell-arrival">
-                                                        <span className="mvd-cell-arrow-small">→</span>
-                                                        <span className="mvd-cell-time-arr">{formatHora(h.horaLlegada)}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="mvd-cell-meta">
-                                                <span className={`mvd-cell-tipo ${esDirecto ? 'directo' : esInd ? 'indirecto' : 'regular'}`}>
-                                                    {esDirecto ? '⚡' : esInd ? '🔄' : '🚌'} {h.tipo || 'REGULAR'}
-                                                </span>
-                                                {tabHorario === 'semana' && (
-                                                    <span className="mvd-cell-dias">{formatearRangoDia(h)}</span>
-                                                )}
-                                                {esProximo && minRest >= 0 && (
-                                                    <span className="mvd-cell-countdown">{formatearTiempoRestante(minRest)}</span>
-                                                )}
-                                                {yaPartio && <span className="mvd-cell-salio">Salió</span>}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))
-                )}
             </div>
-
-            {mapaAbierto && <BusMapModal ruta={ruta} onClose={() => setMapaAbierto(false)} />}
         </div>
     );
 }
@@ -451,279 +106,454 @@ function RutaDetalle({ ruta, esFavorito, onToggleFavorito, onVolver }) {
 // ═══════════════════════════════════════════════════════════
 function PaginaBuses() {
     const navigate = useNavigate();
-
-    const [rutas, setRutas]                     = useState([]);
-    const [busqueda, setBusqueda]               = useState('');
-    const [terminalActiva, setTerminalActiva]   = useState('Todas');
-    const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
-    const [tabPrincipal, setTabPrincipal]       = useState('buses');
-    const [loading, setLoading]                 = useState(true);
-    const [error, setError]                     = useState(null);
-
-    const [ubicacion, setUbicacion]   = useState(null);
-    const [geoEstado, setGeoEstado]   = useState('idle');
-
-    const [favoritos, setFavoritos] = useState(() => {
-        try { return JSON.parse(localStorage.getItem('favoritosRutas') || '[]'); }
+    const [activeTab, setActiveTab] = useState('SCHEDULES');
+    const [activeRoute, setActiveRoute] = useState('');
+    const [tabDia, setTabDia] = useState('hoy');           // 'hoy' | 'manana'
+    const [busquedaBuses, setBusquedaBuses] = useState(''); 
+    const [busesSaved, setBusesSaved] = useState(() => {   
+        try { return JSON.parse(localStorage.getItem('busesGuardados') || '[]'); }
         catch { return []; }
     });
 
-    useEffect(() => {
-        localStorage.setItem('favoritosRutas', JSON.stringify(favoritos));
-    }, [favoritos]);
+    // Estado de datos
+    const [horarios, setHorarios] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const toggleFavorito = useCallback((rutaId, e) => {
-        e?.stopPropagation();
-        const id = String(rutaId);
-        setFavoritos(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        );
+    // Reloj vivo — recalcula "próxima salida" cada minuto
+    const [ahora, setAhora] = useState(new Date());
+    useEffect(() => {
+        const t = setInterval(() => setAhora(new Date()), 30000);
+        return () => clearInterval(t);
     }, []);
 
+    // Persistir rutas guardadas
     useEffect(() => {
-        if (!navigator.geolocation) { setGeoEstado('error'); return; }
-        setGeoEstado('loading');
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                setUbicacion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                setGeoEstado('ok');
-            },
-            () => setGeoEstado('error'),
-            { timeout: 8000, maximumAge: 60000 }
+        localStorage.setItem('busesGuardados', JSON.stringify(busesSaved));
+    }, [busesSaved]);
+
+    const toggleBusesSaved = (route) =>
+        setBusesSaved(prev =>
+            prev.includes(route) ? prev.filter(r => r !== route) : [...prev, route]
         );
-    }, []);
 
+    // ── Fetch de rutas ──────────────────────────────────
     useEffect(() => {
-        if (!ubicacion || rutas.length === 0 || terminalActiva !== 'Todas') return;
-        let nearest = null;
-        let minDist = Infinity;
-        rutas.forEach(r => {
-            if (r.lugarOrigen?.latitud && r.lugarOrigen?.nombre) {
-                const d = haversineKm(ubicacion.lat, ubicacion.lng,
-                    r.lugarOrigen.latitud, r.lugarOrigen.longitud);
-                if (d < minDist) { minDist = d; nearest = r.lugarOrigen.nombre; }
-            }
-        });
-        if (nearest) setTerminalActiva(nearest);
-    }, [ubicacion, rutas]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    useEffect(() => {
+        setLoading(true);
+        setError(null);
         axiosPrivate.get('/ruta-transporte')
-            .then(res => setRutas(res.data))
-            .catch(err => { console.error(err); setError('No se pudieron cargar las rutas.'); })
+            .then(res => {
+                const data = Array.isArray(res.data) ? res.data : [];
+                
+                // Flatten rutas into a list of "salidas" just like ferry
+                const flattenedHorarios = data.flatMap(ruta => {
+                    const orig = ruta.lugarOrigen?.nombre || 'Origen Desconocido';
+                    const dest = ruta.lugarDestino?.nombre || 'Destino Desconocido';
+                    return (ruta.horarios || []).map(h => ({
+                        id: h.id,
+                        horaSalida: h.horaSalida,
+                        horaLlegada: h.horaLlegada,
+                        origen: orig,
+                        destino: dest,
+                        diaInicio: h.diaInicio,
+                        diaFin: h.diaFin,
+                        operadorNombre: ruta.operador?.nombre || 'Operador Desconocido',
+                        terminalNombre: orig,
+                        tipo: h.tipo || 'REGULAR',
+                        esNocturno: parseInt((h.horaSalida||'0').split(':')[0]) >= 18,
+                        enlaceReserva: null // Asumiendo que buses no tienen enlace por defecto
+                    }));
+                });
+
+                setHorarios(flattenedHorarios);
+            })
+            .catch(err => {
+                console.error('[PaginaBuses] Error cargando horarios:', err);
+                setError('No se pudieron cargar los horarios. Intenta de nuevo.');
+            })
             .finally(() => setLoading(false));
     }, []);
 
-    const terminalCoordsMap = useMemo(() => {
-        const m = {};
-        rutas.forEach(r => {
-            if (r.lugarOrigen?.nombre && r.lugarOrigen.latitud) {
-                m[r.lugarOrigen.nombre] = {
-                    lat: r.lugarOrigen.latitud,
-                    lng: r.lugarOrigen.longitud
-                };
-            }
+    // ── Rutas únicas disponibles (dinámicas) ──
+    const routes = useMemo(() => {
+        const set = new Set();
+        horarios.forEach(h => {
+            if (h.origen && h.destino) set.add(`${h.origen} → ${h.destino}`);
         });
-        return m;
-    }, [rutas]);
+        return [...set];
+    }, [horarios]);
 
-    const terminales = useMemo(() => {
-        const nombres = [...new Set(rutas.map(r => r.lugarOrigen?.nombre).filter(Boolean))];
-        if (!ubicacion) return ['Todas', ...nombres];
-        const sorted = nombres.sort((a, b) => {
-            const ca = terminalCoordsMap[a], cb = terminalCoordsMap[b];
-            if (!ca) return 1; if (!cb) return -1;
-            return haversineKm(ubicacion.lat, ubicacion.lng, ca.lat, ca.lng)
-                 - haversineKm(ubicacion.lat, ubicacion.lng, cb.lat, cb.lng);
-        });
-        return ['Todas', ...sorted];
-    }, [rutas, ubicacion, terminalCoordsMap]);
+    // Seleccionar primera ruta al cargar
+    useEffect(() => {
+        if (routes.length > 0 && (!activeRoute || !routes.includes(activeRoute))) {
+            setActiveRoute(routes[0]);
+        }
+    }, [routes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const rutasFiltradas = useMemo(() => {
-        const q = busqueda.toLowerCase();
-        const base = tabPrincipal === 'favoritos'
-            ? rutas.filter(r => favoritos.includes(String(r.id)))
-            : rutas;
-        return base.filter(r => {
-            const p      = parsearParadas(r);
-            const origen = p[0];
-            const dest   = p[p.length - 1];
-            const matchQ = !q ||
-                (r.nombre || '').toLowerCase().includes(q) ||
-                origen.toLowerCase().includes(q) ||
-                dest.toLowerCase().includes(q) ||
-                (r.operador?.nombre || '').toLowerCase().includes(q) ||
-                p.some(stop => stop.toLowerCase().includes(q));
-            const matchT = terminalActiva === 'Todas' || r.lugarOrigen?.nombre === terminalActiva;
-            return matchQ && matchT;
-        });
-    }, [rutas, busqueda, terminalActiva, tabPrincipal, favoritos]);
+    // Rutas filtradas por búsqueda
+    const routesFiltradas = useMemo(() => {
+        if (!busquedaBuses.trim()) return routes;
+        const q = busquedaBuses.toLowerCase();
+        return routes.filter(r => r.toLowerCase().includes(q));
+    }, [routes, busquedaBuses]);
 
-    // ── Pantalla de carga ──
-    if (loading) return (
-        <div className="app-wrapper immersive-layout buses-page">
-            <Navbar />
-            <div className="buses-loading"><div className="buses-spinner"></div><p>Cargando rutas...</p></div>
-        </div>
-    );
+    // ── Horarios filtrados por ruta activa ─────────────────
+    const horariosFiltradosRuta = useMemo(() => {
+        if (!activeRoute) return [];
+        const [origen, destino] = activeRoute.split(' → ');
+        return horarios
+            .filter(h => h.origen === origen && h.destino === destino)
+            .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
+    }, [horarios, activeRoute]);
 
-    if (error) return (
-        <div className="app-wrapper immersive-layout buses-page">
-            <Navbar />
-            <div className="buses-error"><p>{error}</p><button className="buses-retry" onClick={() => window.location.reload()}>Reintentar</button></div>
-        </div>
-    );
+    // ── Próximas salidas (según día y hora) ────────────────
+    const diaNum = tabDia === 'hoy' ? ahora.getDay() : (ahora.getDay() + 1) % 7;
+    
+    // Filtrar primero por el día
+    const horariosDelDia = useMemo(() => {
+        return horariosFiltradosRuta.filter(h => correEnDia(h, diaNum));
+    }, [horariosFiltradosRuta, diaNum]);
 
-    // ── Vista detalle ──
-    if (rutaSeleccionada) return (
-        <div className="app-wrapper immersive-layout buses-page">
-            <RutaDetalle
-                ruta={rutaSeleccionada}
-                esFavorito={favoritos.includes(String(rutaSeleccionada.id))}
-                onToggleFavorito={toggleFavorito}
-                onVolver={() => setRutaSeleccionada(null)}
-            />
-            <BusesBottomBar
-                tab={tabPrincipal}
-                setTab={setTabPrincipal}
-                rutaSeleccionada={rutaSeleccionada}
-                setRutaSeleccionada={setRutaSeleccionada}
-            />
-        </div>
-    );
+    const proximasSalidas = useMemo(() => {
+        if (tabDia === 'manana') return horariosDelDia;
+        return horariosDelDia.filter(h => minutosHasta(h.horaSalida) >= 0);
+    }, [horariosDelDia, tabDia, ahora]);
 
-    // ── Vista lista ──
+    // Siguiente salida (big card)
+    const siguiente = proximasSalidas[0] || null;
+    const proxima2 = proximasSalidas[1] || null;
+    const ultima = horariosDelDia[horariosDelDia.length - 1] || null;
+
+    // Minutos restantes para la siguiente salida
+    const minsRestantes = siguiente ? minutosHasta(siguiente.horaSalida) : null;
+    const textoRestante = minsRestantes !== null ? formatearRestante(minsRestantes) : null;
+
+    // ── Estado vivo de la big card ─────────────────────────
+    const estadoBigCard = (() => {
+        if (!siguiente) return { badge: 'SIN SALIDAS', badgeClass: 'badge-gray' };
+        if (minsRestantes <= 10) return { badge: 'ABORDANDO', badgeClass: 'badge-orange' };
+        return { badge: 'EN HORARIO', badgeClass: 'badge-green' };
+    })();
+
+    // ── Abordaje estimado ──────────────────────────────────
+    const abordajeMin = siguiente ? Math.max(0, minsRestantes - 10) : null;
+
     return (
-        <div className="app-wrapper immersive-layout buses-page">
+        <div className="app-wrapper immersive-layout buses-layout">
             <Navbar />
 
-            <div className="mv-main-content">
-                {/* Botón volver eliminado */}
+            <main className="buses-main">
 
-                <div className="mv-hero">
-                    <div>
-                        <h1 className="mv-hero-title">
-                            {tabPrincipal === 'favoritos' ? 'Mis Rutas' : 'Próximos Buses'}
-                        </h1>
-                        <p className="mv-hero-sub">
-                            {tabPrincipal === 'favoritos'
-                                ? 'Tus rutas guardadas'
-                                : geoEstado === 'ok'
-                                    ? '📍 Ubicación activa · Terminales ordenadas por cercanía'
-                                    : geoEstado === 'loading'
-                                        ? '⏳ Obteniendo tu ubicación...'
-                                        : 'Salidas en tiempo real · Filtrá por terminal'}
-                        </p>
-                    </div>
-                    <RelojVivo />
-                </div>
+                {/* Hero Title */}
+                <h1 className="buses-hero-title">
+                    Horarios de <span className="text-orange">Buses</span>
+                </h1>
 
-                <div className="mv-search-box">
-                    <Search size={17} className="mv-search-icon" />
-                    <input
-                        type="text"
-                        className="mv-search-input"
-                        placeholder="¿A dónde vas?"
-                        value={busqueda}
-                        onChange={e => setBusqueda(e.target.value)}
-                    />
-                    {busqueda && (
-                        <button className="mv-clear-btn" onClick={() => setBusqueda('')}>✕</button>
-                    )}
-                </div>
-
-                {tabPrincipal !== 'favoritos' && (
-                    <div className="mv-chips">
-                        {terminales.map(t => {
-                            const coords = t !== 'Todas' ? terminalCoordsMap[t] : null;
-                            const dist = coords && ubicacion
-                                ? haversineKm(ubicacion.lat, ubicacion.lng, coords.lat, coords.lng)
-                                : null;
-                            return (
+                {/* Route Chips — filtrados por búsqueda */}
+                <div className="buses-route-chips">
+                    {loading
+                        ? [1, 2, 3].map(i => (
+                            <div key={i} className="buses-chip-skeleton" />
+                        ))
+                        : routesFiltradas.length === 0
+                            ? <button className="buses-chip active">Sin resultados</button>
+                            : routesFiltradas.map(r => (
                                 <button
-                                    key={t}
-                                    className={`mv-chip ${terminalActiva === t ? 'active' : ''}`}
-                                    onClick={() => setTerminalActiva(t)}
+                                    key={r}
+                                    className={`buses-chip ${activeRoute === r ? 'active' : ''}`}
+                                    onClick={() => setActiveRoute(r)}
                                 >
-                                    {t === 'Todas' ? (
-                                        <>{geoEstado === 'error'
-                                            ? <Navigation size={12} style={{ opacity: 0.4 }} />
-                                            : null} Todas</>
-                                    ) : t}
-                                    {dist !== null && (
-                                        <span className="mv-chip-dist">
-                                            {dist < 1
-                                                ? `${Math.round(dist * 1000)}m`
-                                                : `${dist.toFixed(1)}km`}
-                                        </span>
-                                    )}
+                                    <MapPin size={14} className="buses-chip-icon" />
+                                    {r}
+                                    <span
+                                        onClick={e => { e.stopPropagation(); toggleBusesSaved(r); }}
+                                        style={{ marginLeft: '6px', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        {busesSaved.includes(r)
+                                            ? <BookmarkCheck size={13} color="#fff" />
+                                            : <Bookmark size={13} style={{ opacity: 0.5 }} />}
+                                    </span>
                                 </button>
-                            );
-                        })}
+                            ))
+                    }
+                </div>
+
+                {/* ── Tabs HOY / MAÑANA ── */}
+                {!loading && !error && (
+                    <div className="buses-dia-tabs">
+                        <button
+                            className={`buses-dia-tab ${tabDia === 'hoy' ? 'active' : ''}`}
+                            onClick={() => setTabDia('hoy')}
+                        >
+                            <Clock size={13} /> HOY
+                        </button>
+                        <button
+                            className={`buses-dia-tab ${tabDia === 'manana' ? 'active' : ''}`}
+                            onClick={() => setTabDia('manana')}
+                        >
+                            <CalendarDays size={13} /> MAÑANA
+                        </button>
                     </div>
                 )}
 
-                <div className="mv-routes-list">
-                    {rutasFiltradas.length === 0 ? (
-                        <div className="mv-empty">
-                            <Bus size={40} />
-                            <p>{tabPrincipal === 'favoritos' ? 'No tenés rutas guardadas aún.' : 'No se encontraron rutas.'}</p>
+                {/* Section Header */}
+                <div className="buses-section-header">
+                    <div>
+                        <h2>{tabDia === 'manana' ? 'Salidas Mañana' : 'Próximas Salidas'}</h2>
+                        <p>
+                            {loading
+                                ? 'Cargando horarios...'
+                                : `${tabDia === 'manana' ? 'Horario de mañana' : 'Tiempo real'} • ${activeRoute ? activeRoute.split(' → ')[0] : 'Origen'}`
+                            }
+                        </p>
+                    </div>
+                    <div className="live-status">
+                        <span className={tabDia === 'manana' ? '' : 'pulse-dot'}></span>
+                        {tabDia === 'manana' ? '📅 MAÑANA' : '🟢 EN VIVO'}
+                    </div>
+                </div>
+
+                {/* ── Estado de carga / error ── */}
+                {loading && <BusesSkeletonGrid />}
+
+                {!loading && error && (
+                    <div className="buses-error-state">
+                        <Bus size={48} className="text-orange" style={{ opacity: 0.4 }} />
+                        <p>{error}</p>
+                        <button
+                            className="buses-btn-outline"
+                            style={{ width: 'auto', marginTop: '1rem' }}
+                            onClick={() => window.location.reload()}
+                        >
+                            Reintentar
+                        </button>
+                    </div>
+                )}
+
+                {/* ── Grid principal — solo cuando hay datos ── */}
+                {!loading && !error && (
+                    <div className="buses-grid">
+
+                        {/* ── Big Card: SIGUIENTE SALIDA ── */}
+                        <div className="buses-card big-card">
+                            <div className="card-top">
+                                <span className="siguiente-label">SIGUIENTE SALIDA</span>
+                                <span className={estadoBigCard.badgeClass}>{estadoBigCard.badge}</span>
+                            </div>
+
+                            {siguiente ? (
+                                <>
+                                    <div className="card-time">{formatHora(siguiente.horaSalida)}</div>
+                                    <div className="card-subtitle">
+                                        {siguiente.operadorNombre} •{' '}
+                                        {siguiente.tipo}
+                                    </div>
+
+                                    <div className="boarding-info">
+                                        {textoRestante && (
+                                            <div className="mins-box">
+                                                <span className="mins-num">{minsRestantes}</span>
+                                                <span className="mins-label">MINS</span>
+                                            </div>
+                                        )}
+                                        <div className="boarding-text">
+                                            <h4>{siguiente.terminalNombre}</h4>
+                                            <p>
+                                                {abordajeMin !== null && abordajeMin > 0
+                                                    ? `Abordaje inicia en ${abordajeMin} minutos`
+                                                    : minsRestantes <= 10
+                                                        ? '🚌 Abordaje en curso'
+                                                        : textoRestante
+                                                            ? `Sale ${textoRestante}`
+                                                            : 'Sin información'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="buses-no-salidas">
+                                    <p>No hay más salidas para esta ruta en este día.</p>
+                                    {ultima && (
+                                        <p className="buses-ultima-hint">
+                                            Última salida fue a las {formatHora(ultima.horaSalida)}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            <Bus className="watermark-bus" size={200} />
+                        </div>
+
+                        {/* ── Right Card: 2ª SALIDA ── */}
+                        {proxima2 && (
+                            <div className="buses-card right-card">
+                                <div className="card-top flex-between">
+                                    <Clock size={20} className="text-orange" />
+                                    <span className="time-small">
+                                        {formatHora(proxima2.horaSalida)}
+                                    </span>
+                                </div>
+
+                                <h3 className="card-title mt-auto">{proxima2.operadorNombre}</h3>
+                                <p className="card-subtitle mb-4">{proxima2.tipo}</p>
+                                <div className="progress-bar-container">
+                                    <div
+                                        className="progress-bar-fill"
+                                        style={{
+                                            width: `${Math.min(100, Math.max(5, 100 - (minutosHasta(proxima2.horaSalida) / 60) * 20))}%`,
+                                            backgroundColor: '#E8621A'
+                                        }}
+                                    />
+                                </div>
+                                <button className="buses-btn-outline">Siguiente Bus</button>
+                            </div>
+                        )}
+
+                        {/* ── Bottom Left Card: ÚLTIMA / NOCTURNA ── */}
+                        <div className="buses-card bottom-left-card">
+                            <div className="card-top flex-between">
+                                <span className="time-small">
+                                    {ultima ? formatHora(ultima.horaSalida) : '--:--'}
+                                </span>
+                                {ultima?.esNocturno
+                                    ? <span className="badge-gray">NOCTURNO</span>
+                                    : ultima
+                                        ? <span className="badge-gray">ÚLTIMA</span>
+                                        : null
+                                }
+                            </div>
+                            <h3 className="card-title mt-auto">
+                                {ultima?.operadorNombre || 'Operador Desconocido'}
+                            </h3>
+                            <p className="card-subtitle">
+                                {ultima ? 'Última salida del día' : 'Sin datos disponibles'}
+                            </p>
+                            <Clock className="watermark-moon" size={150} />
+                        </div>
+
+                        {/* ── Info Card: Recomendación estática ── */}
+                        <div className="buses-card info-card">
+                            <Info size={28} className="text-orange info-icon" />
+                            <div>
+                                <h4>Recomendación para Viajeros</h4>
+                                <p>
+                                    Se recomienda llegar al menos 15 minutos antes de la salida. 
+                                    Asegúrese de revisar la terminal correcta ya que puede variar.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                )}
+
+                {/* ── Lista completa de horarios del día ── */}
+                {!loading && !error && horariosDelDia.length > 0 && (
+                    <div className="buses-horarios-full">
+                        <h3 className="buses-horarios-title">
+                            🚌 Todos los horarios — {activeRoute}
+                        </h3>
+                        <div className="buses-horarios-list">
+                            {horariosDelDia.map((h, idx) => {
+                                const min = minutosHasta(h.horaSalida);
+                                const pasado = tabDia === 'hoy' && min < 0;
+                                const esProximo = !pasado && proximasSalidas[0] === h;
+                                return (
+                                    <div
+                                        key={h.id || idx}
+                                        className={`buses-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
+                                    >
+                                        <div className="buses-row-hora">{formatHora(h.horaSalida)}</div>
+                                        <div className="buses-row-info">
+                                            <span className="buses-row-nombre">
+                                                {h.operadorNombre}
+                                            </span>
+                                            {h.esNocturno && (
+                                                <span className="badge-gray buses-row-badge">Nocturno</span>
+                                            )}
+                                            {esProximo && (
+                                                <span className="badge-orange buses-row-badge">Próximo</span>
+                                            )}
+                                            {h.tipo === 'DIRECTO' && (
+                                                <span className="badge-green buses-row-badge">Directo</span>
+                                            )}
+                                        </div>
+                                        <div className="buses-row-estado">
+                                            {pasado
+                                                ? <span className="buses-row-salido">Salió</span>
+                                                : tabDia === 'manana'
+                                                    ? <span className="buses-row-restante">Mañana</span>
+                                                    : <span className="buses-row-restante">{formatearRestante(min)}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+            </main>
+
+            {/* ── Panel GUARDADOS ── */}
+            {activeTab === 'SAVED' && (
+                <div className="buses-saved-panel">
+                    <h3 className="buses-saved-title">🔖 Rutas Guardadas</h3>
+                    {busesSaved.length === 0 ? (
+                        <div className="buses-saved-empty">
+                            <Bus size={40} style={{ opacity: 0.3 }} />
+                            <p>Guardá rutas tocando el 🔖 en los chips de arriba.</p>
                         </div>
                     ) : (
-                        rutasFiltradas.map(ruta => (
-                            <RutaCard
-                                key={ruta.id}
-                                ruta={ruta}
-                                onSelect={setRutaSeleccionada}
-                                esFavorito={favoritos.includes(String(ruta.id))}
-                                onToggleFavorito={toggleFavorito}
-                            />
-                        ))
+                        <div className="buses-saved-list">
+                            {busesSaved.map(r => {
+                                const [orig, dest] = r.split(' → ');
+                                const hsFiltrados = horarios
+                                    .filter(h => h.origen === orig && h.destino === dest && correEnDia(h, diaNum))
+                                    .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
+                                const proxima = hsFiltrados.find(h => minutosHasta(h.horaSalida) >= 0);
+                                return (
+                                    <div key={r} className="buses-saved-item" onClick={() => { setActiveRoute(r); setActiveTab('SCHEDULES'); }}>
+                                        <div className="buses-saved-route">{r}</div>
+                                        <div className="buses-saved-next">
+                                            {proxima
+                                                ? <><span className="buses-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
+                                                : <span style={{ color: '#555', fontSize: '0.85rem' }}>Sin salidas hoy</span>
+                                            }
+                                        </div>
+                                        <button className="buses-saved-remove" onClick={e => { e.stopPropagation(); toggleBusesSaved(r); }}>✕</button>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
-            </div>
+            )}
 
-            <BusesBottomBar
-                tab={tabPrincipal}
-                setTab={setTabPrincipal}
-                rutaSeleccionada={rutaSeleccionada}
-                setRutaSeleccionada={setRutaSeleccionada}
-            />
+            {/* Bottom Tab Bar — Mobile solo */}
+            <nav className="buses-bottom-nav">
+                <button
+                    className={`nav-item ${activeTab === 'EXPLORE' ? 'active' : ''}`}
+                    onClick={() => { setActiveTab('EXPLORE'); navigate('/'); }}
+                >
+                    <Map size={24} />
+                    <span>RUTAS</span>
+                </button>
+                <button
+                    className={`nav-item ${activeTab === 'SCHEDULES' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('SCHEDULES')}
+                >
+                    <Bus size={24} />
+                    <span>HORARIOS</span>
+                </button>
+                <button
+                    className={`nav-item ${activeTab === 'SAVED' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('SAVED')}
+                >
+                    {busesSaved.length > 0 ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
+                    <span>FAVORITOS</span>
+                </button>
+            </nav>
         </div>
-    );
-}
-
-// ═══════════════════════════════════════════════════════════
-// Bottom Tab Bar
-// ═══════════════════════════════════════════════════════════
-function BusesBottomBar({ tab, setTab, rutaSeleccionada, setRutaSeleccionada }) {
-    return (
-        <nav className="buses-bottom-bar">
-            <button
-                className={`bbar-tab ${tab === 'buses' && !rutaSeleccionada ? 'active' : ''}`}
-                onClick={() => { setRutaSeleccionada(null); setTab('buses'); }}
-            >
-                <Bus size={22} />
-                <span>Rutas</span>
-            </button>
-            <button
-                className={`bbar-tab ${!!rutaSeleccionada ? 'active' : ''}`}
-                onClick={() => {
-                    if (!rutaSeleccionada) return;
-                }}
-                style={{ opacity: rutaSeleccionada ? 1 : 0.35, cursor: rutaSeleccionada ? 'pointer' : 'not-allowed' }}
-            >
-                <Clock size={22} />
-                <span>Horarios</span>
-            </button>
-            <button
-                className={`bbar-tab ${tab === 'favoritos' ? 'active' : ''}`}
-                onClick={() => { setRutaSeleccionada(null); setTab('favoritos'); }}
-            >
-                <Star size={22} />
-                <span>Favoritos</span>
-            </button>
-        </nav>
     );
 }
 

@@ -1,1453 +1,923 @@
-/* ============================================================
-   Buses.css — PuertoInforma · Estilo Move It
+﻿/* ============================================================
+   Buses.css â€” PuertoInforma (Redesign)
    ============================================================ */
 
-/* ── Base ── */
-.buses-page {
-  min-height: 100vh;
-  height: 100vh;
-  overflow-y: auto;
-  background: transparent;
-  color: #fff;
-  font-family: 'Inter', system-ui, sans-serif;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 72px;
-  padding-top: 80px;
+.buses-layout {
+    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* Space for bottom nav */
+    padding-top: 80px;
 }
 
-/* ── Navbar ── */
-.buses-navbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0 1.25rem;
-  height: 56px;
-  background: rgba(17, 17, 17, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  flex-shrink: 0;
-}
-.buses-nav-back {
-  background: none;
-  border: none;
-  color: #E8621A;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0.4rem;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-.buses-nav-back:hover { background: rgba(232,98,26,0.1); }
-.buses-nav-logo {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #fff;
-}
-.logo-orange { color: #E8621A; font-style: italic; }
+/* Typography & Colors */
+.text-orange { color: #E8621A; }
+.logo-white { font-weight: 700; color: #fff; }
+.logo-orange { font-weight: 700; color: #E8621A; }
 
-/* ── Loading & Error ── */
-.buses-loading {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  flex: 1; gap: 1rem; color: rgba(255,255,255,0.35);
-  min-height: 50vh;
-}
-.buses-spinner {
-  width: 36px; height: 36px;
-  border: 3px solid rgba(255,255,255,0.06);
-  border-top-color: #E8621A;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.buses-error { text-align: center; padding: 3rem; color: #ef5350; }
-.buses-retry {
-  margin-top: 1rem; padding: 0.6rem 1.5rem;
-  background: #E8621A; border: none; border-radius: 10px;
-  color: #fff; font-weight: 700; cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.buses-retry:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(232,98,26,0.4); }
-
-/* ═══════════════════════════════════════════
-   VISTA LISTA — Move It style
-═══════════════════════════════════════════ */
-.mv-main-content {
-  flex: 1;
-  padding: 0 1rem 0.5rem;
-  max-width: 680px;
-  width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+/* Top Navbar */
+.buses-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background-color: transparent;
 }
 
-/* Hero */
-.mv-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1.5rem 0 1rem;
-}
-.mv-hero-title {
-  font-size: 1.75rem;
-  font-weight: 900;
-  margin: 0 0 0.2rem;
-  color: #fff;
-}
-.mv-hero-sub {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.4);
-  margin: 0;
-}
-
-/* Reloj en vivo */
-.buses-reloj {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.45);
-  background: rgba(255,255,255,0.05);
-  padding: 0.4rem 0.75rem;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.07);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* Search */
-.mv-search-box {
-  position: relative;
-  margin-bottom: 1rem;
-}
-.mv-search-icon {
-  position: absolute; left: 1rem; top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255,255,255,0.3);
-  pointer-events: none;
-}
-.mv-search-input {
-  width: 100%;
-  padding: 0.85rem 2.5rem 0.85rem 2.75rem;
-  background: rgba(255,255,255,0.05);
-  border: 1.5px solid rgba(255,255,255,0.07);
-  border-radius: 14px;
-  color: #fff;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.25s, background 0.25s;
-}
-.mv-search-input::placeholder { color: rgba(255,255,255,0.25); }
-.mv-search-input:focus {
-  border-color: rgba(232,98,26,0.5);
-  background: rgba(255,255,255,0.07);
-}
-.mv-clear-btn {
-  position: absolute; right: 0.85rem; top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none;
-  color: rgba(255,255,255,0.35);
-  cursor: pointer; font-size: 0.85rem;
-  padding: 0.25rem;
-  transition: color 0.2s;
-}
-.mv-clear-btn:hover { color: #fff; }
-
-/* Chips */
-.mv-chips {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 1rem;
-  -webkit-overflow-scrolling: touch;
-}
-.mv-chips::-webkit-scrollbar { display: none; }
-.mv-chip {
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  border: 1.5px solid rgba(255,255,255,0.08);
-  background: transparent;
-  color: rgba(255,255,255,0.55);
-  font-size: 0.8rem; font-weight: 600;
-  cursor: pointer; white-space: nowrap; flex-shrink: 0;
-  transition: all 0.2s;
-}
-.mv-chip:hover { border-color: rgba(232,98,26,0.4); color: rgba(255,255,255,0.85); }
-.mv-chip.active {
-  background: #E8621A; border-color: #E8621A;
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(232,98,26,0.35);
-}
-.mv-chip-dist {
-  display: inline-block;
-  margin-left: 0.35rem;
-  font-size: 0.58rem;
-  font-weight: 800;
-  background: rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.65);
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  letter-spacing: 0.02em;
-  vertical-align: middle;
-}
-.mv-chip.active .mv-chip-dist {
-  background: rgba(255,255,255,0.22);
-  color: #fff;
-}
-
-/* En desktop, las chips se envuelven y siempre son interactivas */
-@media (min-width: 680px) {
-  .mv-chips {
-    flex-wrap: wrap;
-    overflow-x: visible;
-    overflow-y: visible;
-    padding-bottom: 0.75rem;
-    pointer-events: auto;
-  }
-  .mv-chip {
-    flex-shrink: unset;
-    pointer-events: auto;
+.buses-logo {
+    font-size: 1.4rem;
     cursor: pointer;
-  }
 }
 
-
-/* ─── Route Card ─── */
-.mv-routes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+.buses-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.mv-route-card {
-  background: rgba(30, 30, 30, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-  padding: 1rem 1.1rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25,0.8,0.25,1);
-}
-.mv-route-card:hover {
-  border-color: rgba(255,255,255,0.14);
-  background: rgba(35,35,35,0.95);
-  transform: translateY(-1px);
-}
-.mv-route-card.urgente { border-left: 3px solid #E8621A; }
-.mv-route-card.pronto  { border-left: 3px solid #FFB300; }
-
-/* ── Franja de tipo (visible desde la lista) ── */
-.mv-card-tipo-strip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.22rem 0.7rem;
-  border-radius: 6px 6px 0 0;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  margin: -1rem -1.1rem 0.75rem;
-  width: calc(100% + 2.2rem);
-}
-.mv-card-tipo-strip.directo {
-  background: rgba(232,98,26,0.13);
-  color: #E8621A;
-  border-bottom: 1px solid rgba(232,98,26,0.2);
-}
-.mv-card-tipo-strip.indirecto {
-  background: rgba(99,179,237,0.1);
-  color: #63b3ed;
-  border-bottom: 1px solid rgba(99,179,237,0.18);
+.buses-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #1E1E1E;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    width: 250px;
 }
 
-/* Tiempo de llegada INDIRECTO en la card */
-.mv-card-llegada {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 70px;
-  border-left: 1.5px solid rgba(99,179,237,0.25);
-  padding-left: 0.75rem;
-  margin-left: 0.25rem;
-}
-.mv-llegada-time {
-  font-size: 1.25rem;
-  font-weight: 900;
-  line-height: 1;
-  color: #63b3ed;
+.buses-search-wrapper input {
+    background: none;
+    border: none;
+    color: #fff;
+    margin-left: 0.5rem;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
 }
 
-.mv-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.3rem;
-}
-.mv-route-direction {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex: 1;
-  flex-wrap: wrap;
-}
-.mv-origin {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #fff;
-}
-.mv-arrow {
-  color: rgba(255,255,255,0.35);
-  flex-shrink: 0;
-}
-.mv-dest {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #fff;
-}
-.mv-bookmark {
-  background: none; border: none;
-  color: rgba(255,255,255,0.3); cursor: pointer;
-  padding: 0.2rem; transition: color 0.2s;
-  flex-shrink: 0;
-}
-.mv-bookmark:hover { color: #E8621A; }
-
-.mv-operator {
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.4);
-  margin: 0 0 0.85rem;
+.buses-search-wrapper input::placeholder {
+    color: #666;
 }
 
-/* Próximas salidas en la card */
-.mv-departures {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-}
-.mv-next-bus {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 80px;
-}
-.mv-next-bus.secondary {
-  opacity: 0.6;
-}
-.mv-next-label {
-  font-size: 0.58rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.06em;
-}
-.mv-next-time {
-  font-size: 1.6rem;
-  font-weight: 900;
-  line-height: 1;
-  color: #fff;
-}
-.mv-next-bus.secondary .mv-next-time {
-  font-size: 1.2rem;
-}
-.mv-countdown {
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-.mv-next-bus.urgente .mv-countdown { color: #E8621A; }
-.mv-next-bus.pronto  .mv-countdown { color: #FFB300; }
-.mv-next-bus.normal  .mv-countdown { color: rgba(255,255,255,0.5); }
-
-.mv-no-buses {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.35);
-  font-style: italic;
+.icon-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background 0.2s;
 }
 
-.mv-empty {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 0.75rem; padding: 3rem;
-  color: rgba(255,255,255,0.25);
-  text-align: center;
-}
-.mv-empty p { font-size: 0.9rem; margin: 0; }
-
-/* ═══════════════════════════════════════════
-   VISTA DETALLE — Move It style
-═══════════════════════════════════════════ */
-.mv-detail-page {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+.icon-btn:hover {
+    background: rgba(255,255,255,0.1);
 }
 
-/* Nav del detalle */
-.mv-detail-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1.25rem;
-  position: sticky;
-  top: 0;
-  background: rgba(15,15,15,0.97);
-  backdrop-filter: blur(12px);
-  z-index: 100;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.mv-back-btn {
-  display: flex; align-items: center; gap: 0.4rem;
-  background: none; border: none;
-  color: #E8621A; font-weight: 700; font-size: 0.9rem;
-  cursor: pointer; padding: 0.4rem;
-  transition: opacity 0.2s;
-}
-.mv-back-btn:hover { opacity: 0.75; }
-.mv-fav-btn {
-  background: none; border: none;
-  color: rgba(255,255,255,0.4); cursor: pointer;
-  padding: 0.4rem; transition: color 0.2s;
-}
-.mv-fav-btn:hover { color: #E8621A; }
-
-/* Hero del detalle */
-.mv-detail-hero {
-  padding: 1.5rem 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.mv-detail-title {
-  font-size: 1.6rem;
-  font-weight: 900;
-  margin: 0 0 0.3rem;
-  color: #fff;
-  line-height: 1.2;
-}
-.mv-arrow-big {
-  color: #E8621A;
-  font-style: normal;
-}
-.mv-detail-operator {
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.45);
-  margin: 0 0 0.85rem;
-}
-.mv-detail-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-.mv-pill {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 20px;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(255,255,255,0.65);
-}
-
-/* Recorrido */
-.mv-recorrido {
-  padding: 1.25rem 1.25rem 0;
-}
-.mv-section-label {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.08em;
-  margin: 0 0 1rem;
-}
-.mv-stops-track {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.mv-stops-track::-webkit-scrollbar { display: none; }
-.mv-stop-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  min-width: 80px;
-}
-.mv-stop-dot {
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  border: 2px solid rgba(255,255,255,0.25);
-  flex-shrink: 0;
-  z-index: 1;
-}
-.mv-stop-dot.origin {
-  background: #E8621A;
-  border-color: #E8621A;
-  box-shadow: 0 0 10px rgba(232,98,26,0.5);
-}
-.mv-stop-dot.destination {
-  background: transparent;
-  border: 2px solid #555;
-  position: relative;
-}
-.mv-stop-dot.destination::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: #3399ff;
-}
-.mv-stop-line {
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, #E8621A, rgba(80,80,80,0.4));
-  margin: 5px 0;
-  min-width: 40px;
-}
-.mv-stop-name {
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.55);
-  text-align: center;
-  margin-top: 0.4rem;
-  max-width: 80px;
-  word-break: break-word;
-}
-
-/* ─── Tabs de horario ─── */
-.mv-horario-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.mv-tabs {
-  display: flex;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  padding: 0 0.75rem;
-  position: sticky;
-  top: 56px;
-  background: rgba(15,15,15,0.97);
-  backdrop-filter: blur(12px);
-  z-index: 90;
-}
-.mv-tab {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 1;
-  justify-content: center;
-  padding: 0.9rem 0.5rem;
-  background: none;
-  border: none;
-  border-bottom: 2.5px solid transparent;
-  color: rgba(255,255,255,0.35);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.mv-tab:hover { color: rgba(255,255,255,0.7); }
-.mv-tab.active {
-  color: #E8621A;
-  border-bottom-color: #E8621A;
-}
-
-/* Lista de horarios */
-.mv-horarios-list {
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 1.25rem;
-}
-.mv-no-horarios {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 3rem;
-  color: rgba(255,255,255,0.25);
-  text-align: center;
-}
-.mv-no-horarios p { font-size: 0.85rem; margin: 0; }
-
-.mv-horario-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.8rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  transition: background 0.15s;
-}
-.mv-horario-row:last-child { border-bottom: none; }
-.mv-horario-row.pasado { opacity: 0.35; }
-.mv-horario-row.proximo {
-  background: rgba(232,98,26,0.05);
-  margin: 0 -1.25rem;
-  padding: 0.8rem 1.25rem;
-  border-radius: 10px;
-  border-bottom: none;
-}
-
-/* Indicadores */
-.mv-horario-indicator {
-  width: 16px;
-  display: flex;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.mv-proximo-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: #E8621A;
-  box-shadow: 0 0 8px rgba(232,98,26,0.6);
-}
-.mv-pasado-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-}
-.mv-normal-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.25);
-}
-
-/* Hora */
-.mv-horario-hora {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 80px;
-}
-.mv-hora-big {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: #fff;
-  line-height: 1;
-}
-.mv-horario-row.pasado .mv-hora-big { color: rgba(255,255,255,0.4); }
-.mv-proximo-badge {
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #E8621A;
-}
-.mv-pasado-label {
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.3);
-}
-
-/* Info de horario */
-.mv-horario-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.mv-tipo-badge {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  width: fit-content;
-}
-.mv-tipo-badge.directo   { background: rgba(232,98,26,0.15); color: #E8621A; }
-.mv-tipo-badge.indirecto { background: rgba(99,179,237,0.12); color: #63b3ed; }
-.mv-tipo-badge.regular   { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); }
-.mv-dias-badge {
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.35);
-}
-
-/* ── Horario doble (INDIRECTO: salida + llegada) ── */
-.mv-horario-doble {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-.mv-horario-doble-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-.mv-doble-label {
-  font-size: 0.58rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.04em;
-}
-.mv-hora-big.llegada {
-  color: #63b3ed;
-}
-.mv-horario-doble-sep {
-  color: rgba(99,179,237,0.5);
-  font-size: 1rem;
-  font-weight: 900;
-  margin-top: 0.5rem;
-}
-
-/* Botones acción */
-.mv-detail-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-  padding: 1.25rem;
-  border-top: 1px solid rgba(255,255,255,0.05);
-}
-.mv-btn-primary {
-  background: linear-gradient(135deg, #E8621A, #FF9B6A);
-  color: #fff; border: none;
-  padding: 0.9rem; border-radius: 14px;
-  font-weight: 700; font-size: 0.85rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-  transition: all 0.25s;
-  box-shadow: 0 4px 16px rgba(232,98,26,0.3);
-}
-.mv-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,98,26,0.5); }
-.mv-btn-secondary {
-  background: rgba(45,45,45,0.6);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.8);
-  padding: 0.9rem; border-radius: 14px;
-  font-weight: 700; font-size: 0.85rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-  transition: all 0.25s;
-}
-.mv-btn-secondary:hover { background: rgba(60,60,60,0.8); transform: translateY(-2px); }
-
-/* ═══════════════════════════════════════════
-   BOTTOM TAB BAR
-═══════════════════════════════════════════ */
-.buses-bottom-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 68px;
-  background: rgba(17, 17, 17, 0.5);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(255,255,255,0.07);
-  display: flex;
-  align-items: center;
-  z-index: 300;
-}
-.bbar-tab {
-  flex: 1;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 0.25rem;
-  background: none; border: none;
-  color: rgba(255,255,255,0.3);
-  font-size: 0.62rem; font-weight: 700;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: all 0.2s;
-}
-.bbar-tab:hover { color: rgba(255,255,255,0.7); }
-.bbar-tab.active { color: #E8621A; }
-.bbar-tab.active svg {
-  filter: drop-shadow(0 0 6px rgba(232,98,26,0.5));
-}
-
-/* ═══════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════ */
-@media (min-width: 680px) {
-  .mv-main-content { padding: 0 2rem 0.5rem; }
-  .mv-route-card { border-radius: 18px; }
-  .mv-detail-page { max-width: 680px; margin: 0 auto; }
-  .buses-bottom-bar { display: none !important; }
-  .buses-page { padding-bottom: 2rem; }
-}
-
-@media (max-width: 400px) {
-  .mv-hero-title { font-size: 1.45rem; }
-  .mv-next-time { font-size: 1.35rem; }
-  .mv-hora-big  { font-size: 1.3rem; }
-  .mv-tabs      { padding: 0 0.25rem; }
-  .mv-tab       { font-size: 0.65rem; padding: 0.8rem 0.25rem; }
-}
-
-/* ═══════════════════════════════════════════
-   FILTROS TIPO + DÍA (en RutaDetalle)
-═══════════════════════════════════════════ */
-.mv-tipo-chips,
-.mv-dia-selector {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0.6rem 1.25rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  -webkit-overflow-scrolling: touch;
-}
-.mv-tipo-chips::-webkit-scrollbar,
-.mv-dia-selector::-webkit-scrollbar { display: none; }
-
-.mv-tipo-chip,
-.mv-dia-chip {
-  padding: 0.3rem 0.85rem;
-  border-radius: 20px;
-  border: 1.5px solid rgba(255,255,255,0.1);
-  background: transparent;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  letter-spacing: 0.03em;
-}
-.mv-tipo-chip:hover,
-.mv-dia-chip:hover {
-  border-color: rgba(232,98,26,0.4);
-  color: rgba(255,255,255,0.85);
-}
-.mv-tipo-chip.active,
-.mv-dia-chip.active {
-  background: #E8621A;
-  border-color: #E8621A;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(232,98,26,0.35);
-}
-
-/* ═══════════════════════════════════════════
-   BUS MAP MODAL — Trazado de ruta
-═══════════════════════════════════════════ */
-.busmap-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(4px);
-  z-index: 9999;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  animation: busmap-fade-in 0.25s ease;
-}
-@keyframes busmap-fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-.busmap-modal {
-  width: 100%;
-  max-width: 680px;
-  height: 85vh;
-  background: #111;
-  border-radius: 24px 24px 0 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: busmap-slide-up 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-@keyframes busmap-slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-/* Header del modal */
-.busmap-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem 0.75rem;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  flex-shrink: 0;
-  gap: 0.5rem;
-}
-.busmap-header-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  flex-wrap: wrap;
-  overflow: hidden;
-}
-.busmap-route-label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 160px;
-}
-.busmap-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.busmap-dot.origin  { background: #E8621A; box-shadow: 0 0 6px rgba(232,98,26,0.6); }
-.busmap-dot.dest    { background: #22C55E; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
-.busmap-arrow {
-  color: rgba(255,255,255,0.35);
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-.busmap-close {
-  background: rgba(255,255,255,0.07);
-  border: none;
-  color: rgba(255,255,255,0.6);
-  border-radius: 50%;
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  flex-shrink: 0;
-}
-.busmap-close:hover { background: rgba(232,98,26,0.2); color: #E8621A; }
-
-/* Contenedor del mapa */
-.busmap-map-wrapper {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-.busmap-map-wrapper .leaflet-container {
-  height: 100%;
-  width: 100%;
-  background: #0f0f0f;
-}
-
-/* Estado de carga / error */
-.busmap-state {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  color: rgba(255,255,255,0.45);
-  font-size: 0.9rem;
-  z-index: 5;
-  background: #111;
-}
-.busmap-state.error { color: #ef5350; }
-.busmap-spin {
-  animation: spin 1s linear infinite;
-  color: #E8621A;
-}
-
-/* Footer con leyenda y stats */
-.busmap-footer {
-  padding: 0.75rem 1.25rem;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  background: rgba(15,15,15,0.97);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.busmap-legend {
-  display: flex;
-  gap: 1.25rem;
-  align-items: center;
-}
-.busmap-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.5);
-  font-weight: 600;
-}
-.busmap-legend-line {
-  display: inline-block;
-  width: 24px;
-  height: 3px;
-  border-radius: 2px;
-}
-.busmap-legend-line.orange { background: #E8621A; }
-.busmap-legend-line.blue   { background: #4A90E2; }
-.busmap-legend-line.dashed {
-  background: repeating-linear-gradient(
-    to right,
-    #4A90E2 0, #4A90E2 4px,
-    transparent 4px, transparent 8px
-  );
-}
-.busmap-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-.busmap-stat {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-}
-.busmap-stat.orange {
-  background: rgba(232,98,26,0.12);
-  color: #E8621A;
-  border: 1px solid rgba(232,98,26,0.2);
-}
-.busmap-stat.blue {
-  background: rgba(74,144,226,0.12);
-  color: #4A90E2;
-  border: 1px solid rgba(74,144,226,0.2);
-}
-
-/* Animación pulso del marcador de usuario */
-@keyframes pulseUser {
-  0%   { box-shadow: 0 0 0 0   rgba(74,144,226,0.5); }
-  70%  { box-shadow: 0 0 0 10px rgba(74,144,226,0); }
-  100% { box-shadow: 0 0 0 0   rgba(74,144,226,0); }
-}
-
-/* ═══════════════════════════════════════════
-   NUEVA VISTA DETALLE — Matriz de Horarios
-═══════════════════════════════════════════ */
-
-/* ── Header del detalle ── */
-.mvd-header {
-  padding: 0.75rem 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  background: rgba(15,15,15,0.6);
-  backdrop-filter: blur(12px);
-}
-.mvd-header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-.mvd-header-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-.mvd-map-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(232,98,26,0.12);
-  border: 1px solid rgba(232,98,26,0.3);
-  color: #E8621A;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.4rem 0.8rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-.mvd-map-btn:hover {
-  background: rgba(232,98,26,0.25);
-  transform: translateY(-1px);
-}
-
-/* ── Ruta: Origen → Destino ── */
-.mvd-route-display {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
-}
-.mvd-terminal {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  flex: 1;
-  min-width: 0;
-}
-.mvd-terminal-dest {
-  text-align: right;
-}
-.mvd-terminal-label {
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: rgba(255,255,255,0.3);
-  letter-spacing: 0.1em;
-}
-.mvd-terminal-name {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: #fff;
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.mvd-route-arrow-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  flex-shrink: 0;
-  min-width: 50px;
-}
-.mvd-arrow-line {
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, #E8621A, rgba(255,255,255,0.15));
-  border-radius: 1px;
-}
-.mvd-arrow-bus {
-  color: #E8621A;
-  filter: drop-shadow(0 0 4px rgba(232,98,26,0.4));
-}
-
-/* ── Meta info row ── */
-.mvd-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-}
-.mvd-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: rgba(255,255,255,0.55);
-}
-.mvd-meta-ruta {
-  color: #E8621A;
-  border-color: rgba(232,98,26,0.2);
-  background: rgba(232,98,26,0.08);
-}
-
-/* ── Paradas intermedias ── */
-.mvd-stops-track {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0.6rem 0 0.25rem;
-}
-.mvd-stops-track::-webkit-scrollbar { display: none; }
-.mvd-stop-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  min-width: 70px;
-}
-.mvd-stop-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  border: 2px solid rgba(255,255,255,0.25);
-  flex-shrink: 0;
-  z-index: 1;
-}
-.mvd-stop-dot.origin {
-  background: #E8621A;
-  border-color: #E8621A;
-  box-shadow: 0 0 8px rgba(232,98,26,0.5);
-}
-.mvd-stop-dot.dest {
-  background: transparent;
-  border: 2px solid #555;
-  position: relative;
-}
-.mvd-stop-dot.dest::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: #3399ff;
-}
-.mvd-stop-connector {
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, #E8621A, rgba(80,80,80,0.4));
-  margin: 4px 0;
-  min-width: 30px;
-}
-.mvd-stop-label {
-  font-size: 0.62rem;
-  color: rgba(255,255,255,0.45);
-  text-align: center;
-  margin-top: 0.3rem;
-  max-width: 70px;
-  word-break: break-word;
-}
-
-/* ── Tabs bar ── */
-.mvd-tabs-bar {
-  display: flex;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  padding: 0 0.75rem;
-  position: sticky;
-  top: 0;
-  background: rgba(15,15,15,0.97);
-  backdrop-filter: blur(12px);
-  z-index: 90;
-}
-.mvd-tab {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 1;
-  justify-content: center;
-  padding: 0.9rem 0.5rem;
-  background: none;
-  border: none;
-  border-bottom: 2.5px solid transparent;
-  color: rgba(255,255,255,0.35);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-.mvd-tab:hover { color: rgba(255,255,255,0.7); }
-.mvd-tab.active {
-  color: #E8621A;
-  border-bottom-color: #E8621A;
-}
-
-/* ── Filtros row ── */
-.mvd-filters-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.mvd-filter-group {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.mvd-filter-group::-webkit-scrollbar { display: none; }
-.mvd-filter-chip {
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
-  border: 1.5px solid rgba(255,255,255,0.1);
-  background: transparent;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-.mvd-filter-chip:hover {
-  border-color: rgba(232,98,26,0.4);
-  color: rgba(255,255,255,0.85);
-}
-.mvd-filter-chip.active {
-  background: #E8621A;
-  border-color: #E8621A;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(232,98,26,0.35);
-}
-
-/* ── Contenedor de la matriz ── */
-.mvd-schedule-container {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* ── Grupo por periodo (Mañana, Tarde, Noche) ── */
-.mvd-period-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.mvd-period-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.25rem 0;
-}
-.mvd-period-label {
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: rgba(255,255,255,0.65);
-}
-.mvd-period-count {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.3);
-  letter-spacing: 0.04em;
-}
-
-/* ── Grid de celdas horarias ── */
-.mvd-schedule-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 0.5rem;
-}
-
-/* ── Celda individual ── */
-.mvd-schedule-cell {
-  background: rgba(30,30,30,0.65);
-  backdrop-filter: blur(8px);
-  border: 1.5px solid rgba(255,255,255,0.06);
-  border-radius: 14px;
-  padding: 0.75rem 0.85rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s;
-}
-.mvd-schedule-cell:hover {
-  border-color: rgba(255,255,255,0.14);
-  background: rgba(40,40,40,0.8);
-  transform: translateY(-1px);
-}
-.mvd-schedule-cell.pasado {
-  opacity: 0.35;
-}
-.mvd-schedule-cell.proximo {
-  border-color: rgba(232,98,26,0.5);
-  background: rgba(232,98,26,0.06);
-  box-shadow: 0 0 16px rgba(232,98,26,0.12);
-}
-
-/* Badge PRÓXIMO */
-.mvd-cell-badge-next {
-  position: absolute;
-  top: 0; right: 0;
-  background: #E8621A;
-  color: #fff;
-  font-size: 0.55rem;
-  font-weight: 900;
-  padding: 0.15rem 0.5rem;
-  border-radius: 0 12px 0 8px;
-  letter-spacing: 0.06em;
-}
-
-/* Hora de salida */
-.mvd-cell-departure {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-.mvd-cell-time {
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: #fff;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-.mvd-cell-arrival {
-  display: flex;
-  align-items: baseline;
-  gap: 0.2rem;
-}
-.mvd-cell-arrow-small {
-  color: rgba(99,179,237,0.6);
-  font-size: 0.85rem;
-  font-weight: 900;
-}
-.mvd-cell-time-arr {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #63b3ed;
-  line-height: 1;
-}
-
-/* Meta info dentro de celda */
-.mvd-cell-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  align-items: center;
-}
-.mvd-cell-tipo {
-  font-size: 0.6rem;
-  font-weight: 800;
-  padding: 0.15rem 0.45rem;
-  border-radius: 5px;
-  letter-spacing: 0.04em;
-}
-.mvd-cell-tipo.directo {
-  background: rgba(232,98,26,0.15);
-  color: #E8621A;
-}
-.mvd-cell-tipo.indirecto {
-  background: rgba(99,179,237,0.12);
-  color: #63b3ed;
-}
-.mvd-cell-tipo.regular {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.5);
-}
-.mvd-cell-dias {
-  font-size: 0.6rem;
-  color: rgba(255,255,255,0.35);
-  font-weight: 600;
-}
-.mvd-cell-countdown {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #E8621A;
-}
-.mvd-cell-salio {
-  font-size: 0.6rem;
-  color: rgba(255,255,255,0.3);
-  font-style: italic;
-}
-
-/* ── Responsive: celdas más grandes en desktop ── */
-@media (min-width: 680px) {
-  .mvd-schedule-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.6rem;
-  }
-  .mvd-schedule-container {
-    max-width: 680px;
+/* Main Content */
+.buses-main {
+    padding: 0 2rem;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
-  }
-  .mvd-header {
-    max-width: 680px;
-    margin: 0 auto;
-    width: 100%;
-  }
 }
 
-@media (max-width: 400px) {
-  .mvd-schedule-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 0.4rem;
-  }
-  .mvd-cell-time {
-    font-size: 1.3rem;
-  }
-  .mvd-terminal-name {
+.buses-hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    letter-spacing: -1px;
+}
+
+/* Route Chips */
+.buses-route-chips {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+}
+
+.buses-route-chips::-webkit-scrollbar {
+    display: none;
+}
+
+.buses-chip {
+    background-color: #2A2A2A;
+    color: #ccc;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
     font-size: 0.95rem;
-  }
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    -webkit-tap-highlight-color: transparent;
 }
+
+.buses-chip:hover {
+    background-color: #333;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.buses-chip:active {
+    transform: scale(0.97);
+}
+
+.buses-chip.active {
+    background-color: #E8621A;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(232, 98, 26, 0.35);
+}
+
+.buses-chip-icon {
+    opacity: 0.6;
+}
+
+.buses-chip.active .buses-chip-icon {
+    opacity: 1;
+}
+
+.buses-chip-skeleton {
+    height: 44px;
+    width: 180px;
+    border-radius: 30px;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+    flex-shrink: 0;
+}
+
+/* Section Header */
+.buses-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+}
+
+.buses-section-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.buses-section-header p {
+    color: #888;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.live-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #E8621A;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #E8621A;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(232, 98, 26, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(232, 98, 26, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(232, 98, 26, 0); }
+}
+
+/* Grid Layout */
+.buses-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.buses-card {
+    background: rgba(30, 30, 30, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    flex: 1 1 300px;
+}
+
+.buses-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    border-color: rgba(232, 98, 26, 0.2);
+}
+
+.big-card {
+    flex: 2 1 500px;
+    background: linear-gradient(145deg, rgba(34,34,34,0.7), rgba(24,24,24,0.7));
+}
+
+.right-card {
+    flex: 1 1 300px;
+    background-color: rgba(36, 36, 36, 0.7);
+}
+
+.bottom-left-card {
+    flex: 1 1 300px;
+    background-color: rgba(26, 26, 26, 0.7);
+}
+
+.info-card {
+    flex: 1 1 300px;
+    background: linear-gradient(135deg, rgba(58,32,16,0.7), rgba(30,17,8,0.7));
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+/* Card Elements */
+.card-top {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.flex-between { justify-content: space-between; }
+
+.siguiente-label {
+    color: #E8621A;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    margin-right: 1rem;
+}
+
+.badge-green {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ECC71;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-gray {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.card-time {
+    font-size: 6rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -2px;
+}
+
+.time-small {
+    font-size: 0.9rem;
+    color: #aaa;
+    font-weight: 600;
+}
+
+.card-subtitle {
+    color: #888;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    margin-top: 0;
+}
+
+.card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.mt-auto { margin-top: auto; }
+.mb-4 { margin-bottom: 1.5rem; }
+
+/* Big Card specific */
+.boarding-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 2;
+}
+
+.mins-box {
+    background-color: #E8621A;
+    color: #fff;
+    border-radius: 12px;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mins-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.mins-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.boarding-text h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.boarding-text p {
+    color: #888;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.watermark-bus, .watermark-moon {
+    position: absolute;
+    opacity: 0.05;
+    z-index: 1;
+}
+
+.watermark-bus {
+    right: -20px;
+    bottom: -40px;
+    transform: rotate(-10deg);
+}
+
+.watermark-moon {
+    right: -20px;
+    bottom: -20px;
+    transform: rotate(15deg);
+}
+
+/* Right Card specific */
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: #333;
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    width: 25%;
+    height: 100%;
+    background-color: #555;
+}
+
+.buses-btn-outline {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.buses-btn-outline:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: #666;
+}
+
+/* Info Card specific */
+.info-icon {
+    flex-shrink: 0;
+}
+
+.info-card h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+.info-card p {
+    color: #aaa;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Bottom Navigation */
+.buses-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(22, 22, 22, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 1000;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.nav-item span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.nav-item:hover {
+    color: #999;
+}
+
+.nav-item.active {
+    color: #E8621A;
+}
+
+/* Responsive Styles */
+@media (min-width: 768px) {
+    .buses-bottom-nav {
+        display: none !important;
+    }
+    .buses-layout {
+        padding-bottom: 2rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .buses-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .big-card, .right-card, .bottom-left-card, .info-card {
+        grid-column: 1 / -1;
+        grid-row: auto;
+    }
+
+    .buses-hero-title {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .buses-layout {
+        padding-bottom: 70px;
+    }
+
+    .buses-topbar {
+        padding: 0.8rem 1rem;
+    }
+    
+    .buses-search-wrapper {
+        display: none;
+    }
+
+    .buses-main {
+        padding: 0 0.8rem;
+    }
+
+    .buses-hero-title {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-time {
+        font-size: 3.5rem;
+    }
+
+    .watermark-bus {
+        right: -40px;
+        bottom: -20px;
+    }
+    
+    .buses-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .buses-section-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .buses-card {
+        padding: 1.2rem;
+    }
+
+    .buses-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .boarding-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+    
+    .info-card {
+        flex-direction: column;
+    }
+
+    .buses-route-chips {
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0 0 0.5rem 0;
+    }
+
+    .buses-chip {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .buses-grid {
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.4rem;
+    }
+
+    .card-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .mins-box {
+        padding: 0.6rem 1rem;
+    }
+
+    .mins-num {
+        font-size: 1.6rem;
+    }
+
+    .buses-bottom-nav {
+        padding: 0.7rem 0;
+    }
+
+    .nav-item span {
+        font-size: 0.6rem;
+    }
+
+    .live-status {
+        font-size: 0.75rem;
+    }
+
+    .buses-btn-outline {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ============================================================
+   Badges adicionales
+   ============================================================ */
+.badge-orange {
+    background-color: rgba(232, 98, 26, 0.2);
+    color: #E8621A;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ============================================================
+   Estado sin salidas (big card vacÃ­a)
+   ============================================================ */
+.buses-no-salidas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 2rem 0;
+    z-index: 2;
+}
+
+.buses-no-salidas p {
+    color: #888;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.buses-ultima-hint {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Estado de error
+   ============================================================ */
+.buses-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    color: #666;
+    text-align: center;
+}
+
+.buses-error-state p {
+    font-size: 1rem;
+    max-width: 300px;
+}
+
+/* ============================================================
+   Enlace de reserva (botÃ³n-link)
+   ============================================================ */
+.buses-reserve-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #fff;
+    width: 100%;
+    background: transparent;
+    border: 1px solid #444;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.buses-reserve-link:hover {
+    background: rgba(232, 98, 26, 0.1);
+    border-color: #E8621A;
+    color: #E8621A;
+}
+
+/* ============================================================
+   Lista completa de horarios del dÃ­a
+   ============================================================ */
+.buses-horarios-full {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.buses-horarios-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.buses-horarios-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.buses-horario-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    padding: 0.9rem 1.2rem;
+    transition: background 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.buses-horario-row.proximo {
+    border-left-color: #E8621A;
+    background-color: #221a12;
+}
+
+.buses-horario-row.pasado {
+    opacity: 0.4;
+}
+
+.buses-row-hora {
+    font-size: 1.2rem;
+    font-weight: 800;
+    min-width: 60px;
+    letter-spacing: -0.5px;
+}
+
+.buses-row-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.buses-row-nombre {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ddd;
+}
+
+.buses-row-badge {
+    font-size: 0.7rem;
+}
+
+.buses-row-estado {
+    margin-left: auto;
+    text-align: right;
+}
+
+.buses-row-restante {
+    font-size: 0.85rem;
+    color: #E8621A;
+    font-weight: 600;
+}
+
+.buses-row-salido {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.buses-row-link {
+    color: #666;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    padding: 0.25rem;
+}
+
+.buses-row-link:hover {
+    color: #E8621A;
+}
+
+/* ============================================================
+   Skeleton Loader
+   ============================================================ */
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+}
+
+.skeleton-card {
+    pointer-events: none;
+}
+
+.sk-line, .sk-time, .sk-box, .sk-bar, .sk-boarding {
+    border-radius: 8px;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.sk-label  { height: 14px; width: 40%; margin-bottom: 1rem; }
+.sk-time   { height: 80px; width: 55%; margin-bottom: 1rem; border-radius: 12px; }
+.sk-sub    { height: 14px; width: 65%; margin-bottom: 2rem; }
+.sk-title  { height: 28px; width: 70%; margin-bottom: 0.5rem; margin-top: auto; }
+.sk-btn    { height: 44px; width: 100%; }
+.sk-bar    { height: 6px; width: 100%; margin-bottom: 1.5rem; }
+.sk-t1     { height: 16px; width: 80%; margin-bottom: 0.5rem; }
+.sk-t2     { height: 12px; width: 90%; margin-bottom: 0.4rem; }
+
+.sk-boarding {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    background: none;
+    animation: none;
+}
+
+.sk-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.sk-texts {
+    flex: 1;
+}
+
+@media (max-width: 600px) {
+    .buses-horario-row {
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
+    }
+    .buses-row-hora {
+        font-size: 1rem;
+        min-width: 48px;
+    }
+    .buses-horarios-title {
+        font-size: 1.2rem;
+    }
+}
+
+/* â”€â”€â”€ Tabs HOY / MAÃ‘ANA â€” A-I3 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.buses-dia-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.buses-dia-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #1E1E1E;
+    border: 1px solid #333;
+    color: #888;
+    padding: 0.45rem 1.1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.buses-dia-tab:hover { border-color: #555; color: #ccc; }
+.buses-dia-tab.active {
+    background: #E8621A;
+    border-color: #E8621A;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(232,98,26,0.4);
+}
+
+/* â”€â”€â”€ Panel GUARDADOS â€” A-N2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.buses-saved-panel {
+    padding: 0 2rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.buses-saved-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; }
+
+.buses-saved-empty {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1rem; padding: 3rem 2rem; color: #555; text-align: center;
+}
+
+.buses-saved-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.buses-saved-item {
+    display: flex; align-items: center; gap: 1rem;
+    background: #1E1E1E; border-radius: 12px;
+    padding: 1rem 1.2rem; cursor: pointer;
+    transition: background 0.2s; border-left: 3px solid #E8621A;
+}
+.buses-saved-item:hover { background: #252525; }
+.buses-saved-route { flex: 1; font-weight: 700; font-size: 0.95rem; }
+.buses-saved-next { display: flex; align-items: center; }
+
+.buses-saved-remove {
+    background: none; border: none; color: #555;
+    cursor: pointer; font-size: 1rem; padding: 0.25rem 0.5rem;
+    border-radius: 6px; transition: color 0.2s;
+}
+.buses-saved-remove:hover { color: #E8621A; }
+
