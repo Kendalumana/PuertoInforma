@@ -162,7 +162,7 @@ function MapaView() {
         
         let watchId;
 
-        const startWatching = () => {
+        const startWatching = (highAccuracy = true) => {
             watchId = navigator.geolocation.watchPosition(
                 async (pos) => {
                     const lat = pos.coords.latitude;
@@ -173,7 +173,7 @@ function MapaView() {
                     userMarker.bindPopup('<b>📍 Tu ubicación actual</b><br/>En tiempo real');
                     userMarkerLayer.current.addLayer(userMarker);
 
-                    // A-N2: Enviar ubicación al backend
+                    // Enviar ubicación al backend
                     try {
                         const localToken = localStorage.getItem('token');
                         if (localToken) {
@@ -187,11 +187,20 @@ function MapaView() {
                         console.warn("No se pudo actualizar la ubicación en el backend", e);
                     }
                 },
-                (error) => {
-                    console.warn("No se pudo obtener la ubicación en tiempo real:", error);
-                    setError("Permiso de ubicación denegado. No podrás ver tu posición en el mapa.");
+                (err) => {
+                    if (highAccuracy) {
+                        // Alta precisión falló (timeout, network error) → reintentar con baja precisión
+                        console.warn("Alta precisión falló, usando baja precisión:", err.message);
+                        if (watchId) navigator.geolocation.clearWatch(watchId);
+                        startWatching(false);
+                    } else {
+                        console.warn("No se pudo obtener la ubicación:", err);
+                        setError("Permiso de ubicación denegado. No podrás ver tu posición en el mapa.");
+                    }
                 },
-                { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+                highAccuracy
+                    ? { enableHighAccuracy: true,  maximumAge: 10000, timeout: 8000 }
+                    : { enableHighAccuracy: false, maximumAge: 30000, timeout: 15000 }
             );
         };
 
@@ -216,7 +225,7 @@ function MapaView() {
                 };
             });
         } else if (navigator.geolocation) {
-            // Fallback
+            // Fallback sin permissions API
             startWatching();
         }
 

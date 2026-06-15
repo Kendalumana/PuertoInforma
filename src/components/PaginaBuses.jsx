@@ -343,10 +343,16 @@ function PaginaBuses() {
 
                             {siguiente ? (
                                 <>
+                                    {/* Ruta visible como subtítulo arriba */}
+                                    <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0 0 0.25rem', fontWeight: 600 }}>
+                                        <MapPin size={13} style={{ marginRight: 4, color: '#E8621A' }} />
+                                        {siguiente.origen} → {siguiente.destino}
+                                    </p>
+
                                     <div className="card-time">{formatHora(siguiente.horaSalida)}</div>
                                     <div className="card-subtitle">
-                                        {siguiente.operadorNombre} •{' '}
-                                        {siguiente.tipo}
+                                        {siguiente.operadorNombre}
+                                        {siguiente.tipo === 'DIRECTO' && <span style={{ marginLeft: 8, fontSize: '0.7rem', background: 'rgba(46,204,113,0.15)', color: '#2ECC71', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>DIRECTO</span>}
                                     </div>
 
                                     <div className="boarding-info">
@@ -357,7 +363,7 @@ function PaginaBuses() {
                                             </div>
                                         )}
                                         <div className="boarding-text">
-                                            <h4>{siguiente.terminalNombre}</h4>
+                                            <h4>Terminal: {siguiente.terminalNombre}</h4>
                                             <p>
                                                 {abordajeMin !== null && abordajeMin > 0
                                                     ? `Abordaje inicia en ${abordajeMin} minutos`
@@ -388,14 +394,23 @@ function PaginaBuses() {
                         {proxima2 && (
                             <div className="buses-card right-card">
                                 <div className="card-top flex-between">
-                                    <Clock size={20} className="text-orange" />
-                                    <span className="time-small">
-                                        {formatHora(proxima2.horaSalida)}
-                                    </span>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#E8621A', letterSpacing: 1 }}>2° BUS</span>
+                                    <span className="badge-gray">{proxima2.tipo}</span>
                                 </div>
 
-                                <h3 className="card-title mt-auto">{proxima2.operadorNombre}</h3>
-                                <p className="card-subtitle mb-4">{proxima2.tipo}</p>
+                                {/* Countdown grande como hero */}
+                                <div style={{ fontSize: '2.2rem', fontWeight: 900, lineHeight: 1, margin: '0.75rem 0 0.25rem', color: '#fff' }}>
+                                    {formatearRestante(minutosHasta(proxima2.horaSalida)) || formatHora(proxima2.horaSalida)}
+                                </div>
+                                <p style={{ color: '#888', fontSize: '0.8rem', margin: '0 0 0.5rem' }}>
+                                    Sale a las {formatHora(proxima2.horaSalida)}
+                                </p>
+
+                                <h3 className="card-title mt-auto" style={{ fontSize: '1rem' }}>{proxima2.operadorNombre}</h3>
+                                <p className="card-subtitle mb-4" style={{ fontSize: '0.8rem' }}>
+                                    <MapPin size={11} style={{ marginRight: 3 }} />
+                                    {proxima2.origen} → {proxima2.destino}
+                                </p>
                                 <div className="progress-bar-container">
                                     <div
                                         className="progress-bar-fill"
@@ -405,7 +420,6 @@ function PaginaBuses() {
                                         }}
                                     />
                                 </div>
-                                <button className="buses-btn-outline">Siguiente Bus</button>
                             </div>
                         )}
 
@@ -462,21 +476,29 @@ function PaginaBuses() {
                                         key={h.id || idx}
                                         className={`buses-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
                                     >
+                                        {/* Hora de salida */}
                                         <div className="buses-row-hora">{formatHora(h.horaSalida)}</div>
+
+                                        {/* Info principal: ruta + operador */}
                                         <div className="buses-row-info">
                                             <span className="buses-row-nombre">
-                                                {h.operadorNombre}
+                                                {h.origen} → {h.destino}
                                             </span>
-                                            {h.esNocturno && (
-                                                <span className="badge-gray buses-row-badge">Nocturno</span>
-                                            )}
-                                            {esProximo && (
-                                                <span className="badge-orange buses-row-badge">Próximo</span>
-                                            )}
-                                            {h.tipo === 'DIRECTO' && (
-                                                <span className="badge-green buses-row-badge">Directo</span>
-                                            )}
+                                            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
+                                                <span style={{ fontSize: '0.72rem', color: '#666' }}>{h.operadorNombre}</span>
+                                                {h.esNocturno && (
+                                                    <span className="badge-gray buses-row-badge">Nocturno</span>
+                                                )}
+                                                {esProximo && (
+                                                    <span className="badge-orange buses-row-badge">Próximo</span>
+                                                )}
+                                                {h.tipo === 'DIRECTO' && (
+                                                    <span className="badge-green buses-row-badge">Directo</span>
+                                                )}
+                                            </div>
                                         </div>
+
+                                        {/* Tiempo restante a la derecha */}
                                         <div className="buses-row-estado">
                                             {pasado
                                                 ? <span className="buses-row-salido">Salió</span>
