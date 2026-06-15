@@ -102,6 +102,80 @@ function BusesSkeletonGrid() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// MINI MAPA SVG
+// ═══════════════════════════════════════════════════════════
+function MiniMapaSVG({ ruta }) {
+    let paradas = [];
+    if (ruta.paradas) {
+        try {
+            paradas = typeof ruta.paradas === 'string' ? JSON.parse(ruta.paradas) : ruta.paradas;
+        } catch(e) {
+            paradas = [ruta.origen || 'Origen', ruta.destino || 'Destino'];
+        }
+    } else {
+        paradas = [ruta.origen || 'Origen', ruta.destino || 'Destino'];
+    }
+
+    const total = paradas.length;
+    const W = 320;
+    const H = 80;
+    const margen = 40;
+    const paso = (W - margen * 2) / (total > 1 ? total - 1 : 1);
+
+    const puntos = paradas.map((_, i) => ({
+        x: margen + i * paso,
+        y: i % 2 === 0 ? H / 2 - 10 : H / 2 + 10,
+    }));
+
+    const buildPath = () => {
+        if (puntos.length === 0) return '';
+        let d = `M ${puntos[0].x} ${puntos[0].y} `;
+        for (let i = 0; i < puntos.length - 1; i++) {
+            const p1 = puntos[i];
+            const p2 = puntos[i + 1];
+            const cx = (p1.x + p2.x) / 2;
+            d += `C ${cx} ${p1.y}, ${cx} ${p2.y}, ${p2.x} ${p2.y} `;
+        }
+        return d;
+    };
+
+    return (
+        <div style={{ marginTop: '1rem', width: '100%', position: 'relative', zIndex: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.5rem', color: '#E8621A', fontSize: '0.75rem', fontWeight: 700 }}>
+                <MapPin size={12} />
+                <span>Ruta del bus</span>
+            </div>
+            
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }} preserveAspectRatio="xMidYMid meet">
+                <path d={buildPath()} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" strokeLinecap="round" />
+                <path d={buildPath()} fill="none" stroke="#E8621A" strokeWidth="2.5" strokeLinecap="round" opacity="0.85" />
+
+                {puntos.map((p, i) => (
+                    <g key={i}>
+                        <circle cx={p.x} cy={p.y} r={i === 0 || i === total - 1 ? "5" : "3.5"} fill="#1c1c1e" stroke={i === 0 ? '#E8621A' : '#ffffff'} strokeWidth="1.5" />
+                        {(i === 0 || i === total - 1) && <circle cx={p.x} cy={p.y} r="3" fill="#fff" />}
+                    </g>
+                ))}
+
+                {puntos.map((p, i) => (
+                    <text
+                        key={`label-${i}`}
+                        x={p.x}
+                        y={i % 2 === 0 ? p.y - 14 : p.y + 20}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fill={i === 0 ? '#E8621A' : 'rgba(255,255,255,0.7)'}
+                        fontWeight={i === 0 || i === total - 1 ? '700' : '400'}
+                    >
+                        {paradas[i]}
+                    </text>
+                ))}
+            </svg>
+        </div>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════
 function PaginaBuses() {
@@ -159,7 +233,8 @@ function PaginaBuses() {
                         terminalNombre: orig,
                         tipo: h.tipo || 'REGULAR',
                         esNocturno: parseInt((h.horaSalida||'0').split(':')[0]) >= 18,
-                        enlaceReserva: null
+                        enlaceReserva: null,
+                        paradas: ruta.paradas || [orig, dest]
                     }));
                 });
                 setHorarios(flattenedHorarios);
@@ -465,6 +540,8 @@ function PaginaBuses() {
                                             </p>
                                         </div>
                                     </div>
+                                    
+                                    <MiniMapaSVG ruta={siguiente} />
                                 </>
                             ) : (
                                 <div className="buses-no-salidas">
