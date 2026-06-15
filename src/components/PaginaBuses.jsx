@@ -598,8 +598,7 @@ function PaginaBuses() {
             <Navbar />
 
             <div className="mv-main-content">
-                {/* Botón volver */}
-                <button className="btn-back" onClick={() => navigate('/')}>← Volver al Mapa</button>
+                {/* Botón volver eliminado */}
 
                 <div className="mv-hero">
                     <div>

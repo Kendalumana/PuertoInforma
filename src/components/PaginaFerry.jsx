@@ -220,8 +220,7 @@ function PaginaFerry() {
             <Navbar />
 
             <main className="ferry-main">
-                {/* Botón volver */}
-                <button className="btn-back" onClick={() => navigate('/')}>← Volver al Mapa</button>
+                {/* Botón volver eliminado */}
 
                 {/* Hero Title */}
                 <h1 className="ferry-hero-title">

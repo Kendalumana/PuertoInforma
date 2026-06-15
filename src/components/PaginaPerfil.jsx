@@ -312,8 +312,7 @@ function PaginaPerfil() {
 
         {/* SIDEBAR */}
         <aside className="profile-sidebar">
-          {/* Botón volver */}
-          <Link to="/" className="btn-back">← Volver al Mapa</Link>
+          {/* Botón volver eliminado */}
 
           {/* Tarjeta Principal de Usuario */}
           <div className="profile-card">
@@ -347,18 +346,10 @@ function PaginaPerfil() {
 
                   {/* Subir foto propia */}
                   <div className="avatar-upload-section">
-                    <label htmlFor="avatar-file-input" className="avatar-upload-btn">
-                      {guardandoAvatar ? '⏳ Subiendo...' : '📷 Subir foto'}
+                    <label className="avatar-upload-btn" style={{ cursor: 'not-allowed', opacity: 0.6 }}>
+                      📷 Subir foto (Próximamente)
                     </label>
-                    <input
-                      id="avatar-file-input"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      style={{ display: 'none' }}
-                      onChange={handleSubirImagen}
-                      disabled={guardandoAvatar}
-                    />
-                    <p className="avatar-upload-hint">JPG, PNG, WEBP · Máx 3MB</p>
+                    <p className="avatar-upload-hint">Pronto podrás subir tu propia foto.</p>
                   </div>
 
                   {/* Error de avatar */}
