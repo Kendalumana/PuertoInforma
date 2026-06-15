@@ -355,7 +355,7 @@ function PaginaPerfil() {
               )}
             </div>
 
-            <h2 className="profile-name">{perfil?.nombreUsuario ?? 'Usuario'}</h2>
+            <h2 className="profile-name">{perfil?.nombreUsuario ?? (session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'Usuario')}</h2>
             <div className="profile-rank-badge">
               {rangoActual?.nombre?.toUpperCase() ?? 'RECIEN LLEGADO'}
             </div>
