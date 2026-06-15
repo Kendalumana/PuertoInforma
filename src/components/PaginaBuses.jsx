@@ -108,9 +108,9 @@ function PaginaBuses() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('SCHEDULES');
     const [activeRoute, setActiveRoute] = useState('');
-    const [tabDia, setTabDia] = useState('hoy');           // 'hoy' | 'manana'
-    const [busquedaBuses, setBusquedaBuses] = useState(''); 
-    const [busesSaved, setBusesSaved] = useState(() => {   
+    const [destinoSeleccionado, setDestinoSeleccionado] = useState(''); // destino elegido por el usuario
+    const [tabDia, setTabDia] = useState('hoy');
+    const [busesSaved, setBusesSaved] = useState(() => {
         try { return JSON.parse(localStorage.getItem('busesGuardados') || '[]'); }
         catch { return []; }
     });
@@ -120,7 +120,7 @@ function PaginaBuses() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Reloj vivo — recalcula "próxima salida" cada minuto
+    // Reloj vivo
     const [ahora, setAhora] = useState(new Date());
     useEffect(() => {
         const t = setInterval(() => setAhora(new Date()), 30000);
@@ -144,8 +144,6 @@ function PaginaBuses() {
         axiosPrivate.get('/ruta-transporte')
             .then(res => {
                 const data = Array.isArray(res.data) ? res.data : [];
-                
-                // Flatten rutas into a list of "salidas" just like ferry
                 const flattenedHorarios = data.flatMap(ruta => {
                     const orig = ruta.lugarOrigen?.nombre || 'Origen Desconocido';
                     const dest = ruta.lugarDestino?.nombre || 'Destino Desconocido';
@@ -161,10 +159,9 @@ function PaginaBuses() {
                         terminalNombre: orig,
                         tipo: h.tipo || 'REGULAR',
                         esNocturno: parseInt((h.horaSalida||'0').split(':')[0]) >= 18,
-                        enlaceReserva: null // Asumiendo que buses no tienen enlace por defecto
+                        enlaceReserva: null
                     }));
                 });
-
                 setHorarios(flattenedHorarios);
             })
             .catch(err => {
@@ -174,7 +171,24 @@ function PaginaBuses() {
             .finally(() => setLoading(false));
     }, []);
 
-    // ── Rutas únicas disponibles (dinámicas) ──
+    // ── Destinos únicos disponibles ──
+    const destinos = useMemo(() => {
+        const set = new Set();
+        horarios.forEach(h => { if (h.destino) set.add(h.destino); });
+        return [...set].sort();
+    }, [horarios]);
+
+    // ── Orígenes disponibles para el destino elegido ──
+    const origenesPosibles = useMemo(() => {
+        if (!destinoSeleccionado) return [];
+        const set = new Set();
+        horarios
+            .filter(h => h.destino === destinoSeleccionado)
+            .forEach(h => set.add(h.origen));
+        return [...set].sort();
+    }, [horarios, destinoSeleccionado]);
+
+    // ── Rutas (origen → destino) para el destino elegido ──
     const routes = useMemo(() => {
         const set = new Set();
         horarios.forEach(h => {
@@ -183,19 +197,20 @@ function PaginaBuses() {
         return [...set];
     }, [horarios]);
 
-    // Seleccionar primera ruta al cargar
+    // Seleccionar primer destino al cargar
     useEffect(() => {
-        if (routes.length > 0 && (!activeRoute || !routes.includes(activeRoute))) {
-            setActiveRoute(routes[0]);
+        if (destinos.length > 0 && !destinoSeleccionado) {
+            const primDest = destinos[0];
+            setDestinoSeleccionado(primDest);
         }
-    }, [routes]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [destinos]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Rutas filtradas por búsqueda
-    const routesFiltradas = useMemo(() => {
-        if (!busquedaBuses.trim()) return routes;
-        const q = busquedaBuses.toLowerCase();
-        return routes.filter(r => r.toLowerCase().includes(q));
-    }, [routes, busquedaBuses]);
+    // Al cambiar destino, seleccionar primera ruta con ese destino
+    useEffect(() => {
+        if (!destinoSeleccionado) return;
+        const match = routes.find(r => r.endsWith(`→ ${destinoSeleccionado}`));
+        if (match) setActiveRoute(match);
+    }, [destinoSeleccionado, routes]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Horarios filtrados por ruta activa ─────────────────
     const horariosFiltradosRuta = useMemo(() => {
@@ -249,33 +264,108 @@ function PaginaBuses() {
                     Horarios de <span className="text-orange">Buses</span>
                 </h1>
 
-                {/* Route Chips — filtrados por búsqueda */}
-                <div className="buses-route-chips">
-                    {loading
-                        ? [1, 2, 3].map(i => (
-                            <div key={i} className="buses-chip-skeleton" />
-                        ))
-                        : routesFiltradas.length === 0
-                            ? <button className="buses-chip active">Sin resultados</button>
-                            : routesFiltradas.map(r => (
-                                <button
-                                    key={r}
-                                    className={`buses-chip ${activeRoute === r ? 'active' : ''}`}
-                                    onClick={() => setActiveRoute(r)}
-                                >
-                                    <MapPin size={14} className="buses-chip-icon" />
-                                    {r}
-                                    <span
-                                        onClick={e => { e.stopPropagation(); toggleBusesSaved(r); }}
-                                        style={{ marginLeft: '6px', display: 'flex', alignItems: 'center' }}
+                {/* ─── ¿Para dónde vas? ─────────────────────────────── */}
+                <div style={{ marginBottom: '1.5rem' }}>
+
+                    {/* Label */}
+                    <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
+                        ¿PARA DÓNDE VAS?
+                    </p>
+
+                    {/* Destinos como tarjetas */}
+                    {loading ? (
+                        <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
+                            {[1,2,3].map(i => <div key={i} className="buses-chip-skeleton" style={{ width: 140, height: 56, borderRadius: 14 }} />)}
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
+                            {destinos.map(dest => {
+                                const activo = destinoSeleccionado === dest;
+                                // Cuántas rutas llegan a este destino
+                                const numRutas = routes.filter(r => r.endsWith(`→ ${dest}`)).length;
+                                // Próxima salida hacia este destino hoy
+                                const diaNum2 = tabDia === 'hoy' ? ahora.getDay() : (ahora.getDay() + 1) % 7;
+                                const proxSalida = horarios
+                                    .filter(h => h.destino === dest && correEnDia(h, diaNum2) && minutosHasta(h.horaSalida) >= 0)
+                                    .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida))[0];
+                                return (
+                                    <button
+                                        key={dest}
+                                        onClick={() => setDestinoSeleccionado(dest)}
+                                        style={{
+                                            flexShrink: 0,
+                                            background: activo
+                                                ? 'linear-gradient(135deg, #E8621A, #FF9B6A)'
+                                                : 'rgba(255,255,255,0.05)',
+                                            border: activo ? 'none' : '1.5px solid rgba(255,255,255,0.08)',
+                                            borderRadius: 14,
+                                            padding: '0.75rem 1.1rem',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            minWidth: 140,
+                                            transition: 'all 0.2s',
+                                            boxShadow: activo ? '0 4px 18px rgba(232,98,26,0.4)' : 'none',
+                                        }}
                                     >
-                                        {busesSaved.includes(r)
-                                            ? <BookmarkCheck size={13} color="#fff" />
-                                            : <Bookmark size={13} style={{ opacity: 0.5 }} />}
-                                    </span>
-                                </button>
-                            ))
-                    }
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                                            <MapPin size={13} color={activo ? '#fff' : '#E8621A'} />
+                                            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
+                                                {dest}
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '0.65rem', color: activo ? 'rgba(255,255,255,0.75)' : '#666' }}>
+                                            {proxSalida
+                                                ? `Próximo: ${formatHora(proxSalida.horaSalida)}`
+                                                : 'Sin salidas hoy'}
+                                            {numRutas > 1 && (
+                                                <span style={{ marginLeft: 6, background: activo ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)', padding: '1px 6px', borderRadius: 20, fontWeight: 700 }}>
+                                                    {numRutas} rutas
+                                                </span>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Si hay múltiples orígenes para ese destino → mostrar desde dónde */}
+                    {!loading && origenesPosibles.length > 1 && (
+                        <div style={{ marginTop: '0.85rem' }}>
+                            <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+                                DESDE DÓNDE SALÍS:
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                {origenesPosibles.map(orig => {
+                                    const ruta = `${orig} → ${destinoSeleccionado}`;
+                                    const activo = activeRoute === ruta;
+                                    return (
+                                        <button
+                                            key={orig}
+                                            onClick={() => setActiveRoute(ruta)}
+                                            style={{
+                                                background: activo ? 'rgba(232,98,26,0.2)' : 'rgba(255,255,255,0.04)',
+                                                border: activo ? '1.5px solid #E8621A' : '1.5px solid rgba(255,255,255,0.07)',
+                                                borderRadius: 20,
+                                                padding: '0.4rem 1rem',
+                                                fontSize: '0.78rem',
+                                                fontWeight: 600,
+                                                color: activo ? '#E8621A' : 'rgba(255,255,255,0.55)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.3rem',
+                                            }}
+                                        >
+                                            <Bus size={11} />
+                                            {orig}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── Tabs HOY / MAÑANA ── */}
