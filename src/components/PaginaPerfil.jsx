@@ -69,31 +69,37 @@ function PaginaPerfil() {
   const [error, setError] = useState(null);
 
   const [session, setSession] = useState(null);
+  const [userId, setUserId] = useState(null); // guardamos el userId para usarlo en avatares
 
   useEffect(() => {
     async function cargarTodo() {
       try {
+        // Intentar refrescar la sesión de Supabase primero (por si el token está por vencer)
         const { data: { session: s } } = await supabase.auth.getSession();
         const localToken = localStorage.getItem('token');
 
-        let userId = null;
+        let resolvedUserId = null;
 
         if (s) {
-          userId = s.user.id;
+          resolvedUserId = s.user.id;
           setSession(s);
         } else if (localToken) {
           try {
             const payload = JSON.parse(atob(localToken.split('.')[1]));
-            userId = payload.id || payload.sub || payload.usuarioId || payload.userId;
+            resolvedUserId = payload.id || payload.sub || payload.usuarioId || payload.userId;
           } catch (e) {
             console.error("Error decodificando token local", e);
           }
         }
 
-        if (!userId) {
+        if (!resolvedUserId) {
           navigate('/login');
           return;
         }
+
+        // Guardar el userId en state para que los handlers de avatar lo usen
+        setUserId(resolvedUserId);
+        const userId = resolvedUserId;
 
         // ── Cargar perfil (puede fallar si el usuario aún no tiene perfil) ──
         let perfilId = null;
@@ -180,8 +186,15 @@ function PaginaPerfil() {
     setMostrarSelector(false);
     setGuardandoAvatar(true);
     setAvatarError(null);
+    // Usar userId del state (funciona para login de Supabase Y login clásico)
+    const resolvedId = userId || session?.user?.id;
+    if (!resolvedId) {
+      setAvatarError('No hay sesión activa. Iniciá sesión nuevamente.');
+      setGuardandoAvatar(false);
+      return;
+    }
     try {
-      await guardarAvatar('emoji', id.toString(), session.user.id);
+      await guardarAvatar('emoji', id.toString(), resolvedId);
     } catch (err) {
       setAvatarError('No se pudo guardar el avatar. Reintentá.');
     } finally {
@@ -206,8 +219,9 @@ function PaginaPerfil() {
       return;
     }
 
-    const userId = session?.user?.id;
-    if (!userId) {
+    // Usar userId del state (funciona para login de Supabase Y login clásico)
+    const resolvedId = userId || session?.user?.id;
+    if (!resolvedId) {
       setAvatarError('No hay sesión activa. Iniciá sesión nuevamente.');
       return;
     }
@@ -220,7 +234,7 @@ function PaginaPerfil() {
     setAvatarTipo('subido');
 
     try {
-      const publicUrl = await subirAvatarImagen(file, userId);
+      const publicUrl = await subirAvatarImagen(file, resolvedId);
       setAvatarImagen(publicUrl); // reemplaza preview con URL real
     } catch (err) {
       setAvatarError(err.message || 'No se pudo subir la imagen.');
