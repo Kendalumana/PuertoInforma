@@ -519,7 +519,7 @@
     .ferry-topbar {
         padding: 0.8rem 1rem;
     }
-    
+
     .ferry-search-wrapper {
         display: none;
     }
@@ -541,7 +541,7 @@
         right: -40px;
         bottom: -20px;
     }
-    
+
     .ferry-section-header {
         flex-direction: column;
         align-items: flex-start;
@@ -551,7 +551,7 @@
     .ferry-section-header h2 {
         font-size: 1.3rem;
     }
-    
+
     .ferry-card {
         padding: 1.2rem;
     }
@@ -560,13 +560,13 @@
         transform: none;
         box-shadow: none;
     }
-    
+
     .boarding-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.8rem;
     }
-    
+
     .info-card {
         flex-direction: column;
     }
