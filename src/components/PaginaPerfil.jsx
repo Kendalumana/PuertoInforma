@@ -16,26 +16,6 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
-// ✅ Sube imagen al bucket 'avatars' de Supabase y guarda la URL en el backend
-async function subirAvatarImagen(file, usuarioId) {
-  // 1. Subir al bucket 'avatars' (carpeta por usuario, reemplaza si ya existe)
-  const ext = file.name.split('.').pop();
-  const path = `${usuarioId}/avatar.${ext}`;
-  const { error: uploadError } = await supabase.storage
-    .from('avatars')
-    .upload(path, file, { upsert: true, contentType: file.type });
-  if (uploadError) throw new Error(`Error al subir imagen: ${uploadError.message}`);
-
-  // 2. Obtener URL pública
-  const { data: { publicUrl } } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(path);
-
-  // 3. Guardar URL en el backend
-  await guardarAvatar('imagen', publicUrl, usuarioId);
-  return publicUrl;
-}
-
 // ✅ Función para guardar avatar (con usuarioId explícito, usando fetch)
 async function guardarAvatar(tipo, valor, usuarioId) {
   try {
@@ -195,55 +175,10 @@ function PaginaPerfil() {
     }
     try {
       await guardarAvatar('emoji', id.toString(), resolvedId);
-    } catch (err) {
+    } catch {
       setAvatarError('No se pudo guardar el avatar. Reintentá.');
     } finally {
       setGuardandoAvatar(false);
-    }
-  };
-
-  const handleSubirImagen = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validar tipo y tamaño (máx 3MB)
-    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!tiposPermitidos.includes(file.type)) {
-      setAvatarError('Solo se permiten imágenes JPG, PNG, WEBP o GIF.');
-      e.target.value = '';
-      return;
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setAvatarError('La imagen no puede superar 3MB.');
-      e.target.value = '';
-      return;
-    }
-
-    // Usar userId del state (funciona para login de Supabase Y login clásico)
-    const resolvedId = userId || session?.user?.id;
-    if (!resolvedId) {
-      setAvatarError('No hay sesión activa. Iniciá sesión nuevamente.');
-      return;
-    }
-
-    setGuardandoAvatar(true);
-    setAvatarError(null);
-    // Preview local inmediato mientras sube
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarImagen(previewUrl);
-    setAvatarTipo('subido');
-
-    try {
-      const publicUrl = await subirAvatarImagen(file, resolvedId);
-      setAvatarImagen(publicUrl); // reemplaza preview con URL real
-    } catch (err) {
-      setAvatarError(err.message || 'No se pudo subir la imagen.');
-      // Revertir a emoji si falla
-      setAvatarTipo('prediseñado');
-      setAvatarImagen(null);
-    } finally {
-      setGuardandoAvatar(false);
-      e.target.value = '';
     }
   };
 

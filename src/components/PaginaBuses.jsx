@@ -109,7 +109,7 @@ function MiniMapaSVG({ ruta }) {
     if (ruta.paradas) {
         try {
             paradas = typeof ruta.paradas === 'string' ? JSON.parse(ruta.paradas) : ruta.paradas;
-        } catch(e) {
+        } catch {
             paradas = [ruta.origen || 'Origen', ruta.destino || 'Destino'];
         }
     } else {
@@ -213,8 +213,6 @@ function PaginaBuses() {
 
     // ── Fetch de rutas ──────────────────────────────────
     useEffect(() => {
-        setLoading(true);
-        setError(null);
         axiosPrivate.get('/ruta-transporte')
             .then(res => {
                 const data = Array.isArray(res.data) ? res.data : [];
@@ -238,6 +236,15 @@ function PaginaBuses() {
                     }));
                 });
                 setHorarios(flattenedHorarios);
+
+                const destinosDisponibles = [...new Set(flattenedHorarios.map(h => h.destino).filter(Boolean))].sort();
+                const primerDestino = destinosDisponibles[0] || '';
+                const primeraRuta = flattenedHorarios
+                    .map(h => `${h.origen} → ${h.destino}`)
+                    .find(ruta => ruta.endsWith(`→ ${primerDestino}`)) || '';
+
+                setDestinoSeleccionado(primerDestino);
+                setActiveRoute(primeraRuta);
             })
             .catch(err => {
                 console.error('[PaginaBuses] Error cargando horarios:', err);
@@ -272,20 +279,11 @@ function PaginaBuses() {
         return [...set];
     }, [horarios]);
 
-    // Seleccionar primer destino al cargar
-    useEffect(() => {
-        if (destinos.length > 0 && !destinoSeleccionado) {
-            const primDest = destinos[0];
-            setDestinoSeleccionado(primDest);
-        }
-    }, [destinos]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Al cambiar destino, seleccionar primera ruta con ese destino
-    useEffect(() => {
-        if (!destinoSeleccionado) return;
-        const match = routes.find(r => r.endsWith(`→ ${destinoSeleccionado}`));
-        if (match) setActiveRoute(match);
-    }, [destinoSeleccionado, routes]); // eslint-disable-line react-hooks/exhaustive-deps
+    const handleDestinoChange = (destino) => {
+        setDestinoSeleccionado(destino);
+        const route = routes.find(r => r.endsWith(`→ ${destino}`));
+        if (route) setActiveRoute(route);
+    };
 
     // ── Horarios filtrados por ruta activa ─────────────────
     const horariosFiltradosRuta = useMemo(() => {
@@ -307,7 +305,7 @@ function PaginaBuses() {
     const proximasSalidas = useMemo(() => {
         if (tabDia === 'manana') return horariosDelDia;
         return horariosDelDia.filter(h => minutosHasta(h.horaSalida) >= 0);
-    }, [horariosDelDia, tabDia, ahora]);
+    }, [horariosDelDia, tabDia]);
 
     // Siguiente salida (big card)
     const siguiente = proximasSalidas[0] || null;
@@ -366,7 +364,7 @@ function PaginaBuses() {
                                 return (
                                     <button
                                         key={dest}
-                                        onClick={() => setDestinoSeleccionado(dest)}
+                                        onClick={() => handleDestinoChange(dest)}
                                         style={{
                                             flexShrink: 0,
                                             background: activo

@@ -46,20 +46,29 @@ const categoryColors = {
 };
 
 function MapaView() {
+    const location = useLocation();
     const [map, setMap] = useState(null);
-    const [markers, setMarkers] = useState({});
     const [allPlaces, setAllPlaces] = useState([]);
     const [categories, setCategories] = useState([]);
     const [selectedPlace, setSelectedPlace] = useState(null);
-    const [activeChip, setActiveChip] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [activeChip, setActiveChip] = useState(() => location.state?.flyTo ? 7 : "");
+    const [searchQuery, setSearchQuery] = useState(() => location.state?.label || "");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [previewPlace, setPreviewPlace] = useState(null);
-    const [mapaVisible, setMapaVisible] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
-    const [favorites, setFavorites] = useState([]);
+    const [favorites, setFavorites] = useState(() => {
+        try {
+            const saved = localStorage.getItem('favoritos');
+            return saved
+                ? JSON.parse(saved).map(favorite => typeof favorite === 'object' ? favorite.id : favorite)
+                : [];
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    });
     const [showFavorites, setShowFavorites] = useState(false);
     const [resultadosVisibles, setResultadosVisibles] = useState(20); // A-N1
     const [aboutNombre, setAboutNombre] = useState('');               // A-I5
@@ -68,17 +77,8 @@ function MapaView() {
     const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
     const userMarkerLayer = useRef(L.layerGroup());
-    const location = useLocation();
     // Capturamos el state UNA VEZ al montar para no usarlo como dependency
     const flyToStateRef = useRef(location.state);
-
-    useEffect(() => {
-        const saved = localStorage.getItem('favoritos');
-        if (saved) {
-            try { setFavorites(JSON.parse(saved)); }
-            catch (e) { console.error(e); }
-        }
-    }, []);
 
     useEffect(() => {
         localStorage.setItem('favoritos', JSON.stringify(favorites));
@@ -105,22 +105,20 @@ function MapaView() {
             .finally(() => setLoading(false));
     }, []);
 
-    // Reset paginación al cambiar filtros — A-N1
-    useEffect(() => { setResultadosVisibles(20); }, [searchQuery, activeChip, showFavorites]);
-
     useEffect(() => {
-        if (!mapRef.current) return;
+        const mapElement = mapRef.current;
+        if (!mapElement) return;
 
         // Limpiar instancia previa si existe (fix robusto para StrictMode)
-        if (mapRef.current._leaflet_id) {
+        if (mapElement._leaflet_id) {
             try {
-                const old = mapRef.current._leaflet;
+                const old = mapElement._leaflet;
                 if (old && typeof old.remove === 'function') old.remove();
-            } catch (_) {}
-            mapRef.current._leaflet_id = null;
+            } catch { /* La instancia anterior puede no existir. */ }
+            mapElement._leaflet_id = null;
         }
 
-        const instance = L.map(mapRef.current, { zoomControl: false }).setView([CENTER.lat, CENTER.lng], 14);
+        const instance = L.map(mapElement, { zoomControl: false }).setView([CENTER.lat, CENTER.lng], 14);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap contributors © CARTO',
             subdomains: 'abcd',
@@ -138,9 +136,7 @@ function MapaView() {
         return () => {
             instance.remove();
             setMap(null);
-            if (mapRef.current) {
-                mapRef.current._leaflet_id = null;
-            }
+            mapElement._leaflet_id = null;
         };
     }, []);
 
@@ -149,11 +145,8 @@ function MapaView() {
     useEffect(() => {
         if (!map || !flyToStateRef.current?.flyTo) return;
         const { lat, lng } = flyToStateRef.current.flyTo;
-        const label = flyToStateRef.current.label || '';
         flyToStateRef.current = null; // consumimos el state una sola vez
         map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
-        if (label) setSearchQuery(label);
-        setActiveChip(7);
     }, [map]); // solo depende del mapa, no de location.state
 
     // Obtener y actualizar en tiempo real la ubicación del usuario
@@ -259,7 +252,6 @@ function MapaView() {
     useEffect(() => {
         if (!map || filteredPlaces.length === 0) return;
         markersLayer.current.clearLayers();
-        const newMarkers = {};
         filteredPlaces.forEach(p => {
             const color = categoryColors[p.categoria?.id] || '#E8621A';
             const icon = L.divIcon({
@@ -276,9 +268,7 @@ function MapaView() {
                 setPreviewPlace(p);
                 setSelectedPlace(null);
             });
-            newMarkers[p.id] = m;
         });
-        setMarkers(newMarkers);
     }, [map, filteredPlaces]);
 
     const handlePlaceClick = (p) => {
@@ -291,15 +281,25 @@ function MapaView() {
         setActiveChip("");
         setShowFavorites(false);
         setSearchQuery("");
+        setResultadosVisibles(20);
     };
 
-    const handleToggleMapa = () => {
-        const nuevoEstado = !mapaVisible;
-        setMapaVisible(nuevoEstado);
-        if (nuevoEstado) setTimeout(() => map?.invalidateSize(), 350);
+    const handleSearchChange = (value) => {
+        setSearchQuery(value);
+        setResultadosVisibles(20);
     };
 
-    const handleSuggestionClick = (suggestion) => setSearchQuery(suggestion);
+    const handleSuggestionClick = (suggestion) => handleSearchChange(suggestion);
+
+    const handleCategoryToggle = (categoryId) => {
+        setActiveChip(activeChip === categoryId ? "" : categoryId);
+        setResultadosVisibles(20);
+    };
+
+    const handleFavoritesToggle = () => {
+        setShowFavorites(!showFavorites);
+        setResultadosVisibles(20);
+    };
 
     const toggleFavorite = (placeId, e) => {
         e.stopPropagation();
@@ -328,7 +328,7 @@ function MapaView() {
                         placeholder="Busca destinos, cultura o experiencias..."
                         className="immersive-search-input"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                     />
                     <button className="immersive-search-btn">Explorar</button>
 
@@ -355,7 +355,7 @@ function MapaView() {
                         <button
                             key={c.id}
                             className={`immersive-chip ${activeChip === c.id ? 'active' : ''}`}
-                            onClick={() => setActiveChip(activeChip === c.id ? "" : c.id)}
+                            onClick={() => handleCategoryToggle(c.id)}
                             style={{ display: 'inline-flex', alignItems: 'center' }}
                         >
                             <span
@@ -374,7 +374,7 @@ function MapaView() {
                     ))}
                     <button
                         className={`immersive-chip ${showFavorites ? 'active' : ''}`}
-                        onClick={() => setShowFavorites(!showFavorites)}
+                        onClick={handleFavoritesToggle}
                     >
                         Favoritos
                     </button>
@@ -476,6 +476,7 @@ function MapaView() {
 
             {/* Panel lateral de detalles del lugar */}
             <PlaceModal
+                key={selectedPlace?.id}
                 place={selectedPlace}
                 onClose={() => setSelectedPlace(null)}
             />
@@ -538,7 +539,7 @@ function MapaView() {
             {/* Modal de Permiso de Ubicación */}
             {showLocationModal && (
                 <LocationPermissionModal
-                    onAllow={(accuracy) => {
+                    onAllow={() => {
                         setShowLocationModal(false);
                         // Al ocultar el modal, intentamos obtener la ubicación
                         // Lo que activará el prompt del navegador

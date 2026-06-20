@@ -1,8 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { MapPin, Phone, MessageCircle, Map, Award, ArrowLeft, Heart, Clock, X } from 'lucide-react';
 
 function PlaceModal({ place, onClose }) {
-    const [isFavorite, setIsFavorite] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(() => {
+        try {
+            const favorites = JSON.parse(localStorage.getItem('favoritos') || '[]');
+            return favorites.some(favorite => (typeof favorite === 'object' ? favorite.id : favorite) === place?.id);
+        } catch {
+            return false;
+        }
+    });
     const [fullscreenImg, setFullscreenImg] = useState(null);
 
     // ── Drag refs (refs para evitar closures viejos en touch handlers) ──
@@ -10,19 +17,6 @@ function PlaceModal({ place, onClose }) {
     const dragStartY = useRef(0);
     const currentOffset = useRef(0);
     const dragging = useRef(false);
-
-    useEffect(() => {
-        if (place) {
-            const favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
-            setIsFavorite(favs.some(f => f.id === place.id));
-            setFullscreenImg(null);
-            currentOffset.current = 0;
-            if (modalRef.current) {
-                modalRef.current.style.transform = '';
-                modalRef.current.style.transition = '';
-            }
-        }
-    }, [place]);
 
     // ── Touch handlers: manipulación directa del DOM via refs ──
     // No usamos useCallback aquí porque estas funciones usan refs, no estado
@@ -76,14 +70,14 @@ function PlaceModal({ place, onClose }) {
     // ── Funciones con useCallback para evitar re-renders innecesarios ──
     const toggleFavorite = useCallback(() => {
         const favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
+        const favoriteIds = favs.map(favorite => typeof favorite === 'object' ? favorite.id : favorite);
         setIsFavorite(prev => {
             if (prev) {
-                const newFavs = favs.filter(f => f.id !== place.id);
+                const newFavs = favoriteIds.filter(id => id !== place.id);
                 localStorage.setItem('favoritos', JSON.stringify(newFavs));
                 return false;
             } else {
-                favs.push(place);
-                localStorage.setItem('favoritos', JSON.stringify(favs));
+                localStorage.setItem('favoritos', JSON.stringify([...favoriteIds, place.id]));
                 return true;
             }
         });

@@ -121,8 +121,6 @@ function BusMapModal({ ruta, onClose }) {
 
         // Intentar obtener ubicación del usuario y trazar ruta desde ahí
         const dibujarRuta = async (userPos) => {
-            const routeFrom = userPos || origenCoords;
-
             if (userPos) {
                 L.marker([userPos.lat, userPos.lng], { icon: createUserIcon() })
                     .addTo(map)

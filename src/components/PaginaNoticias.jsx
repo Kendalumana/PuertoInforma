@@ -6,7 +6,6 @@
 // ============================================================
 
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Search, Newspaper, CalendarDays,
     Megaphone, Waves, Ship, Star, ExternalLink, Clock
@@ -92,7 +91,6 @@ function NoticiaSkeleton() {
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════
 function PaginaNoticias() {
-    const navigate = useNavigate();
     const [categoriaActiva, setCategoriaActiva] = useState('Todas');
     const [busqueda, setBusqueda] = useState('');
     const [noticias, setNoticias] = useState([]);

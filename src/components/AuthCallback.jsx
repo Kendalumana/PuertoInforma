@@ -29,7 +29,7 @@ function AuthCallback() {
                         });
                         localStorage.setItem('token', response.data.token);
                         navigate('/');
-                    } catch (err) {
+                    } catch {
                         clearTimeout(timeoutId);
                         setError(true);
                         setMensaje('❌ Error al conectar con el servidor.');

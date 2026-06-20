@@ -10,7 +10,7 @@ function Navbar({ onOpenAbout }) {
     const esMapa = location.pathname === '/';
 
     const handleLogout = async () => {
-        try { await supabase.auth.signOut(); } catch (_) { /* ignorar */ }
+        try { await supabase.auth.signOut(); } catch { /* ignorar */ }
         localStorage.removeItem('token');
         navigate('/login');
     };

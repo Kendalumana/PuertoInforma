@@ -113,7 +113,7 @@ function PaginaFerry() {
     const [activeTab, setActiveTab] = useState('SCHEDULES');
     const [activeRoute, setActiveRoute] = useState('');
     const [tabDia, setTabDia] = useState('hoy');           // A-I3: 'hoy' | 'manana'
-    const [busquedaFerry, setBusquedaFerry] = useState(''); // A-I1
+    const [busquedaFerry] = useState(''); // A-I1
     const [ferrySaved, setFerrySaved] = useState(() => {   // A-N2
         try { return JSON.parse(localStorage.getItem('ferryGuardados') || '[]'); }
         catch { return []; }
@@ -125,7 +125,7 @@ function PaginaFerry() {
     const [error, setError] = useState(null);
 
     // Reloj vivo — recalcula "próxima salida" cada minuto
-    const [ahora, setAhora] = useState(new Date());
+    const [, setAhora] = useState(new Date());
     useEffect(() => {
         const t = setInterval(() => setAhora(new Date()), 30000);
         return () => clearInterval(t);
@@ -143,13 +143,20 @@ function PaginaFerry() {
 
     // ── Fetch de horarios ──────────────────────────────────
     useEffect(() => {
-        setLoading(true);
-        setError(null);
         axiosPrivate.get('/ferry')
             .then(res => {
                 const data = Array.isArray(res.data) ? res.data : [];
                 const normalizados = data.map(normalizarHorario);
                 setHorarios(normalizados);
+
+                const rutasDisponibles = [...new Set(
+                    normalizados
+                        .filter(h => h.origen && h.destino)
+                        .map(h => `${h.origen} → ${h.destino}`)
+                )];
+                setActiveRoute(rutaActual =>
+                    rutasDisponibles.includes(rutaActual) ? rutaActual : (rutasDisponibles[0] || '')
+                );
             })
             .catch(err => {
                 console.error('[PaginaFerry] Error cargando horarios:', err);
@@ -167,13 +174,6 @@ function PaginaFerry() {
         return [...set];
     }, [horarios]);
 
-    // Seleccionar primera ruta al cargar
-    useEffect(() => {
-        if (routes.length > 0 && (!activeRoute || !routes.includes(activeRoute))) {
-            setActiveRoute(routes[0]);
-        }
-    }, [routes]); // eslint-disable-line react-hooks/exhaustive-deps
-
     // Rutas filtradas por búsqueda — A-I1
     const routesFiltradas = useMemo(() => {
         if (!busquedaFerry.trim()) return routes;
@@ -188,7 +188,7 @@ function PaginaFerry() {
         return horarios
             .filter(h => h.origen === origen && h.destino === destino)
             .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
-    }, [horarios, activeRoute, ahora]);
+    }, [horarios, activeRoute]);
 
     // ── Próximas salidas (futuras) — A-I3: en MAÑANA todas son "próximas"
     const proximasSalidas = useMemo(() => {
