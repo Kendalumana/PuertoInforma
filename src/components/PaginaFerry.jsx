@@ -1,13 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Search, Clock, CalendarDays,
-    Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck, ExternalLink, Anchor,
+    Search, Clock,
+    Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck,
     Bell, User, Map
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Ferry.css';
 import Navbar from './Navbar';
+import ReservationLink from './ReservationLink';
+import TransportDayTabs from './TransportDayTabs';
+import FerryRouteSelector from './FerryRouteSelector';
+import FerryScheduleList from './FerryScheduleList';
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL
@@ -227,51 +231,22 @@ function PaginaFerry() {
                     Horarios de <span className="text-orange">Ferry</span>
                 </h1>
 
-                {/* Route Chips — A-I1: filtrados por búsqueda */}
-                <div className="ferry-route-chips">
-                    {loading
-                        ? [1, 2].map(i => (
-                            <div key={i} className="ferry-chip-skeleton" />
-                        ))
-                        : routesFiltradas.length === 0
-                            ? <button className="ferry-chip active">Sin resultados</button>
-                            : routesFiltradas.map(r => (
-                                <button
-                                    key={r}
-                                    className={`ferry-chip ${activeRoute === r ? 'active' : ''}`}
-                                    onClick={() => setActiveRoute(r)}
-                                >
-                                    <Anchor size={14} className="ferry-chip-icon" />
-                                    {r}
-                                    <span
-                                        onClick={e => { e.stopPropagation(); toggleFerrySaved(r); }}
-                                        style={{ marginLeft: '6px', display: 'flex', alignItems: 'center' }}
-                                    >
-                                        {ferrySaved.includes(r)
-                                            ? <BookmarkCheck size={13} color="#fff" />
-                                            : <Bookmark size={13} style={{ opacity: 0.5 }} />}
-                                    </span>
-                                </button>
-                            ))
-                    }
-                </div>
+                <FerryRouteSelector
+                    activeRoute={activeRoute}
+                    loading={loading}
+                    onRouteChange={setActiveRoute}
+                    onToggleSaved={toggleFerrySaved}
+                    routes={routesFiltradas}
+                    savedRoutes={ferrySaved}
+                />
 
                 {/* ── Tabs HOY / MAÑANA — A-I3 ── */}
                 {!loading && !error && (
-                    <div className="ferry-dia-tabs">
-                        <button
-                            className={`ferry-dia-tab ${tabDia === 'hoy' ? 'active' : ''}`}
-                            onClick={() => setTabDia('hoy')}
-                        >
-                            <Clock size={13} /> HOY
-                        </button>
-                        <button
-                            className={`ferry-dia-tab ${tabDia === 'manana' ? 'active' : ''}`}
-                            onClick={() => setTabDia('manana')}
-                        >
-                            <CalendarDays size={13} /> MAÑANA
-                        </button>
-                    </div>
+                    <TransportDayTabs
+                        className="ferry-dia-tabs"
+                        day={tabDia}
+                        onDayChange={setTabDia}
+                    />
                 )}
 
                 {/* Section Header */}
@@ -384,14 +359,10 @@ function PaginaFerry() {
                                     />
                                 </div>
                                 {proxima2.enlaceReserva ? (
-                                    <a
-                                        href={proxima2.enlaceReserva}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <ReservationLink
                                         className="ferry-btn-outline ferry-reserve-link"
-                                    >
-                                        <ExternalLink size={14} /> Reservar Espacio
-                                    </a>
+                                        href={proxima2.enlaceReserva}
+                                    />
                                 ) : (
                                     <button className="ferry-btn-outline">Reservar Espacio</button>
                                 )}
@@ -436,58 +407,16 @@ function PaginaFerry() {
                 )}
 
                 {/* ── Lista completa de horarios del día ── */}
-                {!loading && !error && horariosFiltrados.length > 0 && (
-                    <div className="ferry-horarios-full">
-                        <h3 className="ferry-horarios-title">
-                            🚢 Todos los horarios — {activeRoute}
-                        </h3>
-                        <div className="ferry-horarios-list">
-                            {horariosFiltrados.map((h, idx) => {
-                                const min = minutosHasta(h.horaSalida);
-                                // En tab MAÑANA nada está "pasado" — A-I3
-                                const pasado = tabDia === 'hoy' && min < 0;
-                                const esProximo = !pasado && proximasSalidas[0] === h;
-                                return (
-                                    <div
-                                        key={h.id || idx}
-                                        className={`ferry-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
-                                    >
-                                        <div className="ferry-row-hora">{formatHora(h.horaSalida)}</div>
-                                        <div className="ferry-row-info">
-                                            <span className="ferry-row-nombre">
-                                                {h.embarcacionNombre || 'Naviera Tambor'}
-                                            </span>
-                                            {h.esNocturno && (
-                                                <span className="badge-gray ferry-row-badge">Nocturno</span>
-                                            )}
-                                            {esProximo && (
-                                                <span className="badge-orange ferry-row-badge">Próximo</span>
-                                            )}
-                                        </div>
-                                        <div className="ferry-row-estado">
-                                            {pasado
-                                                ? <span className="ferry-row-salido">Salió</span>
-                                                : tabDia === 'manana'
-                                                    ? <span className="ferry-row-restante">Mañana</span>
-                                                    : <span className="ferry-row-restante">{formatearRestante(min)}</span>
-                                            }
-                                        </div>
-                                        {h.enlaceReserva && !pasado && (
-                                            <a
-                                                href={h.enlaceReserva}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="ferry-row-link"
-                                                onClick={e => e.stopPropagation()}
-                                            >
-                                                <ExternalLink size={14} />
-                                            </a>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                {!loading && !error && (
+                    <FerryScheduleList
+                        activeRoute={activeRoute}
+                        formatHora={formatHora}
+                        formatearRestante={formatearRestante}
+                        horarios={horariosFiltrados}
+                        minutosHasta={minutosHasta}
+                        proximasSalidas={proximasSalidas}
+                        tabDia={tabDia}
+                    />
                 )}
 
             </main>

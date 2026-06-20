@@ -8,9 +8,9 @@ import { axiosPrivate } from '../api/axios';
 import MiniCard from './MiniCard';
 import Navbar from './Navbar';
 import PlaceModal from './PlaceModal';
-import LazyImage from './LazyImage';
-import { SkeletonList } from './Skeleton';
 import LocationPermissionModal from './LocationPermissionModal';
+import MapSearchPanel from './MapSearchPanel';
+import AboutModal from './AboutModal';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
@@ -71,8 +71,6 @@ function MapaView() {
     });
     const [showFavorites, setShowFavorites] = useState(false);
     const [resultadosVisibles, setResultadosVisibles] = useState(20); // A-N1
-    const [aboutNombre, setAboutNombre] = useState('');               // A-I5
-    const [aboutTelefono, setAboutTelefono] = useState('');           // A-I5
 
     const mapRef = useRef(null);
     const markersLayer = useRef(L.layerGroup());
@@ -319,145 +317,28 @@ function MapaView() {
 
             <Navbar onOpenAbout={() => setShowAboutModal(true)} />
 
-            {/* [MODIFICACIÓN] Panel Izquierdo: Buscador y Filtros Flotantes */}
-            <div className="immersive-left-panel">
-                <div className="immersive-search-wrapper">
-                    <span className="search-icon">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Busca destinos, cultura o experiencias..."
-                        className="immersive-search-input"
-                        value={searchQuery}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                    />
-                    <button className="immersive-search-btn">Explorar</button>
-
-                    {/* Sugerencias flotantes */}
-                    {searchQuery.trim().length > 0 && suggestions.length > 0 && (
-                        <div className="immersive-suggestions">
-                            {suggestions.map((s, idx) => (
-                                <div key={idx} className="suggestion-item" onClick={() => handleSuggestionClick(s)}>
-                                    🔍 {s}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="immersive-categories">
-                    <button
-                        className={`immersive-chip ${!activeChip ? 'active' : ''}`}
-                        onClick={handleClearFilters}
-                    >
-                        Todos
-                    </button>
-                    {categories.map(c => (
-                        <button
-                            key={c.id}
-                            className={`immersive-chip ${activeChip === c.id ? 'active' : ''}`}
-                            onClick={() => handleCategoryToggle(c.id)}
-                            style={{ display: 'inline-flex', alignItems: 'center' }}
-                        >
-                            <span
-                                style={{
-                                    display: 'inline-block',
-                                    width: '10px',
-                                    height: '10px',
-                                    borderRadius: '50%',
-                                    backgroundColor: categoryColors[c.id] || '#ccc',
-                                    marginRight: '6px',
-                                    boxShadow: '0 0 4px rgba(0,0,0,0.3)'
-                                }}
-                            />
-                            {c.nombre}
-                        </button>
-                    ))}
-                    <button
-                        className={`immersive-chip ${showFavorites ? 'active' : ''}`}
-                        onClick={handleFavoritesToggle}
-                    >
-                        Favoritos
-                    </button>
-                </div>
-
-                {error && (
-                    <div style={{
-                        background: 'rgba(220, 38, 38, 0.2)',
-                        border: '1px solid rgba(220, 38, 38, 0.5)',
-                        backdropFilter: 'blur(12px)',
-                        color: '#FFF',
-                        padding: '1rem',
-                        borderRadius: '12px',
-                        fontSize: '0.9rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                    }}>
-                        <span>⚠️</span>
-                        <span>{error}</span>
-                    </div>
-                )}
-
-                {/* Lista de resultados flotante (visible si hay búsqueda/filtros y NO hay un lugar seleccionado) */}
-                {(searchQuery || activeChip || showFavorites) && !selectedPlace && (
-                    <div className="immersive-results-panel">
-                        <div className="results-header">
-                            <h2 className="results-title">Comercios encontrados</h2>
-                            <span className="results-count">{filteredPlaces.length}</span>
-                        </div>
-                        {loading && (
-                            <div className="results-list" style={{ padding: '1rem' }}>
-                                <SkeletonList count={5} />
-                            </div>
-                        )}
-                        {!loading && !error && (
-                            <div className="results-list">
-                                {filteredPlaces.length > 0 ? (
-                                    <>
-                                        {filteredPlaces.slice(0, resultadosVisibles).map(p => (
-                                            <div key={p.id} className="result-card" onClick={() => handlePlaceClick(p)}>
-                                                <div
-                                                    className={`favorite-icon ${favorites.includes(p.id) ? 'active' : ''}`}
-                                                    onClick={(e) => toggleFavorite(p.id, e)}
-                                                >
-                                                    {favorites.includes(p.id) ? '❤️' : '🤍'}
-                                                </div>
-                                                {p.urlImagen ? (
-                                                    <LazyImage src={p.urlImagen} alt={p.nombre} className="result-card-img" />
-                                                ) : (
-                                                    <div className="result-card-img-placeholder">🏖️</div>
-                                                )}
-                                                <div className="result-card-body">
-                                                    <div className="result-card-top">
-                                                        <span className="result-name">{p.nombre}</span>
-                                                        {p.categoria && <span className="result-category">{p.categoria.nombre}</span>}
-                                                    </div>
-                                                    {p.descripcion && <p className="result-description">{p.descripcion}</p>}
-                                                    <div className="result-footer">
-                                                        <span className="result-points">🏆 {p.puntosQueOtorga} pts</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {/* Botón Ver más — A-N1 */}
-                                        {filteredPlaces.length > resultadosVisibles && (
-                                            <button
-                                                className="results-ver-mas"
-                                                onClick={() => setResultadosVisibles(v => v + 20)}
-                                            >
-                                                Ver más ({filteredPlaces.length - resultadosVisibles} restantes)
-                                            </button>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p style={{ color: 'rgba(255,255,255,0.5)', padding: '1rem' }}>No se encontraron lugares.</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+            <MapSearchPanel
+                activeChip={activeChip}
+                categories={categories}
+                categoryColors={categoryColors}
+                error={error}
+                favorites={favorites}
+                filteredPlaces={filteredPlaces}
+                loading={loading}
+                onCategoryToggle={handleCategoryToggle}
+                onClearFilters={handleClearFilters}
+                onFavoritesToggle={handleFavoritesToggle}
+                onLoadMore={() => setResultadosVisibles(visible => visible + 20)}
+                onPlaceClick={handlePlaceClick}
+                onSearchChange={handleSearchChange}
+                onSuggestionClick={handleSuggestionClick}
+                onToggleFavorite={toggleFavorite}
+                resultadosVisibles={resultadosVisibles}
+                searchQuery={searchQuery}
+                selectedPlace={selectedPlace}
+                showFavorites={showFavorites}
+                suggestions={suggestions}
+            />
 
             {/* [MODIFICACIÓN] Botón de centrar mapa (ahora flotante abajo a la derecha) */}
             <button className="immersive-recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
@@ -481,60 +362,7 @@ function MapaView() {
                 onClose={() => setSelectedPlace(null)}
             />
 
-            {/* Modal "Acerca de" — A-I5: formulario conectado a WhatsApp */}
-            {showAboutModal && (
-                <div className="modal-overlay about-overlay" onClick={() => setShowAboutModal(false)} style={{ display: 'flex' }}>
-                    <div className="modal-content about-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2 className="modal-title">📰 Acerca de PuertoInforma</h2>
-                            <button className="close-modal" onClick={() => setShowAboutModal(false)}>×</button>
-                        </div>
-                        <div className="modal-body">
-                            <p style={{ marginBottom: '1rem' }}>
-                                PuertoInforma es un directorio interactivo de comercios, lugares culturales y servicios de Puntarenas, Costa Rica.
-                            </p>
-                            <h3 style={{ color: 'var(--naranja)', marginBottom: '0.5rem' }}>¿Sos dueño de un negocio?</h3>
-                            <p>Contáctanos para aparecer en nuestra plataforma.</p>
-                            <div className="contact-form">
-                                <div className="form-group">
-                                    <input
-                                        id="about-nombre"
-                                        type="text"
-                                        className="form-input"
-                                        placeholder="Nombre del negocio / Servicio"
-                                        value={aboutNombre}
-                                        onChange={e => setAboutNombre(e.target.value)}
-                                    />
-                                    <input
-                                        id="about-telefono"
-                                        type="text"
-                                        className="form-input"
-                                        placeholder="Tu número de contacto"
-                                        value={aboutTelefono}
-                                        onChange={e => setAboutTelefono(e.target.value)}
-                                    />
-                                </div>
-                                <button
-                                    className="submit-btn"
-                                    onClick={() => {
-                                        if (!aboutNombre.trim()) return;
-                                        const phoneNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '50684748707';
-                                        const msg = encodeURIComponent(
-                                            `🏢 Hola PuertoInforma!\nMe interesa registrar mi negocio.\n\nNombre: ${aboutNombre}\nTeléfono: ${aboutTelefono}`
-                                        );
-                                        window.open(`https://wa.me/${phoneNumber}?text=${msg}`, '_blank');
-                                        setAboutNombre('');
-                                        setAboutTelefono('');
-                                        setShowAboutModal(false);
-                                    }}
-                                >
-                                    💬 Enviar por WhatsApp
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} />}
 
             {/* Modal de Permiso de Ubicación */}
             {showLocationModal && (

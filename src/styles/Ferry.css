@@ -131,6 +131,10 @@
     transform: translateY(-1px);
 }
 
+.ferry-chip.active {
+    box-shadow: 0 6px 22px rgba(232, 98, 26, 0.28);
+}
+
 .ferry-chip:active {
     transform: scale(0.97);
 }
@@ -920,4 +924,4 @@
     border-radius: 6px; transition: color 0.2s;
 }
 .ferry-saved-remove:hover { color: #E8621A; }
-
+

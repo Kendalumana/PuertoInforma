@@ -78,6 +78,26 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.profile-card--highlight {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(232, 98, 26, 0.22), transparent 42%),
+    rgba(28, 28, 28, 0.72);
+}
+
+.profile-card--highlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(125deg, transparent 30%, rgba(255, 255, 255, 0.06), transparent 65%);
+}
+
+.profile-card--highlight > * {
+  position: relative;
+}
+
 .avatar-wrapper {
   position: relative;
   margin-bottom: 1rem;
@@ -838,4 +858,4 @@
   text-align: center;
   margin: 0;
 }
-
+

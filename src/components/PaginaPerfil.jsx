@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { axiosPrivate } from '../api/axios';
 import Navbar from './Navbar';
+import MissionList from './MissionList';
+import ProfileSidebar from './ProfileSidebar';
 import '../styles/Perfil.css';
 
 const AVATARES = [
@@ -147,9 +149,6 @@ function PaginaPerfil() {
     cargarTodo();
   }, [navigate]);
 
-  const estaCompletada = (misionId) =>
-    perfilMisiones.some(pm => pm.mision?.id === misionId && pm.completada);
-
   const calcularPorcentajeXP = () => {
     const xp = perfil?.experienciaXp ?? 0;
     return Math.min(Math.round((xp / XP_SIGUIENTE_NIVEL) * 100), 100);
@@ -246,157 +245,27 @@ function PaginaPerfil() {
       <div className="profile-layout">
 
         {/* SIDEBAR */}
-        <aside className="profile-sidebar">
-          {/* Botón volver eliminado */}
-
-          {/* Tarjeta Principal de Usuario */}
-          <div className="profile-card">
-            <div className="avatar-wrapper">
-              <div className="avatar-display" onClick={() => setMostrarSelector(!mostrarSelector)}>
-                {guardandoAvatar ? (
-                  <span className="avatar-emoji">⏳</span>
-                ) : avatarTipo === 'subido' && avatarImagen ? (
-                  <img src={avatarImagen} alt="Avatar" className="avatar-img" />
-                ) : (
-                  <span className="avatar-emoji">
-                    {AVATARES.find(a => a.id === avatarSeleccionado)?.emoji || '🧑‍✈️'}
-                  </span>
-                )}
-              </div>
-
-              {mostrarSelector && (
-                <div className="avatar-selector" style={{ top: '130px' }}>
-                  <p className="avatar-selector-titulo">Elegí tu avatar</p>
-                  <div className="avatares-grid">
-                    {AVATARES.map(av => (
-                      <div
-                        key={av.id}
-                        className={`avatar-opcion ${avatarSeleccionado === av.id && avatarTipo === 'prediseñado' ? 'activo' : ''}`}
-                        onClick={() => handleSeleccionarEmoji(av.id)}
-                      >
-                        {av.emoji}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Subir foto propia */}
-                  <div className="avatar-upload-section">
-                    <label className="avatar-upload-btn" style={{ cursor: 'not-allowed', opacity: 0.6 }}>
-                      📷 Subir foto (Próximamente)
-                    </label>
-                    <p className="avatar-upload-hint">Pronto podrás subir tu propia foto.</p>
-                  </div>
-
-                  {/* Error de avatar */}
-                  {avatarError && (
-                    <p className="avatar-error-msg">⚠️ {avatarError}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <h2 className="profile-name">{perfil?.nombreUsuario ?? (session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'Usuario')}</h2>
-            <div className="profile-rank-badge">
-              {rangoActual?.nombre?.toUpperCase() ?? 'RECIEN LLEGADO'}
-            </div>
-
-            <div className="profile-stats-grid">
-              <div className="stat-box">
-                <span className="stat-label">PUNTOS</span>
-                <span className="stat-value">{perfil?.puntosTotales ?? 0}</span>
-              </div>
-              <div className="stat-box rango-box">
-                <span className="stat-label">RANGO</span>
-                {rangoActual?.urlIcono ? (
-                  <img src={rangoActual.urlIcono} alt={rangoActual.nombre} className="rango-stat-icon" />
-                ) : (
-                  <span className="stat-value light">🏅</span>
-                )}
-                <span className="rango-stat-name">{rangoActual?.nombre?.split('(')[0]?.trim() ?? 'Nivel 1'}</span>
-              </div>
-            </div>
-
-            <div className="xp-container">
-              <div className="xp-header">
-                <span className="xp-title">Progreso de Nivel</span>
-                <span className="xp-numbers">{xpActual} / {XP_SIGUIENTE_NIVEL} XP</span>
-              </div>
-              <div className="xp-barra">
-                <div className="xp-relleno" style={{ width: `${calcularPorcentajeXP()}%` }}></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tarjeta de Pines / Rangos */}
-          <div className="badges-card">
-            <h3 className="badges-title">🏆 Tu Progreso de Rango</h3>
-            <div className="badges-grid">
-              {rangos.sort((a, b) => a.puntosRequeridos - b.puntosRequeridos).map((r) => {
-                const isUnlocked = xpActual >= r.puntosRequeridos;
-                return (
-                  <div
-                    key={r.id}
-                    className={`badge-icon ${isUnlocked ? 'unlocked' : 'locked'}`}
-                    title={`${r.nombre} (${r.puntosRequeridos} XP)`}
-                  >
-                    {r.urlIcono ? (
-                      <img src={r.urlIcono} alt={r.nombre} />
-                    ) : (
-                      '🏅'
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Historial de Actividad — A-I2 ── */}
-          {historial.length > 0 && (
-            <div className="perfil-historial-card">
-              <h3 className="badges-title">📍 Historial de Actividad</h3>
-              <div className="perfil-historial-list">
-                {historial.slice(0, 5).map((item, i) => (
-                  <div key={i} className="perfil-historial-item">
-                    <span className="perfil-historial-icon">✓</span>
-                    <div className="perfil-historial-info">
-                      <span className="perfil-historial-nombre">
-                        {item.mision?.titulo || item.titulo || 'Actividad'}
-                      </span>
-                      <span className="perfil-historial-fecha">
-                        {formatearFecha(item.fechaCompletado || item.fecha)}
-                      </span>
-                    </div>
-                    {(item.xpGanado || item.mision?.xpRecompensa) && (
-                      <span className="perfil-historial-xp">
-                        +{item.xpGanado || item.mision?.xpRecompensa} XP
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Sitios Visitados — A-I2 ── */}
-          {sitiosVisitados.length > 0 && (
-            <div className="perfil-historial-card">
-              <h3 className="badges-title">🏖️ Sitios Visitados ({sitiosVisitados.length})</h3>
-              <div className="perfil-sitios-grid">
-                {sitiosVisitados.slice(0, 6).map((sitio, i) => (
-                  <div key={i} className="perfil-sitio-chip">
-                    <span className="perfil-sitio-icono">📍</span>
-                    <span className="perfil-sitio-nombre">
-                      {sitio.lugar?.nombre || sitio.nombre || 'Lugar'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              {sitiosVisitados.length > 6 && (
-                <p className="perfil-sitios-mas">+{sitiosVisitados.length - 6} más</p>
-              )}
-            </div>
-          )}
-        </aside>
+        <ProfileSidebar
+          avatarError={avatarError}
+          avatarImage={avatarImagen}
+          avatarSelected={avatarSeleccionado}
+          avatarType={avatarTipo}
+          avatares={AVATARES}
+          experiencia={xpActual}
+          formatDate={formatearFecha}
+          historial={historial}
+          isAvatarSaving={guardandoAvatar}
+          onSelectAvatar={handleSeleccionarEmoji}
+          onToggleAvatarSelector={() => setMostrarSelector(valor => !valor)}
+          perfil={perfil}
+          rangoActual={rangoActual}
+          rangos={rangos}
+          session={session}
+          showAvatarSelector={mostrarSelector}
+          sitiosVisitados={sitiosVisitados}
+          xpMaximo={XP_SIGUIENTE_NIVEL}
+          xpPorcentaje={calcularPorcentajeXP()}
+        />
 
         {/* MAIN CONTENT */}
         <main className="profile-main-content">
@@ -421,72 +290,11 @@ function PaginaPerfil() {
             </div>
           </div>
 
-          <div className="missions-grid">
-            {misiones.length === 0 && (
-              <p style={{ color: 'rgba(255,255,255,0.5)', gridColumn: '1 / -1' }}>No hay misiones disponibles.</p>
-            )}
-
-            {misiones.map((mision, i) => {
-              const completada = estaCompletada(mision.id);
-              if (tabActiva === 'pendientes' && completada) return null;
-
-              // Buscar el perfilMision correspondiente para leer el progreso real
-              const pm = perfilMisiones.find(p => p.mision?.id === mision.id);
-              const progresoReal = pm?.progreso ?? pm?.contadorVisitas ?? null;
-              const metaReal     = pm?.meta ?? mision.meta ?? null;
-
-              // Generar un gradiente o color estético basado en el index
-              const gradients = [
-                'linear-gradient(45deg, #2D2D2D, #4a5568)',
-                'linear-gradient(45deg, #2D2D2D, #2b6cb0)',
-                'linear-gradient(45deg, #1A202C, #E8621A)',
-                'linear-gradient(45deg, #2D2D2D, #805AD5)'
-              ];
-              const bgGradient = gradients[i % gradients.length];
-
-              // Porcentaje de la barra de progreso
-              const pct = completada
-                ? 100
-                : (progresoReal !== null && metaReal)
-                  ? Math.min(100, Math.round((progresoReal / metaReal) * 100))
-                  : 0;
-
-              // Texto del contador (ej: "3/5")
-              const contadorTexto = completada
-                ? (metaReal ? `${metaReal}/${metaReal}` : '1/1')
-                : (progresoReal !== null && metaReal)
-                  ? `${progresoReal}/${metaReal}`
-                  : '0/1';
-
-              return (
-                <div key={mision.id} className="mission-card">
-                  <div className="mission-img" style={{ background: bgGradient }}>
-                    <div className="xp-pill">+{mision.xpRecompensa} XP</div>
-                  </div>
-                  <div className="mission-content">
-                    <div className="mission-header">
-                      <h3 className="mission-title">{mision.titulo}</h3>
-                      <span className={`status-badge ${completada ? 'completed' : ''}`}>
-                        {completada ? 'COMPLETADO' : 'PENDIENTE'}
-                      </span>
-                    </div>
-                    <p className="mission-desc">
-                      {mision.descripcion || 'Completa esta misión para ganar recompensas.'}
-                    </p>
-                    <div className="mission-progress-container">
-                      <div className="mission-progress-header">
-                        <span>Progreso</span>
-                        <span>{contadorTexto}</span>
-                      </div>
-                      <div className="xp-barra">
-                        <div className="xp-relleno" style={{ width: `${pct}%` }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <MissionList
+            misiones={misiones}
+            perfilMisiones={perfilMisiones}
+            tabActiva={tabActiva}
+          />
         </main>
 
       </div>
