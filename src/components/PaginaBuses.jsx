@@ -35,6 +35,21 @@ function normalizarRuta(nombre) {
         .trim();
 }
 
+function resumirRuta(nombre, tipoHorario) {
+    const texto = (nombre || '').replace(/\s+/g, ' ').trim();
+    const codigo = texto.match(/ruta\s*\d+/i)?.[0]
+        .replace(/\s+/g, ' ')
+        .replace(/^ruta/i, 'Ruta') || 'Ruta';
+    const textoNormalizado = normalizarRuta(texto);
+
+    let servicio = tipoHorario === 'DIRECTO' ? 'Directo' : 'Con paradas';
+    if (textoNormalizado.includes('costa')) servicio = 'Por la costa';
+    else if (textoNormalizado.includes('directo')) servicio = 'Directo';
+    else if (textoNormalizado.includes('indirecto')) servicio = 'Con paradas';
+
+    return { codigo, servicio };
+}
+
 function obtenerEnlaceReservaExterno({ origen, destino, tipo }) {
     const paradasRuta = [normalizarRuta(origen), normalizarRuta(destino)];
     const regla = EXTERNAL_RESERVATION_RULES.find(({ tipo: tipoRegla, paradas }) =>
@@ -214,7 +229,7 @@ function PaginaBuses() {
     const [destinoSeleccionado, setDestinoSeleccionado] = useState(''); // destino elegido por el usuario
     const [tabDia, setTabDia] = useState('hoy');
     const [busesSaved, setBusesSaved] = useState(() => {
-        try { return JSON.parse(localStorage.getItem('busesGuardados') || '[]'); }
+        try { return JSON.parse(localStorage.getItem('busesGuardados') || '[]').map(String); }
         catch { return []; }
     });
 
@@ -235,9 +250,11 @@ function PaginaBuses() {
         localStorage.setItem('busesGuardados', JSON.stringify(busesSaved));
     }, [busesSaved]);
 
-    const toggleBusesSaved = (route) =>
+    const toggleBusesSaved = (routeId) =>
         setBusesSaved(prev =>
-            prev.includes(route) ? prev.filter(r => r !== route) : [...prev, route]
+            prev.includes(String(routeId))
+                ? prev.filter(id => id !== String(routeId))
+                : [...prev, String(routeId)]
         );
 
     // ── Fetch de rutas ──────────────────────────────────
@@ -248,8 +265,15 @@ function PaginaBuses() {
                 const flattenedHorarios = data.flatMap(ruta => {
                     const orig = ruta.lugarOrigen?.nombre || 'Origen Desconocido';
                     const dest = ruta.lugarDestino?.nombre || 'Destino Desconocido';
-                    return (ruta.horarios || []).map(h => ({
+                    return (ruta.horarios || []).map(h => {
+                        const resumen = resumirRuta(ruta.nombre, h.tipo);
+                        return {
                         id: h.id,
+                        rutaId: String(ruta.id),
+                        rutaNombre: ruta.nombre || '',
+                        rutaCodigo: resumen.codigo,
+                        servicioRuta: resumen.servicio,
+                        rutaCorta: `${orig} → ${dest}`,
                         horaSalida: h.horaSalida,
                         horaLlegada: h.horaLlegada,
                         origen: orig,
@@ -266,18 +290,26 @@ function PaginaBuses() {
                             || ruta.enlace_reserva
                             || obtenerEnlaceReservaExterno({ origen: orig, destino: dest, tipo: h.tipo }),
                         paradas: ruta.paradas || [orig, dest]
-                    }));
+                        };
+                    });
                 });
                 setHorarios(flattenedHorarios);
 
                 const destinosDisponibles = [...new Set(flattenedHorarios.map(h => h.destino).filter(Boolean))].sort();
                 const primerDestino = destinosDisponibles[0] || '';
-                const primeraRuta = flattenedHorarios
-                    .map(h => `${h.origen} → ${h.destino}`)
-                    .find(ruta => ruta.endsWith(`→ ${primerDestino}`)) || '';
+                const primeraRuta = flattenedHorarios.find(h => h.destino === primerDestino);
 
                 setDestinoSeleccionado(primerDestino);
-                setActiveRoute(primeraRuta);
+                setActiveRoute(primeraRuta?.rutaId || '');
+
+                // Los favoritos previos se guardaban como "origen → destino".
+                // Los migramos al identificador real de la ruta sin perderlos.
+                setBusesSaved(prev => [...new Set(prev
+                    .map(saved => {
+                        if (flattenedHorarios.some(h => h.rutaId === saved)) return saved;
+                        return flattenedHorarios.find(h => `${h.origen} → ${h.destino}` === saved)?.rutaId;
+                    })
+                    .filter(Boolean))]);
             })
             .catch(err => {
                 console.error('[PaginaBuses] Error cargando horarios:', err);
@@ -293,29 +325,33 @@ function PaginaBuses() {
         return [...set].sort();
     }, [horarios]);
 
-    // ── Orígenes disponibles para el destino elegido ──
-    const origenesPosibles = useMemo(() => {
-        if (!destinoSeleccionado) return [];
-        const set = new Set();
-        horarios
-            .filter(h => h.destino === destinoSeleccionado)
-            .forEach(h => set.add(h.origen));
-        return [...set].sort();
-    }, [horarios, destinoSeleccionado]);
-
-    // ── Rutas (origen → destino) para el destino elegido ──
+    // Cada opción conserva su ruta real: rutas directas e indirectas ya no se mezclan.
     const routes = useMemo(() => {
-        const set = new Set();
+        const routeMap = new Map();
         horarios.forEach(h => {
-            if (h.origen && h.destino) set.add(`${h.origen} → ${h.destino}`);
+            if (h.origen && h.destino && !routeMap.has(h.rutaId)) {
+                routeMap.set(h.rutaId, {
+                    id: h.rutaId,
+                    origen: h.origen,
+                    destino: h.destino,
+                    routeCode: h.rutaCodigo,
+                    serviceLabel: h.servicioRuta,
+                    shortLabel: `${h.origen} → ${h.destino}`,
+                });
+            }
         });
-        return [...set];
+        return [...routeMap.values()];
     }, [horarios]);
+
+    const activeRouteData = useMemo(
+        () => routes.find(route => route.id === activeRoute) || null,
+        [routes, activeRoute]
+    );
 
     const handleDestinoChange = (destino) => {
         setDestinoSeleccionado(destino);
-        const route = routes.find(r => r.endsWith(`→ ${destino}`));
-        if (route) setActiveRoute(route);
+        const route = routes.find(item => item.destino === destino);
+        if (route) setActiveRoute(route.id);
     };
 
     const getNextDeparture = (destino) => {
@@ -328,9 +364,8 @@ function PaginaBuses() {
     // ── Horarios filtrados por ruta activa ─────────────────
     const horariosFiltradosRuta = useMemo(() => {
         if (!activeRoute) return [];
-        const [origen, destino] = activeRoute.split(' → ');
         return horarios
-            .filter(h => h.origen === origen && h.destino === destino)
+            .filter(h => h.rutaId === activeRoute)
             .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
     }, [horarios, activeRoute]);
 
@@ -379,7 +414,7 @@ function PaginaBuses() {
 
                 {/* ─── ¿Para dónde vas? ─────────────────────────────── */}
                 <BusDestinationSelector
-                    activeRoute={activeRoute}
+                    activeRouteId={activeRoute}
                     destinoSeleccionado={destinoSeleccionado}
                     destinos={destinos}
                     formatHora={formatHora}
@@ -388,7 +423,6 @@ function PaginaBuses() {
                     onDestinoChange={handleDestinoChange}
                     onRouteChange={setActiveRoute}
                     onToggleSaved={toggleBusesSaved}
-                    origenesPosibles={origenesPosibles}
                     routes={routes}
                     savedRoutes={busesSaved}
                 />
@@ -409,7 +443,7 @@ function PaginaBuses() {
                         <p>
                             {loading
                                 ? 'Cargando horarios...'
-                                : `${tabDia === 'manana' ? 'Horario de mañana' : 'Tiempo real'} • ${activeRoute ? activeRoute.split(' → ')[0] : 'Origen'}`
+                                : `${tabDia === 'manana' ? 'Horario de mañana' : 'Tiempo real'} • ${activeRouteData?.shortLabel || 'Origen'}`
                             }
                         </p>
                     </div>
@@ -452,13 +486,14 @@ function PaginaBuses() {
                                     {/* Ruta visible como subtítulo arriba */}
                                     <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0 0 0.25rem', fontWeight: 600 }}>
                                         <MapPin size={13} style={{ marginRight: 4, color: '#E8621A' }} />
-                                        {siguiente.origen} → {siguiente.destino}
+                                        {siguiente.rutaCorta}
+                                        <span style={{ marginLeft: 8, color: '#E8621A' }}>{siguiente.rutaCodigo}</span>
                                     </p>
 
                                     <div className="card-time">{formatHora(siguiente.horaSalida)}</div>
                                     <div className="card-subtitle">
                                         {siguiente.operadorNombre}
-                                        {siguiente.tipo === 'DIRECTO' && <span style={{ marginLeft: 8, fontSize: '0.7rem', background: 'rgba(46,204,113,0.15)', color: '#2ECC71', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>DIRECTO</span>}
+                                        <span style={{ marginLeft: 8, fontSize: '0.7rem', background: 'rgba(46,204,113,0.15)', color: '#2ECC71', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>{siguiente.servicioRuta}</span>
                                     </div>
 
                                     <div className="boarding-info">
@@ -522,7 +557,7 @@ function PaginaBuses() {
                                 <h3 className="card-title mt-auto" style={{ fontSize: '1rem' }}>{proxima2.operadorNombre}</h3>
                                 <p className="card-subtitle mb-4" style={{ fontSize: '0.8rem' }}>
                                     <MapPin size={11} style={{ marginRight: 3 }} />
-                                    {proxima2.origen} → {proxima2.destino}
+                                    {proxima2.rutaCorta} · {proxima2.rutaCodigo}
                                 </p>
                                 <div className="progress-bar-container">
                                     <div
@@ -577,7 +612,7 @@ function PaginaBuses() {
                 {!loading && !error && horariosDelDia.length > 0 && (
                     <div className="buses-horarios-full">
                         <h3 className="buses-horarios-title">
-                            🚌 Todos los horarios — {activeRoute}
+                            🚌 Todos los horarios — {activeRouteData ? `${activeRouteData.shortLabel} · ${activeRouteData.routeCode}` : 'Ruta'}
                         </h3>
                         <div className="buses-horarios-list">
                             {horariosDelDia.map((h, idx) => {
@@ -595,18 +630,17 @@ function PaginaBuses() {
                                         {/* Info principal: ruta + operador */}
                                         <div className="buses-row-info">
                                             <span className="buses-row-nombre">
-                                                {h.origen} → {h.destino}
+                                                {h.rutaCorta}
                                             </span>
                                             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
                                                 <span style={{ fontSize: '0.72rem', color: '#666' }}>{h.operadorNombre}</span>
+                                                <span className="badge-gray buses-row-badge">{h.rutaCodigo}</span>
+                                                <span className="badge-green buses-row-badge">{h.servicioRuta}</span>
                                                 {h.esNocturno && (
                                                     <span className="badge-gray buses-row-badge">Nocturno</span>
                                                 )}
                                                 {esProximo && (
                                                     <span className="badge-orange buses-row-badge">Próximo</span>
-                                                )}
-                                                {h.tipo === 'DIRECTO' && (
-                                                    <span className="badge-green buses-row-badge">Directo</span>
                                                 )}
                                             </div>
                                         </div>
@@ -647,22 +681,23 @@ function PaginaBuses() {
                         </div>
                     ) : (
                         <div className="buses-saved-list">
-                            {busesSaved.map(r => {
-                                const [orig, dest] = r.split(' → ');
+                            {busesSaved.map(routeId => {
+                                const route = routes.find(item => item.id === routeId);
+                                if (!route) return null;
                                 const hsFiltrados = horarios
-                                    .filter(h => h.origen === orig && h.destino === dest && correEnDia(h, diaNum))
+                                    .filter(h => h.rutaId === route.id && correEnDia(h, diaNum))
                                     .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
                                 const proxima = hsFiltrados.find(h => minutosHasta(h.horaSalida) >= 0);
                                 return (
-                                    <div key={r} className="buses-saved-item" onClick={() => { setActiveRoute(r); setActiveTab('SCHEDULES'); }}>
-                                        <div className="buses-saved-route">{r}</div>
+                                    <div key={route.id} className="buses-saved-item" onClick={() => { setDestinoSeleccionado(route.destino); setActiveRoute(route.id); setActiveTab('SCHEDULES'); }}>
+                                        <div className="buses-saved-route">{route.shortLabel} · {route.routeCode} · {route.serviceLabel}</div>
                                         <div className="buses-saved-next">
                                             {proxima
                                                 ? <><span className="buses-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
                                                 : <span style={{ color: '#555', fontSize: '0.85rem' }}>Sin salidas hoy</span>
                                             }
                                         </div>
-                                        <button className="buses-saved-remove" onClick={e => { e.stopPropagation(); toggleBusesSaved(r); }}>✕</button>
+                                        <button className="buses-saved-remove" onClick={e => { e.stopPropagation(); toggleBusesSaved(route.id); }}>✕</button>
                                     </div>
                                 );
                             })}
