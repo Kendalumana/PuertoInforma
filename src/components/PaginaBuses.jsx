@@ -327,7 +327,7 @@ function PaginaBuses() {
 
     // Cada opción conserva su ruta real: rutas directas e indirectas ya no se mezclan.
     const routes = useMemo(() => {
-        const routeMap = new Map();
+        const routeMap = new globalThis.Map();
         horarios.forEach(h => {
             if (h.origen && h.destino && !routeMap.has(h.rutaId)) {
                 routeMap.set(h.rutaId, {
