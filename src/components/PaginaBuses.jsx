@@ -387,8 +387,10 @@ function PaginaBuses() {
                     loading={loading}
                     onDestinoChange={handleDestinoChange}
                     onRouteChange={setActiveRoute}
+                    onToggleSaved={toggleBusesSaved}
                     origenesPosibles={origenesPosibles}
                     routes={routes}
+                    savedRoutes={busesSaved}
                 />
 
                 {/* ── Tabs HOY / MAÑANA ── */}

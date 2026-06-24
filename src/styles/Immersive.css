@@ -551,7 +551,8 @@
   }
 
   .immersive-recenter-btn {
-    bottom: 1rem;
+    /* Keep this control above the mobile browser toolbar. */
+    bottom: calc(5rem + env(safe-area-inset-bottom));
     right: 1rem;
   }
 

@@ -49,9 +49,6 @@ function Navbar({ onOpenAbout }) {
 
                     {menuAbierto && (
                         <div className="dropdown-menu dropdown-menu-right">
-                            {!esMapa && (
-                                <Link to="/" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🗺️ Mapa Principal</Link>
-                            )}
                             <Link to="/perfil" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
                             <Link to="/buses" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🚌 Buses</Link>
                             <Link to="/noticias" className="dropdown-item" onClick={() => setMenuAbierto(false)}>📰 Noticias y Eventos</Link>

@@ -1,4 +1,4 @@
-import { Bus, MapPin } from 'lucide-react';
+import { Bus, Bookmark, BookmarkCheck, MapPin } from 'lucide-react';
 
 function BusDestinationSelector({
     activeRoute,
@@ -9,8 +9,10 @@ function BusDestinationSelector({
     loading,
     onDestinoChange,
     onRouteChange,
+    onToggleSaved,
     origenesPosibles,
     routes,
+    savedRoutes,
 }) {
     return (
         <div style={{ marginBottom: '1.5rem' }}>
@@ -66,6 +68,43 @@ function BusDestinationSelector({
                 </div>
             )}
 
+            {!loading && activeRoute && (
+                <div style={{ marginTop: '0.85rem' }}>
+                    <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+                        RUTA ELEGIDA
+                    </p>
+                    <button
+                        onClick={() => onRouteChange(activeRoute)}
+                        style={{
+                            background: 'rgba(232,98,26,0.16)',
+                            border: '1.5px solid #E8621A',
+                            borderRadius: 20,
+                            padding: '0.45rem 0.8rem',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            color: '#E8621A',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            maxWidth: '100%',
+                        }}
+                    >
+                        <Bus size={12} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeRoute}</span>
+                        <span
+                            aria-label={savedRoutes.includes(activeRoute) ? 'Quitar ruta de favoritos' : 'Guardar ruta en favoritos'}
+                            onClick={event => { event.stopPropagation(); onToggleSaved(activeRoute); }}
+                            style={{ display: 'inline-flex', alignItems: 'center' }}
+                        >
+                            {savedRoutes.includes(activeRoute)
+                                ? <BookmarkCheck size={15} />
+                                : <Bookmark size={15} />}
+                        </span>
+                    </button>
+                </div>
+            )}
+
             {!loading && origenesPosibles.length > 1 && (
                 <div style={{ marginTop: '0.85rem' }}>
                     <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
@@ -96,6 +135,15 @@ function BusDestinationSelector({
                                 >
                                     <Bus size={11} />
                                     {origen}
+                                    <span
+                                        aria-label={savedRoutes.includes(ruta) ? 'Quitar ruta de favoritos' : 'Guardar ruta en favoritos'}
+                                        onClick={event => { event.stopPropagation(); onToggleSaved(ruta); }}
+                                        style={{ marginLeft: '0.25rem', display: 'inline-flex', alignItems: 'center' }}
+                                    >
+                                        {savedRoutes.includes(ruta)
+                                            ? <BookmarkCheck size={14} />
+                                            : <Bookmark size={14} style={{ opacity: 0.65 }} />}
+                                    </span>
                                 </button>
                             );
                         })}

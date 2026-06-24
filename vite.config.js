@@ -8,23 +8,29 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'PuertoInforma - Tu Directorio Local',
         short_name: 'PuertoInforma',
+        lang: 'es',
         description: 'Directorio y plataforma informativa local de Puntarenas',
         theme_color: '#E8621A',
         background_color: '#1a1a1a',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
-            src: '/vite.svg',
+            src: '/icon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/vite.svg',
+            src: '/icon-512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

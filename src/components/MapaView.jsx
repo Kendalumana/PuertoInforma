@@ -14,6 +14,9 @@ import AboutModal from './AboutModal';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
+// Avoid duplicate native permission prompts while React StrictMode remounts.
+let locationPermissionRequested = false;
+
 function createUserIcon() {
     return L.divIcon({
         className: '',
@@ -57,6 +60,7 @@ function MapaView() {
     const [error, setError] = useState(null);
     const [previewPlace, setPreviewPlace] = useState(null);
     const [showAboutModal, setShowAboutModal] = useState(false);
+    // Kept false: the browser provides the only location-permission dialog.
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [favorites, setFavorites] = useState(() => {
         try {
@@ -152,8 +156,11 @@ function MapaView() {
         if (!map) return;
         
         let watchId;
+        let isWatching = false;
 
         const startWatching = (highAccuracy = true) => {
+            if (isWatching) return;
+            isWatching = true;
             watchId = navigator.geolocation.watchPosition(
                 async (pos) => {
                     const lat = pos.coords.latitude;
@@ -183,6 +190,7 @@ function MapaView() {
                         // Alta precisión falló (timeout, network error) → reintentar con baja precisión
                         console.warn("Alta precisión falló, usando baja precisión:", err.message);
                         if (watchId) navigator.geolocation.clearWatch(watchId);
+                        isWatching = false;
                         startWatching(false);
                     } else {
                         console.warn("No se pudo obtener la ubicación:", err);
@@ -195,12 +203,21 @@ function MapaView() {
             );
         };
 
+        const requestLocationPermission = () => {
+            if (locationPermissionRequested) return;
+            locationPermissionRequested = true;
+            navigator.geolocation.getCurrentPosition(
+                () => startWatching(),
+                () => setError("Permiso de ubicación denegado. Actívalo en tu navegador para ver tu posición.")
+            );
+        };
+
         if (navigator.geolocation && navigator.permissions) {
             navigator.permissions.query({ name: 'geolocation' }).then(result => {
                 if (result.state === 'granted') {
                     startWatching();
                 } else if (result.state === 'prompt') {
-                    setShowLocationModal(true);
+                    requestLocationPermission();
                 } else if (result.state === 'denied') {
                     setError("Permiso de ubicación denegado. Activalo en tu navegador para ver tu posición.");
                 }
@@ -208,7 +225,6 @@ function MapaView() {
                 result.onchange = () => {
                     if (result.state === 'granted') {
                         startWatching();
-                        setShowLocationModal(false);
                         setError(null);
                     } else if (result.state === 'denied') {
                         setError("Permiso de ubicación denegado. Activalo en tu navegador para ver tu posición.");
@@ -217,7 +233,7 @@ function MapaView() {
             });
         } else if (navigator.geolocation) {
             // Fallback sin permissions API
-            startWatching();
+            requestLocationPermission();
         }
 
         return () => {
