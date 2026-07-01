@@ -125,11 +125,13 @@ function Login() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 autoComplete="current-password"
+                                aria-describedby={error ? 'login-error-msg' : undefined}
                             />
                             <button
                                 type="button"
                                 className="input-icon-right-btn"
                                 onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -138,7 +140,12 @@ function Login() {
 
                     {/* Mensaje de error — solo se muestra si hay un error */}
                     {error && (
-                        <div className="login-error">
+                        <div
+                            id="login-error-msg"
+                            className="login-error"
+                            role="alert"
+                            aria-live="assertive"
+                        >
                             ⚠️ {error}
                         </div>
                     )}

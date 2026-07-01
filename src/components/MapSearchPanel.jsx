@@ -37,11 +37,17 @@ function MapSearchPanel({
                 <button className="immersive-search-btn">Explorar</button>
 
                 {searchQuery.trim().length > 0 && suggestions.length > 0 && (
-                    <div className="immersive-suggestions">
+                    <div className="immersive-suggestions" role="listbox" aria-label="Sugerencias de búsqueda">
                         {suggestions.map((suggestion, index) => (
-                            <div key={index} className="suggestion-item" onClick={() => onSuggestionClick(suggestion)}>
+                            <button
+                                key={index}
+                                role="option"
+                                className="suggestion-item"
+                                onClick={() => onSuggestionClick(suggestion)}
+                                aria-selected={searchQuery === suggestion}
+                            >
                                 🔍 {suggestion}
-                            </div>
+                            </button>
                         ))}
                     </div>
                 )}
@@ -118,13 +124,20 @@ function MapSearchPanel({
                             {filteredPlaces.length > 0 ? (
                                 <>
                                     {filteredPlaces.slice(0, resultadosVisibles).map(place => (
-                                        <div key={place.id} className="result-card" onClick={() => onPlaceClick(place)}>
-                                            <div
+                                        <button
+                                            key={place.id}
+                                            className="result-card"
+                                            onClick={() => onPlaceClick(place)}
+                                            aria-label={`Ver detalles de ${place.nombre}`}
+                                        >
+                                            <button
                                                 className={`favorite-icon ${favorites.includes(place.id) ? 'active' : ''}`}
-                                                onClick={(event) => onToggleFavorite(place.id, event)}
+                                                onClick={(event) => { event.stopPropagation(); onToggleFavorite(place.id, event); }}
+                                                aria-label={favorites.includes(place.id) ? `Quitar ${place.nombre} de favoritos` : `Agregar ${place.nombre} a favoritos`}
+                                                aria-pressed={favorites.includes(place.id)}
                                             >
                                                 {favorites.includes(place.id) ? '❤️' : '🤍'}
-                                            </div>
+                                            </button>
                                             {place.urlImagen ? (
                                                 <LazyImage src={place.urlImagen} alt={place.nombre} className="result-card-img" />
                                             ) : (
@@ -140,7 +153,7 @@ function MapSearchPanel({
                                                     <span className="result-points">🏆 {place.puntosQueOtorga} pts</span>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </button>
                                     ))}
                                     {filteredPlaces.length > resultadosVisibles && (
                                         <button className="results-ver-mas" onClick={onLoadMore}>

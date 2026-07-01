@@ -19,7 +19,11 @@ function Navbar({ onOpenAbout }) {
         <header className="navbar-header immersive-navbar">
             <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {!esMapa && (
-                    <button className="nav-back-map-btn" onClick={() => navigate('/')} title="Volver al Mapa">
+                    <button
+                        className="nav-back-map-btn"
+                        onClick={() => navigate('/')}
+                        aria-label="Volver al Mapa"
+                    >
                         <ArrowLeft size={20} />
                         <span className="hide-on-mobile">Mapa</span>
                     </button>
@@ -33,7 +37,13 @@ function Navbar({ onOpenAbout }) {
                     <Link to="/ferry" className="nav-link">Ferry</Link>
                     <Link to="/buses" className="nav-link">Buses</Link>
                     <Link to="/perfil" className="nav-link">Perfil</Link>
-                    <button className="nav-link btn-logout-nav" onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Cerrar Sesión</button>
+                    <button
+                        className="nav-link btn-logout-nav"
+                        onClick={handleLogout}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                        Cerrar Sesión
+                    </button>
                 </nav>
             </div>
 
@@ -43,19 +53,34 @@ function Navbar({ onOpenAbout }) {
                         className="icon-btn profile-btn"
                         onClick={() => setMenuAbierto(!menuAbierto)}
                         style={{ padding: '4px' }}
+                        aria-label={menuAbierto ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
+                        aria-expanded={menuAbierto}
+                        aria-haspopup="menu"
                     >
                         <MoreVertical size={24} color="#E8621A" />
                     </button>
 
                     {menuAbierto && (
-                        <div className="dropdown-menu dropdown-menu-right">
-                            <Link to="/perfil" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
-                            <Link to="/buses" className="dropdown-item" onClick={() => setMenuAbierto(false)}>🚌 Buses</Link>
-                            <Link to="/noticias" className="dropdown-item" onClick={() => setMenuAbierto(false)}>📰 Noticias y Eventos</Link>
-                            <Link to="/ferry" className="dropdown-item" onClick={() => setMenuAbierto(false)}>⛵ Ferry</Link>
-                            <button className="dropdown-item about-item" onClick={() => { setMenuAbierto(false); if (onOpenAbout) onOpenAbout(); }}>📰 Acerca de</button>
+                        <div className="dropdown-menu dropdown-menu-right" role="menu">
+                            <Link to="/perfil" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
+                            <Link to="/buses" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🚌 Buses</Link>
+                            <Link to="/noticias" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>📰 Noticias y Eventos</Link>
+                            <Link to="/ferry" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>⛵ Ferry</Link>
+                            <button
+                                className="dropdown-item about-item"
+                                role="menuitem"
+                                onClick={() => { setMenuAbierto(false); if (onOpenAbout) onOpenAbout(); }}
+                            >
+                                📰 Acerca de
+                            </button>
                             <div className="dropdown-divider"></div>
-                            <button className="dropdown-item dropdown-logout" onClick={() => { setMenuAbierto(false); handleLogout(); }}>🚪 Cerrar Sesión</button>
+                            <button
+                                className="dropdown-item dropdown-logout"
+                                role="menuitem"
+                                onClick={() => { setMenuAbierto(false); handleLogout(); }}
+                            >
+                                🚪 Cerrar Sesión
+                            </button>
                         </div>
                     )}
                 </div>

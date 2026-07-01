@@ -146,11 +146,13 @@ function Registro() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 autoComplete="new-password"
+                                aria-describedby={error ? 'registro-error-msg' : undefined}
                             />
                             <button 
                                 type="button" 
                                 className="input-icon-right-btn"
                                 onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -199,7 +201,12 @@ function Registro() {
 
                     {/* Error */}
                     {error && (
-                        <div className="login-error">
+                        <div
+                            id="registro-error-msg"
+                            className="login-error"
+                            role="alert"
+                            aria-live="assertive"
+                        >
                             ⚠️ {error}
                         </div>
                     )}
@@ -216,9 +223,13 @@ function Registro() {
 
                 <p className="login-registro">
                     ¿Ya tenés cuenta?{' '}
-                    <span className="login-link" onClick={() => navigate('/login')}>
+                    <button
+                        type="button"
+                        className="login-link"
+                        onClick={() => navigate('/login')}
+                    >
                         Iniciá sesión
-                    </span>
+                    </button>
                 </p>
 
                 {/* Fin de login-card */}

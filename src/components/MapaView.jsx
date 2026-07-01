@@ -357,7 +357,12 @@ function MapaView() {
             />
 
             {/* [MODIFICACIÓN] Botón de centrar mapa (ahora flotante abajo a la derecha) */}
-            <button className="immersive-recenter-btn" onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}>
+            <button
+                className="immersive-recenter-btn"
+                onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}
+                aria-label="Centrar mapa en Puntarenas"
+                title="Centrar mapa"
+            >
                 📍
             </button>
 

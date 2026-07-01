@@ -157,15 +157,21 @@
 
 /* Texto clickeable del link */
 .login-link {
-  color: #E8621A;                  /* --naranja */
+  color: var(--naranja-texto);     /* #FF8C42 — 4.7:1 sobre --gris-oscuro, pasa WCAG AA */
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s ease;
   text-decoration: none;
+  border-radius: 3px;
 }
 
 .login-link:hover {
-  opacity: 0.8;
+  opacity: 0.85;
+}
+
+.login-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ── SEPARADOR ───────────────────────────────────────────────
@@ -264,10 +270,18 @@
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: color 0.2s ease;
+  border-radius: 3px;
+  padding: 0 2px;
 }
 
 .login-forgot-link:hover {
-  color: #E8621A;
+  color: var(--naranja-texto);
+}
+
+.login-forgot-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  color: var(--naranja-texto);
 }
 
 /* Wrapper para inputs con ícono */
@@ -308,6 +322,27 @@
 
 .input-icon-right-btn:hover {
   color: #FFFFFF;
+}
+
+.input-icon-right-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
+}
+
+/* ── Focus visible global para inputs del login ─────────────
+   Garantiza que la navegación por teclado sea siempre visible.
+   ============================================================ */
+.login-input:focus-visible {
+  outline: none;
+  border-color: var(--naranja);
+  box-shadow: var(--focus-ring);
+}
+
+.login-btn:focus-visible,
+.login-btn-google:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ── LAYOUT DE REGISTRO A DOS COLUMNAS ───────────────────────

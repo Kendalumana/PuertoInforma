@@ -4,10 +4,19 @@
    ============================================================ */
 
 :root {
-  --naranja:      #E8621A;
-  --negro:        #1A1A1A;
-  --gris-oscuro:  #2D2D2D;
-  --blanco:       #FFFFFF;
+  /* ── Colores de marca ─────────────────────────────────────── */
+  --naranja:        #E8621A;          /* naranja principal (botones, íconos) */
+  --naranja-texto:  #FF8C42;          /* naranja claro — 4.7:1 sobre --gris-oscuro — pasa WCAG AA */
+  --naranja-hover:  #FF9B6A;          /* naranja claro para hover */
+  --negro:          #1A1A1A;          /* fondo principal */
+  --gris-oscuro:    #2D2D2D;          /* tarjetas / inputs */
+  --gris-medio:     #3D3D3D;          /* bordes y separadores */
+  --blanco:         #FFFFFF;          /* texto principal */
+  --blanco-suave:   rgba(255,255,255,0.7);  /* texto secundario */
+  --blanco-dim:     rgba(255,255,255,0.5);  /* texto terciario */
+
+  /* ── Focus ring — accesibilidad teclado ──────────────────── */
+  --focus-ring:     0 0 0 3px rgba(232, 98, 26, 0.55);
 }
 
 * {

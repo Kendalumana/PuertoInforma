@@ -104,11 +104,21 @@ function PlaceModal({ place, onClose }) {
         <>
             {/* ── Visor de imagen a pantalla completa ── */}
             {fullscreenImg && (
-                <div className="fullscreen-img-overlay" onClick={() => setFullscreenImg(null)}>
-                    <button className="fullscreen-close-btn" onClick={() => setFullscreenImg(null)}>
+                <div
+                    className="fullscreen-img-overlay"
+                    onClick={() => setFullscreenImg(null)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Imagen ampliada de ${place.nombre}`}
+                >
+                    <button
+                        className="fullscreen-close-btn"
+                        onClick={() => setFullscreenImg(null)}
+                        aria-label="Cerrar imagen"
+                    >
                         <ArrowLeft size={24} />
                     </button>
-                    <img src={fullscreenImg} alt={place.nombre} className="fullscreen-img" />
+                    <img src={fullscreenImg} alt={`${place.nombre} — vista ampliada`} className="fullscreen-img" />
                 </div>
             )}
 
@@ -138,34 +148,43 @@ function PlaceModal({ place, onClose }) {
                             {(place.urlImagen || place.urlImagen2 || place.urlImagen3) && (
                                 <div className="gallery-grid">
                                     {place.urlImagen && (
-                                        <div
+                                        <button
                                             className="gallery-main"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setFullscreenImg(place.urlImagen);
                                             }}
+                                            aria-label={`Ampliar foto principal de ${place.nombre}`}
                                         >
                                             <img src={place.urlImagen} alt={place.nombre} draggable="false" />
                                             <span className="gallery-tap-hint">Tocar para ampliar</span>
-                                        </div>
+                                        </button>
                                     )}
                                     {place.urlImagen2 && (
-                                        <div className="gallery-thumb" onClick={(e) => {
-                                            e.stopPropagation();
-                                            setFullscreenImg(place.urlImagen2);
-                                        }}>
+                                        <button
+                                            className="gallery-thumb"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFullscreenImg(place.urlImagen2);
+                                            }}
+                                            aria-label={`Ampliar segunda foto de ${place.nombre}`}
+                                        >
                                             <img src={place.urlImagen2} alt={`${place.nombre} 2`} draggable="false" />
                                             <span className="gallery-tap-hint">Tocar para ampliar</span>
-                                        </div>
+                                        </button>
                                     )}
                                     {place.urlImagen3 && (
-                                        <div className="gallery-thumb" onClick={(e) => {
-                                            e.stopPropagation();
-                                            setFullscreenImg(place.urlImagen3);
-                                        }}>
+                                        <button
+                                            className="gallery-thumb"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFullscreenImg(place.urlImagen3);
+                                            }}
+                                            aria-label={`Ampliar tercera foto de ${place.nombre}`}
+                                        >
                                             <img src={place.urlImagen3} alt={`${place.nombre} 3`} draggable="false" />
                                             <span className="gallery-tap-hint">Tocar para ampliar</span>
-                                        </div>
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -209,10 +228,14 @@ function PlaceModal({ place, onClose }) {
                                     </div>
                                 )}
                                 {place.telefono && (
-                                    <div className="info-item clickable" onClick={() => callPhone(place.telefono)}>
+                                    <button
+                                        className="info-item clickable"
+                                        onClick={() => callPhone(place.telefono)}
+                                        aria-label={`Llamar al ${place.telefono}`}
+                                    >
                                         <Phone size={16} color="#E8621A" />
                                         <span>{place.telefono}</span>
-                                    </div>
+                                    </button>
                                 )}
                             </div>
                         </div>
