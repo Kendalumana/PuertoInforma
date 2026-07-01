@@ -127,6 +127,7 @@ function PaginaFerry() {
     const [horarios, setHorarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [reintento, setReintento] = useState(0);
 
     // Reloj vivo — recalcula "próxima salida" cada minuto
     const [, setAhora] = useState(new Date());
@@ -147,6 +148,8 @@ function PaginaFerry() {
 
     // ── Fetch de horarios ──────────────────────────────────
     useEffect(() => {
+        setLoading(true);
+        setError(null);
         axiosPrivate.get('/ferry')
             .then(res => {
                 const data = Array.isArray(res.data) ? res.data : [];
@@ -164,10 +167,14 @@ function PaginaFerry() {
             })
             .catch(err => {
                 console.error('[PaginaFerry] Error cargando horarios:', err);
-                setError('No se pudieron cargar los horarios. Intenta de nuevo.');
+                const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+                setError(esTimeout
+                    ? 'El servidor tardó en responder. Puede estar iniciando, reintentá en unos segundos.'
+                    : 'No se pudieron cargar los horarios. Intenta de nuevo.'
+                );
             })
             .finally(() => setLoading(false));
-    }, []);
+    }, [reintento]);
 
     // ── Rutas únicas disponibles (dinámicas desde la BD) ──
     const routes = useMemo(() => {
@@ -276,9 +283,9 @@ function PaginaFerry() {
                         <button
                             className="ferry-btn-outline"
                             style={{ width: 'auto', marginTop: '1rem' }}
-                            onClick={() => window.location.reload()}
+                            onClick={() => setReintento(r => r + 1)}
                         >
-                            Reintentar
+                            🔄 Reintentar
                         </button>
                     </div>
                 )}

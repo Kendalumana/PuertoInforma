@@ -18,12 +18,11 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
-// ✅ Función para guardar avatar (con usuarioId explícito, usando fetch)
+// Función para guardar avatar (console.log de producción eliminado)
 async function guardarAvatar(tipo, valor, usuarioId) {
   try {
-    const url = '/perfil/avatar'; // axiosPrivate maneja el baseURL
-    const response = await axiosPrivate.put(url, { tipo, valor, usuarioId });
-    console.log('✅ Avatar guardado correctamente', response.data);
+    const response = await axiosPrivate.put('/perfil/avatar', { tipo, valor, usuarioId });
+    return response.data;
   } catch (error) {
     console.error('❌ Error al guardar avatar:', error);
     throw new Error('No se pudo guardar el avatar');
@@ -51,12 +50,11 @@ function PaginaPerfil() {
   const [error, setError] = useState(null);
 
   const [session, setSession] = useState(null);
-  const [userId, setUserId] = useState(null); // guardamos el userId para usarlo en avatares
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     async function cargarTodo() {
       try {
-        // Intentar refrescar la sesión de Supabase primero (por si el token está por vencer)
         const { data: { session: s } } = await supabase.auth.getSession();
         const localToken = localStorage.getItem('token');
 
@@ -79,14 +77,13 @@ function PaginaPerfil() {
           return;
         }
 
-        // Guardar el userId en state para que los handlers de avatar lo usen
         setUserId(resolvedUserId);
-        const userId = resolvedUserId;
+        const uid = resolvedUserId;
 
-        // ── Cargar perfil (puede fallar si el usuario aún no tiene perfil) ──
+        // ── Cargar perfil ──
         let perfilId = null;
         try {
-          const resPerfil = await axiosPrivate.get(`/perfil/usuario/${userId}`);
+          const resPerfil = await axiosPrivate.get(`/perfil/usuario/${uid}`);
           const datosPerfil = resPerfil.data;
           setPerfil(datosPerfil);
           perfilId = datosPerfil.id;
@@ -105,20 +102,18 @@ function PaginaPerfil() {
           }
         } catch (perfilErr) {
           if (perfilErr.response && perfilErr.response.status === 404) {
-            // Silenciado: es normal si el usuario aún no tiene perfil
+            // Normal: usuario sin perfil creado aún
           } else {
             console.warn('⚠️ No se pudo cargar perfil:', perfilErr.message);
           }
-          // Si no existe perfil en el backend, se queda como null para no mostrar datos falsos
         }
 
-        // ── Cargar rangos y misiones (independientes del perfil) ──
+        // ── Cargar rangos y misiones ──
         const promesas = [
           axiosPrivate.get('/mision').catch(() => ({ data: [] })),
           axiosPrivate.get('/rango').catch(() => ({ data: [] })),
         ];
 
-        // Si tenemos perfilId, cargar datos asociados al perfil
         if (perfilId) {
           promesas.push(
             axiosPrivate.get(`/mision/perfil/${perfilId}`).catch(() => ({ data: [] })),
@@ -165,7 +160,6 @@ function PaginaPerfil() {
     setMostrarSelector(false);
     setGuardandoAvatar(true);
     setAvatarError(null);
-    // Usar userId del state (funciona para login de Supabase Y login clásico)
     const resolvedId = userId || session?.user?.id;
     if (!resolvedId) {
       setAvatarError('No hay sesión activa. Iniciá sesión nuevamente.');
@@ -191,7 +185,6 @@ function PaginaPerfil() {
   if (cargando) return (
     <div className="profile-page">
       <div className="profile-layout">
-        {/* Skeleton sidebar */}
         <aside className="profile-sidebar">
           <div className="skeleton-card">
             <div className="skeleton-avatar"></div>
@@ -204,7 +197,6 @@ function PaginaPerfil() {
             <div className="skeleton-bar"></div>
           </div>
         </aside>
-        {/* Skeleton misiones */}
         <main className="profile-main-content">
           <div className="skeleton-line wide" style={{ height: '2rem', marginBottom: '1.5rem', maxWidth: '250px' }}></div>
           <div className="missions-grid">
@@ -239,12 +231,10 @@ function PaginaPerfil() {
 
   return (
     <div className="profile-page">
-      {/* NAVBAR SUPERIOR */}
       <Navbar />
 
       <div className="profile-layout">
 
-        {/* SIDEBAR */}
         <ProfileSidebar
           avatarError={avatarError}
           avatarImage={avatarImagen}
@@ -267,7 +257,6 @@ function PaginaPerfil() {
           xpPorcentaje={calcularPorcentajeXP()}
         />
 
-        {/* MAIN CONTENT */}
         <main className="profile-main-content">
           <div className="main-header">
             <div className="main-title">

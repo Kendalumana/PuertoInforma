@@ -95,19 +95,28 @@ function PaginaNoticias() {
     const [busqueda, setBusqueda] = useState('');
     const [noticias, setNoticias] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [reintento, setReintento] = useState(0);
 
     useEffect(() => {
+        setLoading(true);
+        setError(null);
         axiosPrivate.get('/noticia')
             .then(res => {
                 setNoticias(res.data);
             })
             .catch(err => {
                 console.error("Error cargando noticias:", err);
+                const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+                setError(esTimeout
+                    ? 'El servidor tardó en responder. El servicio puede estar iniciando, reintentá en unos segundos.'
+                    : 'No se pudieron cargar las noticias. Reintentá más tarde.'
+                );
             })
             .finally(() => {
                 setLoading(false);
             });
-    }, []);
+    }, [reintento]);
 
     const destacada = noticias.find(n => n.destacado);
 
@@ -163,8 +172,33 @@ function PaginaNoticias() {
 
             <div className="noticias-body">
 
+                {/* ── Estado de error con reintento ── */}
+                {!loading && error && (
+                    <div style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        justifyContent: 'center', gap: '1rem', padding: '3rem 1rem',
+                        textAlign: 'center'
+                    }}>
+                        <span style={{ fontSize: '3rem' }}>📡</span>
+                        <p style={{ color: '#ef9090', maxWidth: '320px', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                            {error}
+                        </p>
+                        <button
+                            onClick={() => setReintento(r => r + 1)}
+                            style={{
+                                background: 'linear-gradient(to right, #FF9B6A, #E85D04)',
+                                color: '#fff', border: 'none', padding: '0.7rem 2rem',
+                                borderRadius: '12px', fontWeight: 700, cursor: 'pointer',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            🔄 Reintentar
+                        </button>
+                    </div>
+                )}
+
                 {/* Noticia destacada */}
-                {loading ? (
+                {!error && (loading ? (
                     <div className="noticia-card skeleton-noticia hero-skeleton">
                         <div className="nc-sk-icono large" />
                         <div className="nc-body" style={{ gap: '0.7rem' }}>
@@ -176,24 +210,25 @@ function PaginaNoticias() {
                     </div>
                 ) : destacada && (categoriaActiva === 'Todas' || categoriaActiva === destacada.categoria) && !busqueda ? (
                     <NoticiasHeroCard noticia={destacada} />
-                ) : null}
+                ) : null)}
 
                 {/* Lista de noticias */}
-                <div className="noticias-lista">
-                    {loading ? (
-                        [1, 2, 3, 4].map(i => <NoticiaSkeleton key={i} />)
-                    ) : noticiasFiltradas.length === 0 ? (
-                        <div className="noticias-empty">
-                            <span style={{ fontSize: '2.5rem' }}>🔍</span>
-                            <p>No se encontraron noticias{categoriaActiva !== 'Todas' ? ` en "${categoriaActiva}"` : ''}.</p>
-                        </div>
-                    ) : (
-                        noticiasFiltradas.map(n => (
-                            <NoticiaCard key={n.id} noticia={n} />
-                        ))
-                    )}
-                </div>
-
+                {!error && (
+                    <div className="noticias-lista">
+                        {loading ? (
+                            [1, 2, 3, 4].map(i => <NoticiaSkeleton key={i} />)
+                        ) : noticiasFiltradas.length === 0 ? (
+                            <div className="noticias-empty">
+                                <span style={{ fontSize: '2.5rem' }}>🔍</span>
+                                <p>No se encontraron noticias{categoriaActiva !== 'Todas' ? ` en "${categoriaActiva}"` : ''}.</p>
+                            </div>
+                        ) : (
+                            noticiasFiltradas.map(n => (
+                                <NoticiaCard key={n.id} noticia={n} />
+                            ))
+                        )}
+                    </div>
+                )}
 
             </div>
         </div>

@@ -237,6 +237,7 @@ function PaginaBuses() {
     const [horarios, setHorarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [reintento, setReintento] = useState(0);
 
     // Reloj vivo
     const [ahora, setAhora] = useState(new Date());
@@ -259,6 +260,8 @@ function PaginaBuses() {
 
     // ── Fetch de rutas ──────────────────────────────────
     useEffect(() => {
+        setLoading(true);
+        setError(null);
         axiosPrivate.get('/ruta-transporte')
             .then(res => {
                 const data = Array.isArray(res.data) ? res.data : [];
@@ -273,7 +276,7 @@ function PaginaBuses() {
                         rutaNombre: ruta.nombre || '',
                         rutaCodigo: resumen.codigo,
                         servicioRuta: resumen.servicio,
-                        rutaCorta: `${orig} → ${dest}`,
+                        rutaCorta: `${orig} \u2192 ${dest}`,
                         horaSalida: h.horaSalida,
                         horaLlegada: h.horaLlegada,
                         origen: orig,
@@ -302,21 +305,23 @@ function PaginaBuses() {
                 setDestinoSeleccionado(primerDestino);
                 setActiveRoute(primeraRuta?.rutaId || '');
 
-                // Los favoritos previos se guardaban como "origen → destino".
-                // Los migramos al identificador real de la ruta sin perderlos.
                 setBusesSaved(prev => [...new Set(prev
                     .map(saved => {
                         if (flattenedHorarios.some(h => h.rutaId === saved)) return saved;
-                        return flattenedHorarios.find(h => `${h.origen} → ${h.destino}` === saved)?.rutaId;
+                        return flattenedHorarios.find(h => `${h.origen} \u2192 ${h.destino}` === saved)?.rutaId;
                     })
                     .filter(Boolean))]);
             })
             .catch(err => {
                 console.error('[PaginaBuses] Error cargando horarios:', err);
-                setError('No se pudieron cargar los horarios. Intenta de nuevo.');
+                const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+                setError(esTimeout
+                    ? 'El servidor tard\u00f3 en responder. Puede estar iniciando, reintent\u00e1 en unos segundos.'
+                    : 'No se pudieron cargar los horarios. Intenta de nuevo.'
+                );
             })
             .finally(() => setLoading(false));
-    }, []);
+    }, [reintento]);
 
     // ── Destinos únicos disponibles ──
     const destinos = useMemo(() => {
@@ -463,9 +468,9 @@ function PaginaBuses() {
                         <button
                             className="buses-btn-outline"
                             style={{ width: 'auto', marginTop: '1rem' }}
-                            onClick={() => window.location.reload()}
+                            onClick={() => setReintento(r => r + 1)}
                         >
-                            Reintentar
+                            🔄 Reintentar
                         </button>
                     </div>
                 )}
