@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search, Clock,
     Info, Compass, Bus, Ticket, Bookmark, BookmarkCheck, MapPin,
-    Bell, User, Map
+    Bell, User, Map, Navigation
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Transporte.css';
@@ -258,13 +258,146 @@ function RouteStopsTrack({ paradas }) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// COMBOBOX DE PARADA INTERMEDIA — dropdown real con todas las paradas del JSON
+// ═══════════════════════════════════════════════════════════
+function StopCombobox({ paradasUnicas, paradaBuscada, onParadaChange }) {
+    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState('');
+    const wrapperRef = useRef(null);
+    const searchRef = useRef(null);
+
+    // Cierra al hacer clic fuera
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                setOpen(false);
+                setQuery('');
+            }
+        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
+    // Al abrir, enfoca el buscador interno
+    useEffect(() => {
+        if (open && searchRef.current) searchRef.current.focus();
+    }, [open]);
+
+    // Paradas filtradas por lo que el usuario escribe DENTRO del dropdown
+    const paradasFiltradas = useMemo(() => {
+        if (!query.trim()) return paradasUnicas;
+        const q = query.trim().toLowerCase();
+        return paradasUnicas.filter(p => p.toLowerCase().includes(q));
+    }, [query, paradasUnicas]);
+
+    const seleccionar = (parada) => {
+        onParadaChange(parada);
+        setOpen(false);
+        setQuery('');
+    };
+
+    const limpiar = (e) => {
+        e.stopPropagation();
+        onParadaChange('');
+        setQuery('');
+        setOpen(false);
+    };
+
+    const isActive = !!paradaBuscada;
+
+    return (
+        <div className={`stop-combobox-wrapper${isActive ? ' is-active' : ''}`} ref={wrapperRef}>
+            {/* ── Botón principal del combobox ── */}
+            <button
+                id="stop-combobox-trigger"
+                type="button"
+                className="stop-combobox-trigger"
+                onClick={() => setOpen(o => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-label="Seleccionar parada intermedia"
+            >
+                <Navigation size={16} className="stop-combobox-icon" />
+                <span className={`stop-combobox-label${isActive ? ' selected' : ''}`}>
+                    {paradaBuscada || '¿A dónde vas?'}
+                </span>
+                {isActive ? (
+                    <button
+                        className="stop-combobox-clear"
+                        onClick={limpiar}
+                        aria-label="Limpiar selección"
+                        type="button"
+                    >✕</button>
+                ) : (
+                    <span className={`stop-combobox-chevron${open ? ' open' : ''}`}>▾</span>
+                )}
+            </button>
+
+            {/* ── Panel desplegable con TODAS las paradas del JSON ── */}
+            {open && (
+                <div className="stop-combobox-panel" role="listbox" aria-label="Paradas disponibles">
+                    {/* Buscador interno para filtrar dentro del dropdown */}
+                    <div className="stop-combobox-search-row">
+                        <Search size={13} className="stop-panel-search-icon" />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            className="stop-panel-search-input"
+                            placeholder="Filtrar paradas..."
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <ul className="stop-combobox-list">
+                        {paradasFiltradas.length === 0 ? (
+                            <li className="stop-combobox-empty">Sin resultados</li>
+                        ) : (
+                            paradasFiltradas.map(p => (
+                                <li
+                                    key={p}
+                                    role="option"
+                                    aria-selected={p === paradaBuscada}
+                                    className={`stop-combobox-option${p === paradaBuscada ? ' selected' : ''}`}
+                                    onMouseDown={() => seleccionar(p)}
+                                >
+                                    <MapPin size={12} className="stop-option-icon" />
+                                    <span>{p}</span>
+                                    {p === paradaBuscada && <span className="stop-option-check">✓</span>}
+                                </li>
+                            ))
+                        )}
+                    </ul>
+
+                    <div className="stop-combobox-count">
+                        {paradasFiltradas.length} parada{paradasFiltradas.length !== 1 ? 's' : ''} disponible{paradasFiltradas.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+            )}
+
+            {/* Badge "Filtrando por:" debajo del trigger */}
+            {isActive && !open && (
+                <div className="stop-combobox-badge-row">
+                    <span className="stop-combobox-active-badge">
+                        <MapPin size={11} /> Filtrando por: <strong>{paradaBuscada}</strong>
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════
+
 function PaginaBuses() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('SCHEDULES');
     const [activeRoute, setActiveRoute] = useState('');
     const [destinoSeleccionado, setDestinoSeleccionado] = useState(''); // destino elegido por el usuario
+    const [paradaBuscada, setParadaBuscada] = useState(''); // parada intermedia buscada
+    const [filtroServicio, setFiltroServicio] = useState('TODOS'); // 'TODOS', 'DIRECTO', 'REGULAR'
     const [tabDia, setTabDia] = useState('hoy');
     const [busesSaved, setBusesSaved] = useState(() => {
         try { return JSON.parse(localStorage.getItem('busesGuardados') || '[]').map(String); }
@@ -368,11 +501,52 @@ function PaginaBuses() {
         return [...set].sort();
     }, [horarios]);
 
+    // ── Paradas únicas de TODAS las rutas (para el combobox) ──
+    const paradasUnicas = useMemo(() => {
+        const set = new Set();
+        horarios.forEach(h => {
+            let paradas = h.paradas;
+            if (typeof paradas === 'string') {
+                try { paradas = JSON.parse(paradas); } catch { paradas = [paradas]; }
+            }
+            if (Array.isArray(paradas)) {
+                paradas.forEach(p => { if (p && typeof p === 'string') set.add(p.trim()); });
+            }
+        });
+        return [...set].sort((a, b) => a.localeCompare(b, 'es'));
+    }, [horarios]);
+
+    // ── IDs de rutas que pasan por la parada buscada ──
+    const rutasConParada = useMemo(() => {
+        if (!paradaBuscada) return null; // null = sin filtro activo
+        const q = paradaBuscada.trim().toLowerCase();
+        const ids = new Set();
+        horarios.forEach(h => {
+            // EXCEPCIÓN SOLICITADA:
+            // Si el usuario está buscando una parada intermedia específica (ej. Barranca),
+            // excluimos los buses DIRECTOS del filtro.
+            // ¿Por qué?: Porque los buses directos no recogen ni bajan pasajeros a medio camino,
+            // por lo tanto, no sirve mostrarle un bus directo a alguien que espera en Barranca.
+            if (h.tipo === 'DIRECTO') return;
+
+            let paradas = h.paradas;
+            if (typeof paradas === 'string') {
+                try { paradas = JSON.parse(paradas); } catch { paradas = [paradas]; }
+            }
+            if (Array.isArray(paradas) && paradas.some(p => p?.toLowerCase().includes(q))) {
+                ids.add(h.rutaId);
+            }
+        });
+        return ids;
+    }, [horarios, paradaBuscada]);
+
     // Cada opción conserva su ruta real: rutas directas e indirectas ya no se mezclan.
     const routes = useMemo(() => {
         const routeMap = new globalThis.Map();
         horarios.forEach(h => {
             if (h.origen && h.destino && !routeMap.has(h.rutaId)) {
+                // Si hay filtro por parada, solo incluimos rutas que pasen por ella
+                if (rutasConParada && !rutasConParada.has(h.rutaId)) return;
                 routeMap.set(h.rutaId, {
                     id: h.rutaId,
                     origen: h.origen,
@@ -384,7 +558,7 @@ function PaginaBuses() {
             }
         });
         return [...routeMap.values()];
-    }, [horarios]);
+    }, [horarios, rutasConParada]);
 
     const activeRouteData = useMemo(
         () => routes.find(route => route.id === activeRoute) || null,
@@ -395,6 +569,30 @@ function PaginaBuses() {
         setDestinoSeleccionado(destino);
         const route = routes.find(item => item.destino === destino);
         if (route) setActiveRoute(route.id);
+    };
+
+    // Cuando se selecciona una parada, auto-seleccionamos la primera ruta que pase por ella
+    const handleParadaChange = (parada) => {
+        setParadaBuscada(parada);
+        if (parada) {
+            // Si busca una parada intermedia, el filtro "Directo" pierde sentido. Forzamos a "Con Paradas" (REGULAR)
+            if (filtroServicio === 'DIRECTO') setFiltroServicio('REGULAR');
+
+            // Buscar la primera ruta que pase por esta parada
+            const q = parada.trim().toLowerCase();
+            const primerHorario = horarios.find(h => {
+                if (h.tipo === 'DIRECTO') return false; // Los directos no cuentan para paradas intermedias
+                let paradas = h.paradas;
+                if (typeof paradas === 'string') {
+                    try { paradas = JSON.parse(paradas); } catch { paradas = [paradas]; }
+                }
+                return Array.isArray(paradas) && paradas.some(p => p?.toLowerCase().includes(q));
+            });
+            if (primerHorario) {
+                setDestinoSeleccionado(primerHorario.destino);
+                setActiveRoute(primerHorario.rutaId);
+            }
+        }
     };
 
     const getNextDeparture = (destino) => {
@@ -409,8 +607,20 @@ function PaginaBuses() {
         if (!activeRoute) return [];
         return horarios
             .filter(h => h.rutaId === activeRoute)
+            .filter(h => {
+                // Filtro visual (Pestañota "Todos / Directo / Con Paradas")
+                if (filtroServicio === 'DIRECTO' && h.tipo !== 'DIRECTO') return false;
+                if (filtroServicio === 'REGULAR' && h.tipo === 'DIRECTO') return false;
+
+                // Doble validación de la excepción solicitada:
+                // Si hay un filtro de parada buscada, NUNCA mostrar buses directos,
+                // ya que no pueden abordarse en esa parada intermedia.
+                if (paradaBuscada && h.tipo === 'DIRECTO') return false;
+
+                return true;
+            })
             .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
-    }, [horarios, activeRoute]);
+    }, [horarios, activeRoute, filtroServicio, paradaBuscada]);
 
     // Paradas de la ruta activa para el mapa de puntitos
     const paradasRutaActiva = horariosFiltradosRuta.length > 0 ? horariosFiltradosRuta[0].paradas : [];
@@ -458,6 +668,15 @@ function PaginaBuses() {
                     Horarios de <span className="text-orange">Buses</span>
                 </h1>
 
+                {/* ─── Combobox de parada intermedia ──────────────────── */}
+                {!loading && paradasUnicas.length > 0 && (
+                    <StopCombobox
+                        paradasUnicas={paradasUnicas}
+                        paradaBuscada={paradaBuscada}
+                        onParadaChange={handleParadaChange}
+                    />
+                )}
+
                 {/* ─── ¿Para dónde vas? ─────────────────────────────── */}
                 <BusDestinationSelector
                     activeRouteId={activeRoute}
@@ -473,13 +692,32 @@ function PaginaBuses() {
                     savedRoutes={busesSaved}
                 />
 
-                {/* ── Tabs HOY / MAÑANA ── */}
+                {/* ── Tabs HOY / MAÑANA y Pestañota de Servicio ── */}
                 {!loading && !error && (
-                    <TransportDayTabs
-                        className="transporte-dia-tabs"
-                        day={tabDia}
-                        onDayChange={setTabDia}
-                    />
+                    <div className="transporte-filtros-row">
+                        <TransportDayTabs
+                            className="transporte-dia-tabs"
+                            day={tabDia}
+                            onDayChange={setTabDia}
+                            style={{ marginBottom: 0 }}
+                        />
+
+                        {/* Pestañota UI de tipo de servicio solicitada */}
+                        <div className="transporte-servicio-tabs">
+                            <button 
+                                className={`transporte-servicio-tab ${filtroServicio === 'TODOS' ? 'active' : ''}`}
+                                onClick={() => setFiltroServicio('TODOS')}
+                            >Todos</button>
+                            <button 
+                                className={`transporte-servicio-tab ${filtroServicio === 'DIRECTO' ? 'active' : ''}`}
+                                onClick={() => { setFiltroServicio('DIRECTO'); setParadaBuscada(''); }} // Limpiar parada si elige Directo
+                            >Directo</button>
+                            <button 
+                                className={`transporte-servicio-tab ${filtroServicio === 'REGULAR' ? 'active' : ''}`}
+                                onClick={() => setFiltroServicio('REGULAR')}
+                            >Con Paradas</button>
+                        </div>
+                    </div>
                 )}
 
                 {/* ── Mapa de Puntitos de la ruta actual ── */}
@@ -534,6 +772,13 @@ function PaginaBuses() {
 
                             {siguiente ? (
                                 <>
+                                    {/* Badge de parada filtrada */}
+                                    {paradaBuscada && (
+                                        <div className="stop-filter-banner">
+                                            <Navigation size={13} />
+                                            Pasa por <strong>{paradaBuscada}</strong>
+                                        </div>
+                                    )}
                                     {/* Ruta visible como subtítulo arriba */}
                                     <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0 0 0.25rem', fontWeight: 600 }}>
                                         <MapPin size={13} style={{ marginRight: 4, color: '#E8621A' }} />

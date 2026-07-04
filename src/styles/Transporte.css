@@ -1009,3 +1009,290 @@
     font-weight: 700;
 }
 
+/* ============================================================
+   Stop Combobox — "¿A dónde vas?" (dropdown real con todas las paradas del JSON)
+   ============================================================ */
+.stop-combobox-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+    max-width: 440px;
+    z-index: 50;
+}
+
+/* ── Botón trigger (aspecto de pill selector) ── */
+.stop-combobox-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 1.2rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    text-align: left;
+}
+.stop-combobox-trigger:hover {
+    border-color: rgba(232, 98, 26, 0.35);
+}
+.stop-combobox-wrapper.is-active .stop-combobox-trigger {
+    border-color: var(--naranja);
+    box-shadow: 0 0 0 3px rgba(232, 98, 26, 0.15);
+}
+
+.stop-combobox-icon {
+    color: var(--naranja);
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.stop-combobox-label {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #555;
+    font-family: inherit;
+}
+.stop-combobox-label.selected {
+    color: var(--blanco);
+}
+
+.stop-combobox-chevron {
+    color: #555;
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.stop-combobox-chevron.open {
+    transform: rotate(180deg);
+}
+
+.stop-combobox-clear {
+    background: rgba(255,255,255,0.07);
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.8rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+.stop-combobox-clear:hover {
+    background: rgba(232, 98, 26, 0.2);
+    color: var(--naranja);
+}
+
+/* ── Panel desplegable ── */
+.stop-combobox-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: rgba(18, 18, 18, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: comboDropIn 0.18s ease;
+    z-index: 200;
+}
+
+@keyframes comboDropIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Buscador interno */
+.stop-combobox-search-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.stop-panel-search-icon {
+    color: #555;
+    flex-shrink: 0;
+}
+.stop-panel-search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--blanco);
+    font-size: 0.88rem;
+    font-family: inherit;
+}
+.stop-panel-search-input::placeholder { color: #444; }
+
+/* Lista de opciones */
+.stop-combobox-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.35rem 0;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+}
+.stop-combobox-list::-webkit-scrollbar { width: 4px; }
+.stop-combobox-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+.stop-combobox-option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    color: #bbb;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    user-select: none;
+}
+.stop-combobox-option span { flex: 1; }
+.stop-combobox-option:hover {
+    background: rgba(232, 98, 26, 0.1);
+    color: var(--blanco);
+}
+.stop-combobox-option.selected {
+    background: rgba(232, 98, 26, 0.12);
+    color: var(--naranja);
+    font-weight: 700;
+}
+.stop-option-icon {
+    color: var(--naranja);
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+.stop-option-check {
+    color: var(--naranja);
+    font-size: 0.8rem;
+    font-weight: 900;
+}
+.stop-combobox-empty {
+    padding: 1rem;
+    color: #444;
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+/* Pie del panel — contador */
+.stop-combobox-count {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: #444;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    text-align: right;
+}
+
+/* Badge "Filtrando por:" */
+.stop-combobox-badge-row {
+    margin-top: 0.45rem;
+    padding: 0 0.2rem;
+}
+.stop-combobox-active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(232, 98, 26, 0.1);
+    border: 1px solid rgba(232, 98, 26, 0.25);
+    color: var(--naranja);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.28rem 0.7rem;
+    border-radius: 20px;
+    animation: comboDropIn 0.2s ease;
+}
+.stop-combobox-active-badge strong { color: var(--blanco); }
+
+/* Banner "Pasa por X" en la big card */
+.stop-filter-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(135deg, rgba(232,98,26,0.18), rgba(232,98,26,0.08));
+    border: 1px solid rgba(232, 98, 26, 0.35);
+    color: var(--naranja);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.02em;
+    animation: comboDropIn 0.2s ease;
+}
+.stop-filter-banner strong { color: var(--blanco); }
+
+@media (max-width: 600px) {
+    .stop-combobox-wrapper { max-width: 100%; }
+    .stop-combobox-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0;
+        border-radius: 16px 16px 0 0; max-height: 70vh; z-index: 300; }
+    .stop-combobox-list { max-height: calc(70vh - 120px); }
+}
+
+/* ============================================================
+   Filtros UI (Día y Servicio)
+   ============================================================ */
+.transporte-filtros-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Tabs Servicio (Directo/Indirecto) ── */
+.transporte-servicio-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: rgba(30, 30, 30, 0.6);
+    padding: 0.35rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.transporte-servicio-tab {
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 0.4rem 1rem;
+    border-radius: 18px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.transporte-servicio-tab:hover {
+    color: #ccc;
+}
+
+.transporte-servicio-tab.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--blanco);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 600px) {
+    .transporte-servicio-tabs {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .transporte-servicio-tab {
+        flex: 1;
+        text-align: center;
+        padding: 0.5rem 0.5rem;
+    }
+}
+
