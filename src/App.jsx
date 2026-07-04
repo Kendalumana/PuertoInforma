@@ -7,6 +7,8 @@ import './styles/Index.css';
 import Login from './components/Login';
 import Registro from './components/Registro';
 import AuthCallback from './components/AuthCallback';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 // ── Carga diferida: rutas protegidas solo se descargan cuando el usuario las visita ──
 // Esto reduce el bundle inicial de ~700kB a ~150kB
@@ -85,6 +87,8 @@ function App() {
                 <Route path="/login"         element={<Login />} />
                 <Route path="/registro"      element={<Registro />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/recuperar-clave" element={<ForgotPassword />} />
+                <Route path="/restablecer-clave" element={<ResetPassword />} />
 
                 {/* Rutas protegidas — lazy: se descargan al navegar por primera vez */}
                 <Route path="/"         element={<RutaProtegida><MapaView /></RutaProtegida>} />

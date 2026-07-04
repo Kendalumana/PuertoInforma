@@ -118,6 +118,17 @@
   text-align: center;
 }
 
+.login-success {
+  background: rgba(46, 204, 113, 0.13);
+  border: 1px solid rgba(46, 204, 113, 0.35);
+  color: #8be0ad;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 1.45;
+}
+
 /* ── BOTÓN DE LOGIN ──────────────────────────────────────────
    ============================================================ */
 .login-btn {
@@ -275,6 +286,7 @@
   border-radius: 3px;
   padding: 0 2px;
   font-family: inherit;
+  text-decoration: none;
 }
 
 .login-forgot-link:hover {
