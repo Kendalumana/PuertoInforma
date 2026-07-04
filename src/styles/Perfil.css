@@ -859,3 +859,53 @@
   margin: 0;
 }
 
+/* ─── Banner de Error de Misiones ──────────────────────── */
+.misiones-error-banner {
+  background: rgba(239, 83, 80, 0.1);
+  border: 1px solid rgba(239, 83, 80, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.misiones-error-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.misiones-error-texto {
+  flex: 1;
+}
+
+.misiones-error-texto strong {
+  display: block;
+  color: #ef5350;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.misiones-error-texto p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.misiones-retry-btn {
+  background: rgba(239, 83, 80, 0.2);
+  color: #ff8a80;
+  border: 1px solid rgba(239, 83, 80, 0.4);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.misiones-retry-btn:hover {
+  background: rgba(239, 83, 80, 0.4);
+  color: #fff;
+}

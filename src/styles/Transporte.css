@@ -1,12 +1,12 @@
 /* ============================================================
-   Ferry.css — PuertoInforma (Redesign)
+   Buses.css â€” PuertoInforma (Redesign)
    ============================================================ */
 
-.ferry-layout {
+.transporte-layout {
     min-height: 100vh;
     height: 100vh;
     overflow-y: auto;
-    color: #ffffff;
+    color: var(--blanco);
     display: flex;
     flex-direction: column;
     padding-bottom: 80px; /* Space for bottom nav */
@@ -14,12 +14,12 @@
 }
 
 /* Typography & Colors */
-.text-orange { color: #E8621A; }
-.logo-white { font-weight: 700; color: #fff; }
-.logo-orange { font-weight: 700; color: #E8621A; }
+.text-orange { color: var(--naranja); }
+.logo-white { font-weight: 700; color: var(--blanco); }
+.logo-orange { font-weight: 700; color: var(--naranja); }
 
 /* Top Navbar */
-.ferry-topbar {
+.transporte-topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -27,45 +27,45 @@
     background-color: transparent;
 }
 
-.ferry-logo {
+.transporte-logo {
     font-size: 1.4rem;
     cursor: pointer;
 }
 
-.ferry-topbar-right {
+.transporte-topbar-right {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.ferry-search-wrapper {
+.transporte-search-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    background-color: #1E1E1E;
+    background-color: var(--gris-oscuro);
     border-radius: 20px;
     padding: 0.5rem 1rem;
     width: 250px;
 }
 
-.ferry-search-wrapper input {
+.transporte-search-wrapper input {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--blanco);
     margin-left: 0.5rem;
     outline: none;
     width: 100%;
     font-size: 0.9rem;
 }
 
-.ferry-search-wrapper input::placeholder {
+.transporte-search-wrapper input::placeholder {
     color: #666;
 }
 
 .icon-btn {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--blanco);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -80,14 +80,14 @@
 }
 
 /* Main Content */
-.ferry-main {
+.transporte-main {
     padding: 0 2rem;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
 }
 
-.ferry-hero-title {
+.transporte-hero-title {
     font-size: 4rem;
     font-weight: 800;
     margin-bottom: 2rem;
@@ -95,7 +95,7 @@
 }
 
 /* Route Chips */
-.ferry-route-chips {
+.transporte-route-chips {
     display: flex;
     gap: 1rem;
     margin-bottom: 3rem;
@@ -104,11 +104,11 @@
     scrollbar-width: none;
 }
 
-.ferry-route-chips::-webkit-scrollbar {
+.transporte-route-chips::-webkit-scrollbar {
     display: none;
 }
 
-.ferry-chip {
+.transporte-chip {
     background-color: #2A2A2A;
     color: #ccc;
     border: none;
@@ -125,35 +125,31 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.ferry-chip:hover {
+.transporte-chip:hover {
     background-color: #333;
-    color: #fff;
+    color: var(--blanco);
     transform: translateY(-1px);
 }
 
-.ferry-chip.active {
-    box-shadow: 0 6px 22px rgba(232, 98, 26, 0.28);
-}
-
-.ferry-chip:active {
+.transporte-chip:active {
     transform: scale(0.97);
 }
 
-.ferry-chip.active {
-    background-color: #E8621A;
-    color: #fff;
+.transporte-chip.active {
+    background-color: var(--naranja);
+    color: var(--blanco);
     box-shadow: 0 4px 14px rgba(232, 98, 26, 0.35);
 }
 
-.ferry-chip-icon {
+.transporte-chip-icon {
     opacity: 0.6;
 }
 
-.ferry-chip.active .ferry-chip-icon {
+.transporte-chip.active .transporte-chip-icon {
     opacity: 1;
 }
 
-.ferry-chip-skeleton {
+.transporte-chip-skeleton {
     height: 44px;
     width: 180px;
     border-radius: 30px;
@@ -164,7 +160,7 @@
 }
 
 /* Section Header */
-.ferry-section-header {
+.transporte-section-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -173,14 +169,14 @@
     padding-bottom: 1rem;
 }
 
-.ferry-section-header h2 {
+.transporte-section-header h2 {
     font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 0.25rem;
     margin-top: 0;
 }
 
-.ferry-section-header p {
+.transporte-section-header p {
     color: #888;
     font-size: 0.95rem;
     margin: 0;
@@ -190,7 +186,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #E8621A;
+    color: var(--naranja);
     font-weight: 700;
     font-size: 0.85rem;
     letter-spacing: 1px;
@@ -199,7 +195,7 @@
 .pulse-dot {
     width: 10px;
     height: 10px;
-    background-color: #E8621A;
+    background-color: var(--naranja);
     border-radius: 50%;
     animation: pulse 1.5s infinite;
 }
@@ -211,14 +207,14 @@
 }
 
 /* Grid Layout */
-.ferry-grid {
+.transporte-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
     margin-bottom: 3rem;
 }
 
-.ferry-card {
+.transporte-card {
     background: rgba(30, 30, 30, 0.65);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -233,7 +229,7 @@
     flex: 1 1 300px;
 }
 
-.ferry-card:hover {
+.transporte-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     border-color: rgba(232, 98, 26, 0.2);
@@ -272,7 +268,7 @@
 .flex-between { justify-content: space-between; }
 
 .siguiente-label {
-    color: #E8621A;
+    color: var(--naranja);
     font-weight: 700;
     font-size: 0.85rem;
     letter-spacing: 1px;
@@ -338,8 +334,8 @@
 }
 
 .mins-box {
-    background-color: #E8621A;
-    color: #fff;
+    background-color: var(--naranja);
+    color: var(--blanco);
     border-radius: 12px;
     padding: 0.8rem 1.2rem;
     display: flex;
@@ -373,10 +369,16 @@
     margin: 0;
 }
 
-.watermark-ship, .watermark-moon {
+.watermark-bus, .watermark-ship, .watermark-moon {
     position: absolute;
     opacity: 0.05;
     z-index: 1;
+}
+
+.watermark-bus {
+    right: -20px;
+    bottom: -40px;
+    transform: rotate(-10deg);
 }
 
 .watermark-ship {
@@ -407,11 +409,11 @@
     background-color: #555;
 }
 
-.ferry-btn-outline {
+.transporte-btn-outline {
     width: 100%;
     background: transparent;
     border: 1px solid #444;
-    color: #fff;
+    color: var(--blanco);
     padding: 1rem;
     border-radius: 12px;
     font-weight: 600;
@@ -419,7 +421,7 @@
     transition: all 0.2s;
 }
 
-.ferry-btn-outline:hover {
+.transporte-btn-outline:hover {
     background: rgba(255,255,255,0.05);
     border-color: #666;
 }
@@ -444,7 +446,7 @@
 }
 
 /* Bottom Navigation */
-.ferry-bottom-nav {
+.transporte-bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -482,21 +484,21 @@
 }
 
 .nav-item.active {
-    color: #E8621A;
+    color: var(--naranja);
 }
 
 /* Responsive Styles */
 @media (min-width: 768px) {
-    .ferry-bottom-nav {
+    .transporte-bottom-nav {
         display: none !important;
     }
-    .ferry-layout {
+    .transporte-layout {
         padding-bottom: 2rem;
     }
 }
 
 @media (max-width: 900px) {
-    .ferry-grid {
+    .transporte-grid {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
     }
@@ -506,29 +508,29 @@
         grid-row: auto;
     }
 
-    .ferry-hero-title {
+    .transporte-hero-title {
         font-size: 3rem;
     }
 }
 
 @media (max-width: 600px) {
-    .ferry-layout {
+    .transporte-layout {
         padding-bottom: 70px;
     }
 
-    .ferry-topbar {
+    .transporte-topbar {
         padding: 0.8rem 1rem;
     }
-
-    .ferry-search-wrapper {
+    
+    .transporte-search-wrapper {
         display: none;
     }
 
-    .ferry-main {
+    .transporte-main {
         padding: 0 0.8rem;
     }
 
-    .ferry-hero-title {
+    .transporte-hero-title {
         font-size: 2rem;
         margin-bottom: 1rem;
     }
@@ -537,52 +539,52 @@
         font-size: 3.5rem;
     }
 
-    .watermark-ship {
+    .watermark-bus, .watermark-ship {
         right: -40px;
         bottom: -20px;
     }
-
-    .ferry-section-header {
+    
+    .transporte-section-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
 
-    .ferry-section-header h2 {
+    .transporte-section-header h2 {
         font-size: 1.3rem;
     }
-
-    .ferry-card {
+    
+    .transporte-card {
         padding: 1.2rem;
     }
 
-    .ferry-card:hover {
+    .transporte-card:hover {
         transform: none;
         box-shadow: none;
     }
-
+    
     .boarding-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.8rem;
     }
-
+    
     .info-card {
         flex-direction: column;
     }
 
-    .ferry-route-chips {
+    .transporte-route-chips {
         gap: 0.5rem;
         margin-bottom: 1.5rem;
         padding: 0 0 0.5rem 0;
     }
 
-    .ferry-chip {
+    .transporte-chip {
         padding: 0.6rem 1rem;
         font-size: 0.85rem;
     }
 
-    .ferry-grid {
+    .transporte-grid {
         gap: 0.8rem;
         margin-bottom: 1.5rem;
     }
@@ -604,7 +606,7 @@
         font-size: 1.6rem;
     }
 
-    .ferry-bottom-nav {
+    .transporte-bottom-nav {
         padding: 0.7rem 0;
     }
 
@@ -616,7 +618,7 @@
         font-size: 0.75rem;
     }
 
-    .ferry-btn-outline {
+    .transporte-btn-outline {
         padding: 0.8rem;
         font-size: 0.9rem;
     }
@@ -627,7 +629,7 @@
    ============================================================ */
 .badge-orange {
     background-color: rgba(232, 98, 26, 0.2);
-    color: #E8621A;
+    color: var(--naranja);
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -635,9 +637,9 @@
 }
 
 /* ============================================================
-   Estado sin salidas (big card vacía)
+   Estado sin salidas (big card vacÃ­a)
    ============================================================ */
-.ferry-no-salidas {
+.transporte-no-salidas {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -645,13 +647,13 @@
     z-index: 2;
 }
 
-.ferry-no-salidas p {
+.transporte-no-salidas p {
     color: #888;
     font-size: 1rem;
     margin: 0;
 }
 
-.ferry-ultima-hint {
+.transporte-ultima-hint {
     color: #555;
     font-size: 0.9rem;
 }
@@ -659,7 +661,7 @@
 /* ============================================================
    Estado de error
    ============================================================ */
-.ferry-error-state {
+.transporte-error-state {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -670,21 +672,21 @@
     text-align: center;
 }
 
-.ferry-error-state p {
+.transporte-error-state p {
     font-size: 1rem;
     max-width: 300px;
 }
 
 /* ============================================================
-   Enlace de reserva (botón-link)
+   Enlace de reserva (botÃ³n-link)
    ============================================================ */
-.ferry-reserve-link {
+.transporte-reserve-link {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     text-decoration: none;
-    color: #fff;
+    color: var(--blanco);
     width: 100%;
     background: transparent;
     border: 1px solid #444;
@@ -696,61 +698,61 @@
     box-sizing: border-box;
 }
 
-.ferry-reserve-link:hover {
+.transporte-reserve-link:hover {
     background: rgba(232, 98, 26, 0.1);
-    border-color: #E8621A;
-    color: #E8621A;
+    border-color: var(--naranja);
+    color: var(--naranja);
 }
 
 /* ============================================================
-   Lista completa de horarios del día
+   Lista completa de horarios del dÃ­a
    ============================================================ */
-.ferry-horarios-full {
+.transporte-horarios-full {
     margin-top: 2rem;
     margin-bottom: 1rem;
 }
 
-.ferry-horarios-title {
+.transporte-horarios-title {
     font-size: 1.4rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    color: #fff;
+    color: var(--blanco);
 }
 
-.ferry-horarios-list {
+.transporte-horarios-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.ferry-horario-row {
+.transporte-horario-row {
     display: flex;
     align-items: center;
     gap: 1rem;
-    background-color: #1E1E1E;
+    background-color: var(--gris-oscuro);
     border-radius: 12px;
     padding: 0.9rem 1.2rem;
     transition: background 0.2s;
     border-left: 3px solid transparent;
 }
 
-.ferry-horario-row.proximo {
-    border-left-color: #E8621A;
+.transporte-horario-row.proximo {
+    border-left-color: var(--naranja);
     background-color: #221a12;
 }
 
-.ferry-horario-row.pasado {
+.transporte-horario-row.pasado {
     opacity: 0.4;
 }
 
-.ferry-row-hora {
+.transporte-row-hora {
     font-size: 1.2rem;
     font-weight: 800;
     min-width: 60px;
     letter-spacing: -0.5px;
 }
 
-.ferry-row-info {
+.transporte-row-info {
     flex: 1;
     display: flex;
     align-items: center;
@@ -758,33 +760,33 @@
     flex-wrap: wrap;
 }
 
-.ferry-row-nombre {
+.transporte-row-nombre {
     font-size: 0.95rem;
     font-weight: 600;
     color: #ddd;
 }
 
-.ferry-row-badge {
+.transporte-row-badge {
     font-size: 0.7rem;
 }
 
-.ferry-row-estado {
+.transporte-row-estado {
     margin-left: auto;
     text-align: right;
 }
 
-.ferry-row-restante {
+.transporte-row-restante {
     font-size: 0.85rem;
-    color: #E8621A;
+    color: var(--naranja);
     font-weight: 600;
 }
 
-.ferry-row-salido {
+.transporte-row-salido {
     font-size: 0.85rem;
     color: #555;
 }
 
-.ferry-row-link {
+.transporte-row-link {
     color: #666;
     display: flex;
     align-items: center;
@@ -792,8 +794,8 @@
     padding: 0.25rem;
 }
 
-.ferry-row-link:hover {
-    color: #E8621A;
+.transporte-row-link:hover {
+    color: var(--naranja);
 }
 
 /* ============================================================
@@ -847,27 +849,27 @@
 }
 
 @media (max-width: 600px) {
-    .ferry-horario-row {
+    .transporte-horario-row {
         padding: 0.75rem 1rem;
         gap: 0.75rem;
     }
-    .ferry-row-hora {
+    .transporte-row-hora {
         font-size: 1rem;
         min-width: 48px;
     }
-    .ferry-horarios-title {
+    .transporte-horarios-title {
         font-size: 1.2rem;
     }
 }
 
-/* ─── Tabs HOY / MAÑANA — A-I3 ────────────────────────── */
-.ferry-dia-tabs {
+/* â”€â”€â”€ Tabs HOY / MAÃ‘ANA â€” A-I3 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.transporte-dia-tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
 }
 
-.ferry-dia-tab {
+.transporte-dia-tab {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -883,45 +885,127 @@
     transition: all 0.2s;
 }
 
-.ferry-dia-tab:hover { border-color: #555; color: #ccc; }
-.ferry-dia-tab.active {
-    background: #E8621A;
-    border-color: #E8621A;
-    color: #fff;
+.transporte-dia-tab:hover { border-color: #555; color: #ccc; }
+.transporte-dia-tab.active {
+    background: var(--naranja);
+    border-color: var(--naranja);
+    color: var(--blanco);
     box-shadow: 0 2px 10px rgba(232,98,26,0.4);
 }
 
-/* ─── Panel GUARDADOS — A-N2 ───────────────────────────── */
-.ferry-saved-panel {
+/* â”€â”€â”€ Panel GUARDADOS â€” A-N2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.transporte-saved-panel {
     padding: 0 2rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
 }
 
-.ferry-saved-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; }
+.transporte-saved-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; }
 
-.ferry-saved-empty {
+.transporte-saved-empty {
     display: flex; flex-direction: column; align-items: center;
     gap: 1rem; padding: 3rem 2rem; color: #555; text-align: center;
 }
 
-.ferry-saved-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.transporte-saved-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
-.ferry-saved-item {
+.transporte-saved-item {
     display: flex; align-items: center; gap: 1rem;
     background: #1E1E1E; border-radius: 12px;
     padding: 1rem 1.2rem; cursor: pointer;
-    transition: background 0.2s; border-left: 3px solid #E8621A;
+    transition: background 0.2s; border-left: 3px solid var(--naranja);
 }
-.ferry-saved-item:hover { background: #252525; }
-.ferry-saved-route { flex: 1; font-weight: 700; font-size: 0.95rem; }
-.ferry-saved-next { display: flex; align-items: center; }
+.transporte-saved-item:hover { background: #252525; }
+.transporte-saved-route { flex: 1; font-weight: 700; font-size: 0.95rem; }
+.transporte-saved-next { display: flex; align-items: center; }
 
-.ferry-saved-remove {
+.transporte-saved-remove {
     background: none; border: none; color: #555;
     cursor: pointer; font-size: 1rem; padding: 0.25rem 0.5rem;
     border-radius: 6px; transition: color 0.2s;
 }
-.ferry-saved-remove:hover { color: #E8621A; }
+.transporte-saved-remove:hover { color: var(--naranja); }
+
+
+
+/* ============================================================
+   Stops Track (Mapa de paradas)
+   ============================================================ */
+.transporte-stops-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1.5rem 0 2rem;
+    padding-top: 1rem;
+    padding-bottom: 3.5rem; /* Espacio extra para que no se corten los textos absolutos */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.transporte-stops-track::-webkit-scrollbar {
+    display: none;
+}
+
+.transporte-stop-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.transporte-stop-dot {
+    width: 14px;
+    height: 14px;
+    background-color: #333;
+    border: 2px solid #555;
+    border-radius: 50%;
+    z-index: 2;
+    position: relative;
+}
+.transporte-stop-dot.origin {
+    background-color: var(--naranja);
+    border-color: #fff;
+    width: 18px;
+    height: 18px;
+    box-shadow: 0 0 10px rgba(232, 98, 26, 0.6);
+}
+.transporte-stop-dot.dest {
+    background-color: #2ECC71;
+    border-color: #fff;
+    width: 18px;
+    height: 18px;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+}
+
+.transporte-stop-connector {
+    width: 140px; /* Ancho ampliado para que no se superpongan los textos */
+    height: 3px;
+    background-color: #444;
+    position: relative;
+    z-index: 1;
+    margin: 0 -2px;
+}
+.transporte-stop-connector.active {
+    background: linear-gradient(90deg, var(--naranja), #2ECC71);
+}
+
+.transporte-stop-label {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: #aaa;
+    white-space: nowrap;
+    font-weight: 500;
+}
+.transporte-stop-item:first-child .transporte-stop-label {
+    color: var(--naranja);
+    font-weight: 700;
+}
+.transporte-stop-item:last-child .transporte-stop-label {
+    color: #2ECC71;
+    font-weight: 700;
+}
 

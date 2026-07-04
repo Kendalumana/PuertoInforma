@@ -2,18 +2,18 @@ import { Anchor, Bookmark, BookmarkCheck } from 'lucide-react';
 
 function FerryRouteSelector({ activeRoute, loading, onRouteChange, onToggleSaved, routes, savedRoutes }) {
     return (
-        <div className="ferry-route-chips">
+        <div className="transporte-route-chips">
             {loading
-                ? [1, 2].map(index => <div key={index} className="ferry-chip-skeleton" />)
+                ? [1, 2].map(index => <div key={index} className="transporte-chip-skeleton" />)
                 : routes.length === 0
-                    ? <button className="ferry-chip active">Sin resultados</button>
+                    ? <button className="transporte-chip active">Sin resultados</button>
                     : routes.map(route => (
                         <button
                             key={route}
-                            className={`ferry-chip ${activeRoute === route ? 'active' : ''}`}
+                            className={`transporte-chip ${activeRoute === route ? 'active' : ''}`}
                             onClick={() => onRouteChange(route)}
                         >
-                            <Anchor size={14} className="ferry-chip-icon" />
+                            <Anchor size={14} className="transporte-chip-icon" />
                             {route}
                             <span
                                 onClick={event => { event.stopPropagation(); onToggleSaved(route); }}

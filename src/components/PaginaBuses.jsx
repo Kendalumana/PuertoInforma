@@ -6,7 +6,7 @@ import {
     Bell, User, Map
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
-import '../styles/Buses.css';
+import '../styles/Transporte.css';
 import Navbar from './Navbar';
 import BusDestinationSelector from './BusDestinationSelector';
 import ReservationLink from './ReservationLink';
@@ -108,8 +108,8 @@ function formatearRestante(min) {
 // ═══════════════════════════════════════════════════════════
 function BusesSkeletonGrid() {
     return (
-        <div className="buses-grid">
-            <div className="buses-card big-card skeleton-card">
+        <div className="transporte-grid">
+            <div className="transporte-card big-card skeleton-card">
                 <div className="sk-line sk-label" />
                 <div className="sk-time" />
                 <div className="sk-line sk-sub" />
@@ -121,19 +121,19 @@ function BusesSkeletonGrid() {
                     </div>
                 </div>
             </div>
-            <div className="buses-card right-card skeleton-card">
+            <div className="transporte-card right-card skeleton-card">
                 <div className="sk-line sk-label" />
                 <div className="sk-line sk-title" />
                 <div className="sk-line sk-sub" />
                 <div className="sk-bar" />
                 <div className="sk-line sk-btn" />
             </div>
-            <div className="buses-card bottom-left-card skeleton-card">
+            <div className="transporte-card bottom-left-card skeleton-card">
                 <div className="sk-line sk-label" />
                 <div className="sk-line sk-title" />
                 <div className="sk-line sk-sub" />
             </div>
-            <div className="buses-card info-card skeleton-card" style={{ flexDirection: 'row', gap: '1rem' }}>
+            <div className="transporte-card info-card skeleton-card" style={{ flexDirection: 'row', gap: '1rem' }}>
                 <div className="sk-box" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                     <div className="sk-line sk-t1" />
@@ -215,6 +215,44 @@ function MiniMapaSVG({ ruta }) {
                     </text>
                 ))}
             </svg>
+        </div>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAPA DE PUNTITOS (TRACK DE PARADAS)
+// ═══════════════════════════════════════════════════════════
+function RouteStopsTrack({ paradas }) {
+    if (!paradas || paradas.length < 2) return null;
+
+    let parsed = [];
+    if (typeof paradas === 'string') {
+        try {
+            parsed = JSON.parse(paradas);
+        } catch {
+            parsed = [paradas];
+        }
+    } else {
+        parsed = paradas;
+    }
+
+    if (parsed.length <= 2) return null; // Solo mostramos track si hay paradas intermedias
+
+    return (
+        <div style={{ padding: '0 1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#E8621A', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                <MapPin size={14} />
+                <span>Ruta del Bus</span>
+            </div>
+            <div className="transporte-stops-track">
+                {parsed.map((p, i) => (
+                    <div key={i} className="transporte-stop-item">
+                        <div className={`transporte-stop-dot ${i === 0 ? 'origin' : i === parsed.length - 1 ? 'dest' : ''}`} />
+                        {i < parsed.length - 1 && <div className="transporte-stop-connector active" />}
+                        <span className="transporte-stop-label">{p}</span>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
@@ -374,6 +412,9 @@ function PaginaBuses() {
             .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
     }, [horarios, activeRoute]);
 
+    // Paradas de la ruta activa para el mapa de puntitos
+    const paradasRutaActiva = horariosFiltradosRuta.length > 0 ? horariosFiltradosRuta[0].paradas : [];
+
     // ── Próximas salidas (según día y hora) ────────────────
     const diaNum = tabDia === 'hoy' ? ahora.getDay() : (ahora.getDay() + 1) % 7;
     
@@ -407,13 +448,13 @@ function PaginaBuses() {
     const abordajeMin = siguiente ? Math.max(0, minsRestantes - 10) : null;
 
     return (
-        <div className="app-wrapper immersive-layout buses-layout">
+        <div className="app-wrapper immersive-layout transporte-layout">
             <Navbar />
 
-            <main className="buses-main">
+            <main className="transporte-main">
 
                 {/* Hero Title */}
-                <h1 className="buses-hero-title">
+                <h1 className="transporte-hero-title">
                     Horarios de <span className="text-orange">Buses</span>
                 </h1>
 
@@ -435,14 +476,19 @@ function PaginaBuses() {
                 {/* ── Tabs HOY / MAÑANA ── */}
                 {!loading && !error && (
                     <TransportDayTabs
-                        className="buses-dia-tabs"
+                        className="transporte-dia-tabs"
                         day={tabDia}
                         onDayChange={setTabDia}
                     />
                 )}
 
+                {/* ── Mapa de Puntitos de la ruta actual ── */}
+                {!loading && !error && activeRouteData && (
+                    <RouteStopsTrack paradas={paradasRutaActiva} />
+                )}
+
                 {/* Section Header */}
-                <div className="buses-section-header">
+                <div className="transporte-section-header">
                     <div>
                         <h2>{tabDia === 'manana' ? 'Salidas Mañana' : 'Próximas Salidas'}</h2>
                         <p>
@@ -462,11 +508,11 @@ function PaginaBuses() {
                 {loading && <BusesSkeletonGrid />}
 
                 {!loading && error && (
-                    <div className="buses-error-state">
+                    <div className="transporte-error-state">
                         <Bus size={48} className="text-orange" style={{ opacity: 0.4 }} />
                         <p>{error}</p>
                         <button
-                            className="buses-btn-outline"
+                            className="transporte-btn-outline"
                             style={{ width: 'auto', marginTop: '1rem' }}
                             onClick={() => setReintento(r => r + 1)}
                         >
@@ -477,10 +523,10 @@ function PaginaBuses() {
 
                 {/* ── Grid principal — solo cuando hay datos ── */}
                 {!loading && !error && (
-                    <div className="buses-grid">
+                    <div className="transporte-grid">
 
                         {/* ── Big Card: SIGUIENTE SALIDA ── */}
-                        <div className="buses-card big-card">
+                        <div className="transporte-card big-card">
                             <div className="card-top">
                                 <span className="siguiente-label">SIGUIENTE SALIDA</span>
                                 <span className={estadoBigCard.badgeClass}>{estadoBigCard.badge}</span>
@@ -524,16 +570,16 @@ function PaginaBuses() {
                                     
                                     <MiniMapaSVG ruta={siguiente} />
                                     <ReservationLink
-                                        className="buses-btn-outline"
+                                        className="transporte-btn-outline"
                                         href={siguiente.enlaceReserva}
                                         label="Comprar boleto"
                                     />
                                 </>
                             ) : (
-                                <div className="buses-no-salidas">
+                                <div className="transporte-no-salidas">
                                     <p>No hay más salidas para esta ruta en este día.</p>
                                     {ultima && (
-                                        <p className="buses-ultima-hint">
+                                        <p className="transporte-ultima-hint">
                                             Última salida fue a las {formatHora(ultima.horaSalida)}
                                         </p>
                                     )}
@@ -545,7 +591,7 @@ function PaginaBuses() {
 
                         {/* ── Right Card: 2ª SALIDA ── */}
                         {proxima2 && (
-                            <div className="buses-card right-card">
+                            <div className="transporte-card right-card">
                                 <div className="card-top flex-between">
                                     <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#E8621A', letterSpacing: 1 }}>2° BUS</span>
                                     <span className="badge-gray">{proxima2.tipo}</span>
@@ -577,7 +623,7 @@ function PaginaBuses() {
                         )}
 
                         {/* ── Bottom Left Card: ÚLTIMA / NOCTURNA ── */}
-                        <div className="buses-card bottom-left-card">
+                        <div className="transporte-card bottom-left-card">
                             <div className="card-top flex-between">
                                 <span className="time-small">
                                     {ultima ? formatHora(ultima.horaSalida) : '--:--'}
@@ -599,7 +645,7 @@ function PaginaBuses() {
                         </div>
 
                         {/* ── Info Card: Recomendación estática ── */}
-                        <div className="buses-card info-card">
+                        <div className="transporte-card info-card">
                             <Info size={28} className="text-orange info-icon" />
                             <div>
                                 <h4>Recomendación para Viajeros</h4>
@@ -615,11 +661,11 @@ function PaginaBuses() {
 
                 {/* ── Lista completa de horarios del día ── */}
                 {!loading && !error && horariosDelDia.length > 0 && (
-                    <div className="buses-horarios-full">
-                        <h3 className="buses-horarios-title">
+                    <div className="transporte-horarios-full">
+                        <h3 className="transporte-horarios-title">
                             🚌 Todos los horarios — {activeRouteData ? `${activeRouteData.shortLabel} · ${activeRouteData.routeCode}` : 'Ruta'}
                         </h3>
-                        <div className="buses-horarios-list">
+                        <div className="transporte-horarios-list">
                             {horariosDelDia.map((h, idx) => {
                                 const min = minutosHasta(h.horaSalida);
                                 const pasado = tabDia === 'hoy' && min < 0;
@@ -627,41 +673,41 @@ function PaginaBuses() {
                                 return (
                                     <div
                                         key={h.id || idx}
-                                        className={`buses-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
+                                        className={`transporte-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
                                     >
                                         {/* Hora de salida */}
-                                        <div className="buses-row-hora">{formatHora(h.horaSalida)}</div>
+                                        <div className="transporte-row-hora">{formatHora(h.horaSalida)}</div>
 
                                         {/* Info principal: ruta + operador */}
-                                        <div className="buses-row-info">
-                                            <span className="buses-row-nombre">
+                                        <div className="transporte-row-info">
+                                            <span className="transporte-row-nombre">
                                                 {h.rutaCorta}
                                             </span>
                                             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
                                                 <span style={{ fontSize: '0.72rem', color: '#666' }}>{h.operadorNombre}</span>
-                                                <span className="badge-gray buses-row-badge">{h.rutaCodigo}</span>
-                                                <span className="badge-green buses-row-badge">{h.servicioRuta}</span>
+                                                <span className="badge-gray transporte-row-badge">{h.rutaCodigo}</span>
+                                                <span className="badge-green transporte-row-badge">{h.servicioRuta}</span>
                                                 {h.esNocturno && (
-                                                    <span className="badge-gray buses-row-badge">Nocturno</span>
+                                                    <span className="badge-gray transporte-row-badge">Nocturno</span>
                                                 )}
                                                 {esProximo && (
-                                                    <span className="badge-orange buses-row-badge">Próximo</span>
+                                                    <span className="badge-orange transporte-row-badge">Próximo</span>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* Tiempo restante a la derecha */}
-                                        <div className="buses-row-estado">
+                                        <div className="transporte-row-estado">
                                             {pasado
-                                                ? <span className="buses-row-salido">Salió</span>
+                                                ? <span className="transporte-row-salido">Salió</span>
                                                 : tabDia === 'manana'
-                                                    ? <span className="buses-row-restante">Mañana</span>
-                                                    : <span className="buses-row-restante">{formatearRestante(min)}</span>
+                                                    ? <span className="transporte-row-restante">Mañana</span>
+                                                    : <span className="transporte-row-restante">{formatearRestante(min)}</span>
                                             }
                                         </div>
                                         {!pasado && (
                                             <ReservationLink
-                                                className="buses-row-link"
+                                                className="transporte-row-link"
                                                 href={h.enlaceReserva}
                                                 label="Comprar"
                                             />
@@ -677,15 +723,15 @@ function PaginaBuses() {
 
             {/* ── Panel GUARDADOS ── */}
             {activeTab === 'SAVED' && (
-                <div className="buses-saved-panel">
-                    <h3 className="buses-saved-title">🔖 Rutas Guardadas</h3>
+                <div className="transporte-saved-panel">
+                    <h3 className="transporte-saved-title">🔖 Rutas Guardadas</h3>
                     {busesSaved.length === 0 ? (
-                        <div className="buses-saved-empty">
+                        <div className="transporte-saved-empty">
                             <Bus size={40} style={{ opacity: 0.3 }} />
                             <p>Guardá rutas tocando el 🔖 en los chips de arriba.</p>
                         </div>
                     ) : (
-                        <div className="buses-saved-list">
+                        <div className="transporte-saved-list">
                             {busesSaved.map(routeId => {
                                 const route = routes.find(item => item.id === routeId);
                                 if (!route) return null;
@@ -694,15 +740,15 @@ function PaginaBuses() {
                                     .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
                                 const proxima = hsFiltrados.find(h => minutosHasta(h.horaSalida) >= 0);
                                 return (
-                                    <div key={route.id} className="buses-saved-item" onClick={() => { setDestinoSeleccionado(route.destino); setActiveRoute(route.id); setActiveTab('SCHEDULES'); }}>
-                                        <div className="buses-saved-route">{route.shortLabel} · {route.routeCode} · {route.serviceLabel}</div>
-                                        <div className="buses-saved-next">
+                                    <div key={route.id} className="transporte-saved-item" onClick={() => { setDestinoSeleccionado(route.destino); setActiveRoute(route.id); setActiveTab('SCHEDULES'); }}>
+                                        <div className="transporte-saved-route">{route.shortLabel} · {route.routeCode} · {route.serviceLabel}</div>
+                                        <div className="transporte-saved-next">
                                             {proxima
-                                                ? <><span className="buses-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
+                                                ? <><span className="transporte-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
                                                 : <span style={{ color: '#555', fontSize: '0.85rem' }}>Sin salidas hoy</span>
                                             }
                                         </div>
-                                        <button className="buses-saved-remove" onClick={e => { e.stopPropagation(); toggleBusesSaved(route.id); }}>✕</button>
+                                        <button className="transporte-saved-remove" onClick={e => { e.stopPropagation(); toggleBusesSaved(route.id); }}>✕</button>
                                     </div>
                                 );
                             })}
@@ -712,7 +758,7 @@ function PaginaBuses() {
             )}
 
             {/* Bottom Tab Bar — Mobile solo */}
-            <nav className="buses-bottom-nav">
+            <nav className="transporte-bottom-nav">
                 <button
                     className={`nav-item ${activeTab === 'EXPLORE' ? 'active' : ''}`}
                     onClick={() => { setActiveTab('EXPLORE'); navigate('/'); }}

@@ -4,9 +4,9 @@ function FerryScheduleList({ activeRoute, formatHora, formatearRestante, horario
     if (horarios.length === 0) return null;
 
     return (
-        <div className="ferry-horarios-full">
-            <h3 className="ferry-horarios-title">🚢 Todos los horarios — {activeRoute}</h3>
-            <div className="ferry-horarios-list">
+        <div className="transporte-horarios-full">
+            <h3 className="transporte-horarios-title">🚢 Todos los horarios — {activeRoute}</h3>
+            <div className="transporte-horarios-list">
                 {horarios.map((horario, index) => {
                     const minutos = minutosHasta(horario.horaSalida);
                     const pasado = tabDia === 'hoy' && minutos < 0;
@@ -15,23 +15,23 @@ function FerryScheduleList({ activeRoute, formatHora, formatearRestante, horario
                     return (
                         <div
                             key={horario.id || index}
-                            className={`ferry-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
+                            className={`transporte-horario-row ${pasado ? 'pasado' : ''} ${esProximo ? 'proximo' : ''}`}
                         >
-                            <div className="ferry-row-hora">{formatHora(horario.horaSalida)}</div>
-                            <div className="ferry-row-info">
-                                <span className="ferry-row-nombre">{horario.embarcacionNombre || 'Naviera Tambor'}</span>
-                                {horario.esNocturno && <span className="badge-gray ferry-row-badge">Nocturno</span>}
-                                {esProximo && <span className="badge-orange ferry-row-badge">Próximo</span>}
+                            <div className="transporte-row-hora">{formatHora(horario.horaSalida)}</div>
+                            <div className="transporte-row-info">
+                                <span className="transporte-row-nombre">{horario.embarcacionNombre || 'Naviera Tambor'}</span>
+                                {horario.esNocturno && <span className="badge-gray transporte-row-badge">Nocturno</span>}
+                                {esProximo && <span className="badge-orange transporte-row-badge">Próximo</span>}
                             </div>
-                            <div className="ferry-row-estado">
+                            <div className="transporte-row-estado">
                                 {pasado
-                                    ? <span className="ferry-row-salido">Salió</span>
+                                    ? <span className="transporte-row-salido">Salió</span>
                                     : tabDia === 'manana'
-                                        ? <span className="ferry-row-restante">Mañana</span>
-                                        : <span className="ferry-row-restante">{formatearRestante(minutos)}</span>}
+                                        ? <span className="transporte-row-restante">Mañana</span>
+                                        : <span className="transporte-row-restante">{formatearRestante(minutos)}</span>}
                             </div>
                             {!pasado && (
-                                <ReservationLink className="ferry-row-link" href={horario.enlaceReserva} label="Reservar" />
+                                <ReservationLink className="transporte-row-link" href={horario.enlaceReserva} label="Reservar" />
                             )}
                         </div>
                     );

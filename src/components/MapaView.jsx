@@ -14,8 +14,8 @@ import AboutModal from './AboutModal';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
-// Avoid duplicate native permission prompts while React StrictMode remounts.
-let locationPermissionRequested = false;
+// Clave de localStorage para la preferencia de consentimiento de ubicación.
+const LOCATION_CONSENT_KEY = 'location_consent';
 
 function createUserIcon() {
     return L.divIcon({
@@ -60,8 +60,11 @@ function MapaView() {
     const [error, setError] = useState(null);
     const [previewPlace, setPreviewPlace] = useState(null);
     const [showAboutModal, setShowAboutModal] = useState(false);
-    // Kept false: the browser provides the only location-permission dialog.
+    // El modal de reactivación solo se muestra si el usuario rechazó anteriormente
+    // y elige voluntariamente volver a intentarlo (nunca al inicio automáticamente).
     const [showLocationModal, setShowLocationModal] = useState(false);
+    // Ref para poder llamar startWatching desde el JSX del modal (fuera del useEffect).
+    const startWatchingRef = useRef(null);
     const [favorites, setFavorites] = useState(() => {
         try {
             const saved = localStorage.getItem('favoritos');
@@ -154,7 +157,7 @@ function MapaView() {
     // Obtener y actualizar en tiempo real la ubicación del usuario
     useEffect(() => {
         if (!map) return;
-        
+
         let watchId;
         let isWatching = false;
 
@@ -163,9 +166,13 @@ function MapaView() {
             isWatching = true;
             watchId = navigator.geolocation.watchPosition(
                 async (pos) => {
+                    // El browser concedió el permiso → guardarlo para visitas futuras.
+                    localStorage.setItem(LOCATION_CONSENT_KEY, 'accepted');
+                    setError(null);
+
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
-                    
+
                     userMarkerLayer.current.clearLayers();
                     const userMarker = L.marker([lat, lng], { icon: createUserIcon() });
                     userMarker.bindPopup('<b>📍 Tu ubicación actual</b><br/>En tiempo real');
@@ -187,14 +194,16 @@ function MapaView() {
                 },
                 (err) => {
                     if (highAccuracy) {
-                        // Alta precisión falló (timeout, network error) → reintentar con baja precisión
+                        // Alta precisión falló → reintentar con baja precisión
                         console.warn("Alta precisión falló, usando baja precisión:", err.message);
                         if (watchId) navigator.geolocation.clearWatch(watchId);
                         isWatching = false;
                         startWatching(false);
                     } else {
+                        // El usuario denegó el permiso en el browser → guardar y mostrar aviso.
                         console.warn("No se pudo obtener la ubicación:", err);
-                        setError("Permiso de ubicación denegado. No podrás ver tu posición en el mapa.");
+                        localStorage.setItem(LOCATION_CONSENT_KEY, 'denied');
+                        setError("Permiso de ubicación denegado. Actívalo en los ajustes de tu navegador.");
                     }
                 },
                 highAccuracy
@@ -203,37 +212,56 @@ function MapaView() {
             );
         };
 
-        const requestLocationPermission = () => {
-            if (locationPermissionRequested) return;
-            locationPermissionRequested = true;
-            navigator.geolocation.getCurrentPosition(
-                () => startWatching(),
-                () => setError("Permiso de ubicación denegado. Actívalo en tu navegador para ver tu posición.")
-            );
-        };
+        // Exponemos startWatching en un ref para usarla fuera del useEffect.
+        startWatchingRef.current = startWatching;
 
-        if (navigator.geolocation && navigator.permissions) {
+        if (!navigator.geolocation) return;
+
+        // ── Flujo de un solo diálogo ────────────────────────────────────────────
+        // Consultamos el estado real del permiso del browser.
+        // En estado 'granted'/'denied' no se muestra ningún diálogo.
+        // En estado 'prompt' se llama watchPosition directamente → el browser muestra
+        // SU diálogo nativo UNA SOLA VEZ. Guardamos el resultado en localStorage
+        // para que visitas futuras no generen ningún diálogo.
+        const consent = localStorage.getItem(LOCATION_CONSENT_KEY);
+
+        if (navigator.permissions) {
             navigator.permissions.query({ name: 'geolocation' }).then(result => {
                 if (result.state === 'granted') {
+                    // Browser ya autorizó → no hay ningún diálogo.
                     startWatching();
-                } else if (result.state === 'prompt') {
-                    requestLocationPermission();
                 } else if (result.state === 'denied') {
-                    setError("Permiso de ubicación denegado. Activalo en tu navegador para ver tu posición.");
-                }
-                
-                result.onchange = () => {
-                    if (result.state === 'granted') {
+                    // Browser bloqueó → informar sin diálogo.
+                    setError("Permiso de ubicación denegado. Actívalo en los ajustes de tu navegador.");
+                } else {
+                    // Estado 'prompt': el browser preguntará cuando llamemos watchPosition.
+                    // Si el usuario ya rechazó en nuestro sistema, no volvemos a preguntar.
+                    if (consent === 'denied') {
+                        setError("Desactivaste el acceso a tu ubicación. Usa el botón 📍 para reactivarlo.");
+                    } else {
+                        // Primera vez O consent='accepted' → llamar watchPosition.
+                        // El browser mostrará su diálogo nativo una sola vez.
                         startWatching();
-                        setError(null);
-                    } else if (result.state === 'denied') {
-                        setError("Permiso de ubicación denegado. Activalo en tu navegador para ver tu posición.");
+                    }
+                }
+
+                // Escuchar cambios en tiempo real (ajustes del navegador)
+                result.onchange = () => {
+                    if (result.state === 'granted') { startWatching(); setError(null); }
+                    else if (result.state === 'denied') {
+                        localStorage.setItem(LOCATION_CONSENT_KEY, 'denied');
+                        setError("Permiso de ubicación denegado. Actívalo en los ajustes de tu navegador.");
                     }
                 };
             });
-        } else if (navigator.geolocation) {
-            // Fallback sin permissions API
-            requestLocationPermission();
+        } else {
+            // Fallback: sin Permissions API → llamar watchPosition directamente.
+            // El browser hará lo suyo. Solo respetamos el 'denied' previo de nuestro localStorage.
+            if (consent === 'denied') {
+                setError("Desactivaste el acceso a tu ubicación. Usa el botón 📍 para reactivarlo.");
+            } else {
+                startWatching();
+            }
         }
 
         return () => {
@@ -385,23 +413,21 @@ function MapaView() {
 
             {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} />}
 
-            {/* Modal de Permiso de Ubicación */}
+            {/* Modal de reactivación de ubicación — solo aparece cuando el usuario
+                elige voluntariamente volver a activar su ubicación (nunca al inicio). */}
             {showLocationModal && (
                 <LocationPermissionModal
-                    onAllow={() => {
+                    onAllow={(accuracy) => {
+                        // Limpiar el rechazo previo y volver a intentar.
+                        localStorage.removeItem(LOCATION_CONSENT_KEY);
                         setShowLocationModal(false);
-                        // Al ocultar el modal, intentamos obtener la ubicación
-                        // Lo que activará el prompt del navegador
-                        if (navigator.geolocation) {
-                            navigator.geolocation.getCurrentPosition(
-                                () => {}, // el watchPosition del useEffect atrapará el cambio
-                                () => setError("Permiso denegado por el navegador.")
-                            );
+                        setError(null);
+                        if (startWatchingRef.current) {
+                            startWatchingRef.current(accuracy === 'precisa');
                         }
                     }}
                     onDeny={() => {
                         setShowLocationModal(false);
-                        setError("Has denegado el acceso a tu ubicación. Algunas funciones no estarán disponibles.");
                     }}
                 />
             )}

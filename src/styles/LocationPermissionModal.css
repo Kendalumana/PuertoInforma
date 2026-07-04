@@ -1,28 +1,49 @@
+/* ============================================================
+   LocationPermissionModal.css — PuertoInforma
+   Modal de consentimiento de ubicación GPS.
+   Usa las variables globales de Variables.css.
+   ============================================================ */
+
 .location-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
   padding: 20px;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Animación de entrada */
+  animation: overlayFadeIn 0.2s ease;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .location-modal-content {
-  background-color: #38312b; /* Dark brownish gray similar to the image */
+  background-color: var(--gris-oscuro);
   border-radius: 24px;
   width: 100%;
   max-width: 360px;
   padding: 24px 20px;
-  color: #f3f2f1;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color: var(--blanco);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--gris-medio);
+  /* Animación de entrada del panel */
+  animation: modalSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── Encabezado ─────────────────────────────────────────────── */
 
 .location-modal-header {
   display: flex;
@@ -32,10 +53,11 @@
 }
 
 .location-icon-wrapper {
-  background-color: #5c4224;
+  background-color: rgba(232, 98, 26, 0.15);
+  border: 1px solid rgba(232, 98, 26, 0.3);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -44,66 +66,65 @@
 
 .location-modal-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  line-height: 1.4;
-  color: #fff;
+  line-height: 1.45;
+  color: var(--blanco);
 }
+
+/* ── Opciones de precisión ──────────────────────────────────── */
 
 .location-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
 .location-option {
   display: flex;
   align-items: center;
-  background-color: #2b2520;
+  background-color: var(--negro);
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px 16px;
   gap: 16px;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  outline: none; /* Gestionamos el focus manualmente */
+}
+
+.location-option:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 .location-option.selected {
-  border-color: #38312b; /* Subtle indication or we can just rely on the checkmark */
-  background-color: #302924;
+  border-color: var(--naranja);
+  background-color: rgba(232, 98, 26, 0.08);
 }
 
+.location-option:hover:not(.selected) {
+  border-color: var(--gris-medio);
+}
+
+/* Miniatura de mapa simulada */
 .option-icon-bg {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-size: cover;
-  background-position: center;
+  flex-shrink: 0;
+  background-color: #1e293b;
+  background-image: radial-gradient(circle at 50% 50%, #334155 1px, transparent 1px);
+  background-size: 10px 10px;
   position: relative;
   overflow: hidden;
 }
 
-.precise-bg {
-  background-color: #1e293b;
-  /* Mock map background */
-  background-image: radial-gradient(circle at 50% 50%, #334155 1px, transparent 1px);
-  background-size: 10px 10px;
-}
-
-.approx-bg {
-  background-color: #1e293b;
-  background-image: radial-gradient(circle at 50% 50%, #334155 1px, transparent 1px);
-  background-size: 10px 10px;
-}
-
-/* Simulate the blue circle/zone */
 .precise-bg::after {
   content: '';
   position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
   background-color: #3b82f6;
@@ -114,9 +135,11 @@
 .approx-bg::after {
   content: '';
   position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   width: 40px;
   height: 40px;
-  background-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.25);
   border: 1px solid #60a5fa;
   border-radius: 50%;
 }
@@ -126,16 +149,16 @@
 }
 
 .option-text h4 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
+  margin: 0 0 3px 0;
+  font-size: 15px;
   font-weight: 500;
-  color: #fff;
+  color: var(--blanco);
 }
 
 .option-text p {
   margin: 0;
-  font-size: 14px;
-  color: #a19c98;
+  font-size: 13px;
+  color: var(--blanco-suave);
 }
 
 .option-check {
@@ -144,16 +167,20 @@
   align-items: center;
 }
 
+/* ── Aviso de ubicación aproximada ─────────────────────────── */
+
 .location-warning {
-  background-color: rgba(249, 168, 38, 0.1);
+  background-color: rgba(249, 168, 38, 0.08);
   color: #fbd38d;
-  padding: 12px 16px;
+  padding: 12px 14px;
   border-radius: 12px;
   font-size: 13px;
   margin-bottom: 20px;
-  line-height: 1.4;
+  line-height: 1.45;
   border: 1px solid rgba(249, 168, 38, 0.2);
 }
+
+/* ── Botones de acción ──────────────────────────────────────── */
 
 .location-actions {
   display: flex;
@@ -163,24 +190,43 @@
 
 .location-btn {
   width: 100%;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: 12px;
   border: none;
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s;
-  color: #f3f2f1;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  outline: none;
+}
+
+.location-btn:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 .location-btn:active {
-  opacity: 0.8;
+  opacity: 0.85;
+  transform: scale(0.98);
 }
 
+/* Botón principal — Permitir */
 .allow-btn {
-  background-color: #8c531d; /* Warm amber/brown from image */
+  background-color: var(--naranja);
+  color: var(--blanco);
 }
 
+.allow-btn:hover {
+  background-color: var(--naranja-hover);
+}
+
+/* Botón secundario — No permitir */
 .deny-btn {
-  background-color: #8c531d; /* Same color for all buttons in that UI */
+  background-color: transparent;
+  color: var(--blanco-suave);
+  border: 1px solid var(--gris-medio);
+}
+
+.deny-btn:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--blanco);
 }

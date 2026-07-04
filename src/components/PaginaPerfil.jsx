@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { axiosPrivate } from '../api/axios';
@@ -18,7 +18,6 @@ const AVATARES = [
 
 const XP_SIGUIENTE_NIVEL = 500;
 
-// Función para guardar avatar (console.log de producción eliminado)
 async function guardarAvatar(tipo, valor, usuarioId) {
   try {
     const response = await axiosPrivate.put('/perfil/avatar', { tipo, valor, usuarioId });
@@ -27,6 +26,15 @@ async function guardarAvatar(tipo, valor, usuarioId) {
     console.error('❌ Error al guardar avatar:', error);
     throw new Error('No se pudo guardar el avatar');
   }
+}
+
+// Distingue timeout de otros errores
+function mensajeError(err) {
+  const esTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
+  const es500 = err?.response?.status >= 500;
+  if (esTimeout) return 'El servidor tardó en responder. Reintentá en unos segundos.';
+  if (es500) return 'Error en el servidor (500). Reintentá en un momento.';
+  return 'No se pudo cargar. Reintentá.';
 }
 
 function PaginaPerfil() {
@@ -46,14 +54,24 @@ function PaginaPerfil() {
   const [historial, setHistorial] = useState([]);
   const [rangos, setRangos] = useState([]);
   const [sitiosVisitados, setSitiosVisitados] = useState([]);
+
+  // Estados separados para carga/error del perfil completo vs. solo misiones
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null);           // error total (sesión/perfil)
+  const [errorMisiones, setErrorMisiones] = useState(null); // error parcial: solo misiones
+  const [cargandoMisiones, setCargandoMisiones] = useState(false);
+
+  const [reintento, setReintento] = useState(0);
 
   const [session, setSession] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [perfilId, setPerfilId] = useState(null);
 
+  // ── Carga del perfil y sesión ──────────────────────────────
   useEffect(() => {
-    async function cargarTodo() {
+    async function cargarPerfil() {
+      setCargando(true);
+      setError(null);
       try {
         const { data: { session: s } } = await supabase.auth.getSession();
         const localToken = localStorage.getItem('token');
@@ -68,7 +86,7 @@ function PaginaPerfil() {
             const payload = JSON.parse(atob(localToken.split('.')[1]));
             resolvedUserId = payload.id || payload.sub || payload.usuarioId || payload.userId;
           } catch (e) {
-            console.error("Error decodificando token local", e);
+            console.error('Error decodificando token local', e);
           }
         }
 
@@ -78,15 +96,13 @@ function PaginaPerfil() {
         }
 
         setUserId(resolvedUserId);
-        const uid = resolvedUserId;
 
-        // ── Cargar perfil ──
-        let perfilId = null;
+        // Cargar datos del perfil
         try {
-          const resPerfil = await axiosPrivate.get(`/perfil/usuario/${uid}`);
+          const resPerfil = await axiosPrivate.get(`/perfil/usuario/${resolvedUserId}`);
           const datosPerfil = resPerfil.data;
           setPerfil(datosPerfil);
-          perfilId = datosPerfil.id;
+          setPerfilId(datosPerfil.id);
 
           if (datosPerfil.avatarTipo && datosPerfil.avatarValor) {
             if (datosPerfil.avatarTipo === 'emoji') {
@@ -101,48 +117,68 @@ function PaginaPerfil() {
             }
           }
         } catch (perfilErr) {
-          if (perfilErr.response && perfilErr.response.status === 404) {
-            // Normal: usuario sin perfil creado aún
-          } else {
+          // 404 = usuario sin perfil aún, es normal
+          if (!perfilErr.response || perfilErr.response.status !== 404) {
             console.warn('⚠️ No se pudo cargar perfil:', perfilErr.message);
           }
         }
 
-        // ── Cargar rangos y misiones ──
-        const promesas = [
-          axiosPrivate.get('/mision').catch(() => ({ data: [] })),
-          axiosPrivate.get('/rango').catch(() => ({ data: [] })),
-        ];
-
-        if (perfilId) {
-          promesas.push(
-            axiosPrivate.get(`/mision/perfil/${perfilId}`).catch(() => ({ data: [] })),
-            axiosPrivate.get(`/mision/historial/${perfilId}`).catch(() => ({ data: [] })),
-            axiosPrivate.get(`/mision/visitados/${perfilId}`).catch(() => ({ data: [] })),
-          );
-        }
-
-        const resultados = await Promise.all(promesas);
-
-        setMisiones(resultados[0].data);
-        setRangos(resultados[1].data);
-
-        if (perfilId) {
-          setPerfilMisiones(resultados[2].data);
-          setHistorial(resultados[3].data);
-          setSitiosVisitados(resultados[4].data);
-        }
-
       } catch (err) {
         console.error(err);
-        setError('No se pudo cargar el perfil. Intentá de nuevo.');
+        setError(mensajeError(err));
       } finally {
         setCargando(false);
       }
     }
 
-    cargarTodo();
+    cargarPerfil();
   }, [navigate]);
+
+  // ── Carga de misiones — separada del perfil para poder reintentar ──
+  const cargarMisiones = useCallback(async (pid) => {
+    if (!pid) return;
+    setCargandoMisiones(true);
+    setErrorMisiones(null);
+    try {
+      // Rangos y misiones globales — si falla uno, el otro puede seguir
+      const [resMisiones, resRangos, resPerfilMisiones, resHistorial, resVisitados] =
+        await Promise.allSettled([
+          axiosPrivate.get('/mision'),
+          axiosPrivate.get('/rango'),
+          axiosPrivate.get(`/mision/perfil/${pid}`),
+          axiosPrivate.get(`/mision/historial/${pid}`),
+          axiosPrivate.get(`/mision/visitados/${pid}`),
+        ]);
+
+      // Tomamos lo que funcionó, mostramos error si alguno falló
+      const alguno500 = [resMisiones, resRangos, resPerfilMisiones, resHistorial, resVisitados]
+        .some(r => r.status === 'rejected');
+
+      if (resMisiones.status === 'fulfilled') setMisiones(resMisiones.value.data || []);
+      if (resRangos.status === 'fulfilled')   setRangos(resRangos.value.data || []);
+      if (resPerfilMisiones.status === 'fulfilled') setPerfilMisiones(resPerfilMisiones.value.data || []);
+      if (resHistorial.status === 'fulfilled')      setHistorial(resHistorial.value.data || []);
+      if (resVisitados.status === 'fulfilled')      setSitiosVisitados(resVisitados.value.data || []);
+
+      if (alguno500) {
+        // Algunos datos sí cargaron, mostramos lo que tenemos pero avisamos
+        const primerError = [resMisiones, resRangos, resPerfilMisiones, resHistorial, resVisitados]
+          .find(r => r.status === 'rejected')?.reason;
+        setErrorMisiones(mensajeError(primerError));
+      }
+    } catch (err) {
+      setErrorMisiones(mensajeError(err));
+    } finally {
+      setCargandoMisiones(false);
+    }
+  }, []);
+
+  // Disparar carga de misiones cuando tengamos el perfilId (o al reintentar)
+  useEffect(() => {
+    if (perfilId) {
+      cargarMisiones(perfilId);
+    }
+  }, [perfilId, reintento, cargarMisiones]);
 
   const calcularPorcentajeXP = () => {
     const xp = perfil?.experienciaXp ?? 0;
@@ -182,6 +218,7 @@ function PaginaPerfil() {
     });
   };
 
+  // ── Skeleton de carga inicial ──
   if (cargando) return (
     <div className="profile-page">
       <div className="profile-layout">
@@ -216,15 +253,18 @@ function PaginaPerfil() {
     </div>
   );
 
+  // ── Error crítico (sesión / red) ──
   if (error) return (
     <div className="profile-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.5rem', minHeight: '100vh' }}>
       <div style={{ fontSize: '3rem' }}>⚠️</div>
-      <p style={{ color: '#ef5350', fontWeight: 700, fontSize: '1rem', textAlign: 'center', maxWidth: '300px' }}>{error}</p>
+      <p style={{ color: '#ef5350', fontWeight: 700, fontSize: '1rem', textAlign: 'center', maxWidth: '300px' }}>
+        {error}
+      </p>
       <button
-        onClick={() => window.location.reload()}
-        style={{ background: '#E8621A', color: '#fff', border: 'none', padding: '0.7rem 2rem', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}
+        onClick={() => setReintento(r => r + 1)}
+        style={{ background: 'linear-gradient(to right,#FF9B6A,#E85D04)', color: '#fff', border: 'none', padding: '0.7rem 2rem', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}
       >
-        Reintentar
+        🔄 Reintentar
       </button>
     </div>
   );
@@ -279,11 +319,46 @@ function PaginaPerfil() {
             </div>
           </div>
 
-          <MissionList
-            misiones={misiones}
-            perfilMisiones={perfilMisiones}
-            tabActiva={tabActiva}
-          />
+          {/* ── Banner de error de misiones (sin bloquear el resto del perfil) ── */}
+          {errorMisiones && !cargandoMisiones && (
+            <div className="misiones-error-banner" role="alert">
+              <span className="misiones-error-icon">📡</span>
+              <div className="misiones-error-texto">
+                <strong>No se pudieron cargar las misiones</strong>
+                <p>{errorMisiones}</p>
+              </div>
+              <button
+                className="misiones-retry-btn"
+                onClick={() => setReintento(r => r + 1)}
+              >
+                🔄 Reintentar
+              </button>
+            </div>
+          )}
+
+          {/* ── Skeleton de misiones cargando ── */}
+          {cargandoMisiones && (
+            <div className="missions-grid">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="skeleton-mission-card">
+                  <div className="skeleton-mission-img"></div>
+                  <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <div className="skeleton-line wide"></div>
+                    <div className="skeleton-line medium"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Lista de misiones ── */}
+          {!cargandoMisiones && (
+            <MissionList
+              misiones={misiones}
+              perfilMisiones={perfilMisiones}
+              tabActiva={tabActiva}
+            />
+          )}
         </main>
 
       </div>

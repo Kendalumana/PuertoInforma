@@ -1,60 +1,77 @@
-import React, { useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { MapPin, CheckCircle2, Circle } from 'lucide-react';
 import '../styles/LocationPermissionModal.css';
 
 const LocationPermissionModal = ({ onAllow, onDeny }) => {
   const [accuracy, setAccuracy] = useState('precisa');
+  // Ref para mover el foco al botón principal al montar el modal (accesibilidad).
+  const primaryBtnRef = useRef(null);
+
+  useEffect(() => {
+    // Focus automático al botón "Permitir" cuando el modal aparece.
+    primaryBtnRef.current?.focus();
+  }, []);
 
   const handleAllow = () => {
-    // Aquí puedes manejar la lógica antes de pedir el permiso real del navegador
-    // onAllow puede recibir la "precisión" seleccionada si deseas usarla para algo,
-    // aunque el navegador siempre pedirá lat/lng real.
-    if (onAllow) {
-      onAllow(accuracy);
-    }
+    if (onAllow) onAllow(accuracy);
   };
 
   return (
-    <div className="location-modal-overlay">
+    <div
+      className="location-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="location-modal-title"
+    >
       <div className="location-modal-content">
         <div className="location-modal-header">
-          <div className="location-icon-wrapper">
-            <MapPin size={20} color="#f9a826" />
+          <div className="location-icon-wrapper" aria-hidden="true">
+            <MapPin size={20} color="var(--naranja)" />
           </div>
-          <h3>www.puertoinforma.com desea usar la ubicación de tu dispositivo</h3>
+          <h3 id="location-modal-title">
+            PuertoInforma desea usar la ubicación de tu dispositivo
+          </h3>
         </div>
 
-        <div className="location-options">
-          <div 
+        <div className="location-options" role="radiogroup" aria-label="Precisión de la ubicación">
+          <div
             className={`location-option ${accuracy === 'precisa' ? 'selected' : ''}`}
             onClick={() => setAccuracy('precisa')}
+            role="radio"
+            aria-checked={accuracy === 'precisa'}
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setAccuracy('precisa')}
           >
-            <div className="option-icon-bg precise-bg"></div>
+            <div className="option-icon-bg precise-bg" aria-hidden="true"></div>
             <div className="option-text">
               <h4>Precisa</h4>
               <p>Ubicación exacta</p>
             </div>
-            <div className="option-check">
+            <div className="option-check" aria-hidden="true">
               {accuracy === 'precisa' ? (
-                <CheckCircle2 size={24} color="#f9a826" fill="#f9a826" stroke="#38312b" />
+                <CheckCircle2 size={24} color="var(--naranja)" fill="var(--naranja)" stroke="var(--gris-oscuro)" />
               ) : (
                 <Circle size={24} color="#a19c98" />
               )}
             </div>
           </div>
 
-          <div 
+          <div
             className={`location-option ${accuracy === 'aproximada' ? 'selected' : ''}`}
             onClick={() => setAccuracy('aproximada')}
+            role="radio"
+            aria-checked={accuracy === 'aproximada'}
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setAccuracy('aproximada')}
           >
-            <div className="option-icon-bg approx-bg"></div>
+            <div className="option-icon-bg approx-bg" aria-hidden="true"></div>
             <div className="option-text">
               <h4>Aproximada</h4>
-              <p>Colonia</p>
+              <p>Solo tu zona general</p>
             </div>
-            <div className="option-check">
+            <div className="option-check" aria-hidden="true">
               {accuracy === 'aproximada' ? (
-                <CheckCircle2 size={24} color="#f9a826" fill="#f9a826" stroke="#38312b" />
+                <CheckCircle2 size={24} color="var(--naranja)" fill="var(--naranja)" stroke="var(--gris-oscuro)" />
               ) : (
                 <Circle size={24} color="#a19c98" />
               )}
@@ -63,20 +80,26 @@ const LocationPermissionModal = ({ onAllow, onDeny }) => {
         </div>
 
         {accuracy === 'aproximada' && (
-          <div className="location-warning">
-            ⚠️ Aviso: Si eliges la ubicación aproximada, te costará más acceder a las paradas y estimar los tiempos de llegada de los buses.
+          <div className="location-warning" role="alert">
+            ⚠️ Con ubicación aproximada, puede costar más estimar tiempos de llegada de buses y paradas cercanas.
           </div>
         )}
 
         <div className="location-actions">
-          <button className="location-btn allow-btn" onClick={handleAllow}>
-            Permitir mientras visito el sitio
+          <button
+            ref={primaryBtnRef}
+            className="location-btn allow-btn"
+            onClick={handleAllow}
+            aria-label={`Permitir acceso a ubicación ${accuracy}`}
+          >
+            Permitir acceso a mi ubicación
           </button>
-          <button className="location-btn allow-btn" onClick={handleAllow}>
-            Permitir esta vez
-          </button>
-          <button className="location-btn deny-btn" onClick={onDeny}>
-            No permitir nunca
+          <button
+            className="location-btn deny-btn"
+            onClick={onDeny}
+            aria-label="No permitir acceso a la ubicación"
+          >
+            No permitir
           </button>
         </div>
       </div>

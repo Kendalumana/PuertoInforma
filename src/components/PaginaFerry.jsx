@@ -6,7 +6,7 @@ import {
     Bell, User, Map
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
-import '../styles/Ferry.css';
+import '../styles/Transporte.css';
 import Navbar from './Navbar';
 import ReservationLink from './ReservationLink';
 import TransportDayTabs from './TransportDayTabs';
@@ -72,8 +72,8 @@ function normalizarHorario(h) {
 // ═══════════════════════════════════════════════════════════
 function FerrySkeletonGrid() {
     return (
-        <div className="ferry-grid">
-            <div className="ferry-card big-card skeleton-card">
+        <div className="transporte-grid">
+            <div className="transporte-card big-card skeleton-card">
                 <div className="sk-line sk-label" />
                 <div className="sk-time" />
                 <div className="sk-line sk-sub" />
@@ -85,19 +85,19 @@ function FerrySkeletonGrid() {
                     </div>
                 </div>
             </div>
-            <div className="ferry-card right-card skeleton-card">
+            <div className="transporte-card right-card skeleton-card">
                 <div className="sk-line sk-label" />
                 <div className="sk-line sk-title" />
                 <div className="sk-line sk-sub" />
                 <div className="sk-bar" />
                 <div className="sk-line sk-btn" />
             </div>
-            <div className="ferry-card bottom-left-card skeleton-card">
+            <div className="transporte-card bottom-left-card skeleton-card">
                 <div className="sk-line sk-label" />
                 <div className="sk-line sk-title" />
                 <div className="sk-line sk-sub" />
             </div>
-            <div className="ferry-card info-card skeleton-card" style={{ flexDirection: 'row', gap: '1rem' }}>
+            <div className="transporte-card info-card skeleton-card" style={{ flexDirection: 'row', gap: '1rem' }}>
                 <div className="sk-box" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                     <div className="sk-line sk-t1" />
@@ -227,14 +227,14 @@ function PaginaFerry() {
     const abordajeMin = siguiente ? Math.max(0, minsRestantes - 10) : null;
 
     return (
-        <div className="app-wrapper immersive-layout ferry-layout">
+        <div className="app-wrapper immersive-layout transporte-layout">
             <Navbar />
 
-            <main className="ferry-main">
+            <main className="transporte-main">
                 {/* Botón volver eliminado */}
 
                 {/* Hero Title */}
-                <h1 className="ferry-hero-title">
+                <h1 className="transporte-hero-title">
                     Horarios de <span className="text-orange">Ferry</span>
                 </h1>
 
@@ -250,14 +250,14 @@ function PaginaFerry() {
                 {/* ── Tabs HOY / MAÑANA — A-I3 ── */}
                 {!loading && !error && (
                     <TransportDayTabs
-                        className="ferry-dia-tabs"
+                        className="transporte-dia-tabs"
                         day={tabDia}
                         onDayChange={setTabDia}
                     />
                 )}
 
                 {/* Section Header */}
-                <div className="ferry-section-header">
+                <div className="transporte-section-header">
                     <div>
                         <h2>{tabDia === 'manana' ? 'Salidas Mañana' : 'Próximas Salidas'}</h2>
                         <p>
@@ -277,11 +277,11 @@ function PaginaFerry() {
                 {loading && <FerrySkeletonGrid />}
 
                 {!loading && error && (
-                    <div className="ferry-error-state">
+                    <div className="transporte-error-state">
                         <Ship size={48} className="text-orange" style={{ opacity: 0.4 }} />
                         <p>{error}</p>
                         <button
-                            className="ferry-btn-outline"
+                            className="transporte-btn-outline"
                             style={{ width: 'auto', marginTop: '1rem' }}
                             onClick={() => setReintento(r => r + 1)}
                         >
@@ -292,10 +292,10 @@ function PaginaFerry() {
 
                 {/* ── Grid principal — solo cuando hay datos ── */}
                 {!loading && !error && (
-                    <div className="ferry-grid">
+                    <div className="transporte-grid">
 
                         {/* ── Big Card: SIGUIENTE SALIDA ── */}
-                        <div className="ferry-card big-card">
+                        <div className="transporte-card big-card">
                             <div className="card-top">
                                 <span className="siguiente-label">SIGUIENTE SALIDA</span>
                                 <span className={estadoBigCard.badgeClass}>{estadoBigCard.badge}</span>
@@ -331,10 +331,10 @@ function PaginaFerry() {
                                     </div>
                                 </>
                             ) : (
-                                <div className="ferry-no-salidas">
+                                <div className="transporte-no-salidas">
                                     <p>No hay más salidas hoy para esta ruta.</p>
                                     {ultima && (
-                                        <p className="ferry-ultima-hint">
+                                        <p className="transporte-ultima-hint">
                                             Última salida fue a las {formatHora(ultima.horaSalida)}
                                         </p>
                                     )}
@@ -346,7 +346,7 @@ function PaginaFerry() {
 
                         {/* ── Right Card: 2ª SALIDA ── */}
                         {proxima2 && (
-                            <div className="ferry-card right-card">
+                            <div className="transporte-card right-card">
                                 <div className="card-top flex-between">
                                     <Clock size={20} className="text-orange" />
                                     <span className="time-small">
@@ -367,17 +367,17 @@ function PaginaFerry() {
                                 </div>
                                 {proxima2.enlaceReserva ? (
                                     <ReservationLink
-                                        className="ferry-btn-outline ferry-reserve-link"
+                                        className="transporte-btn-outline transporte-reserve-link"
                                         href={proxima2.enlaceReserva}
                                     />
                                 ) : (
-                                    <button className="ferry-btn-outline">Reservar Espacio</button>
+                                    <button className="transporte-btn-outline">Reservar Espacio</button>
                                 )}
                             </div>
                         )}
 
                         {/* ── Bottom Left Card: ÚLTIMA / NOCTURNA ── */}
-                        <div className="ferry-card bottom-left-card">
+                        <div className="transporte-card bottom-left-card">
                             <div className="card-top flex-between">
                                 <span className="time-small">
                                     {ultima ? formatHora(ultima.horaSalida) : '--:--'}
@@ -399,7 +399,7 @@ function PaginaFerry() {
                         </div>
 
                         {/* ── Info Card: Recomendación estática ── */}
-                        <div className="ferry-card info-card">
+                        <div className="transporte-card info-card">
                             <Info size={28} className="text-orange info-icon" />
                             <div>
                                 <h4>Recomendación para Viajeros</h4>
@@ -430,15 +430,15 @@ function PaginaFerry() {
 
             {/* ── Panel GUARDADOS — A-N2 ── */}
             {activeTab === 'SAVED' && (
-                <div className="ferry-saved-panel">
-                    <h3 className="ferry-saved-title">⚓ Rutas Guardadas</h3>
+                <div className="transporte-saved-panel">
+                    <h3 className="transporte-saved-title">⚓ Rutas Guardadas</h3>
                     {ferrySaved.length === 0 ? (
-                        <div className="ferry-saved-empty">
+                        <div className="transporte-saved-empty">
                             <Ship size={40} style={{ opacity: 0.3 }} />
                             <p>Guardá rutas tocando el 🔖 en los chips de arriba.</p>
                         </div>
                     ) : (
-                        <div className="ferry-saved-list">
+                        <div className="transporte-saved-list">
                             {ferrySaved.map(r => {
                                 const [orig, dest] = r.split(' → ');
                                 const hsFiltrados = horarios
@@ -446,15 +446,15 @@ function PaginaFerry() {
                                     .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida));
                                 const proxima = hsFiltrados.find(h => minutosHasta(h.horaSalida) >= 0);
                                 return (
-                                    <div key={r} className="ferry-saved-item" onClick={() => { setActiveRoute(r); setActiveTab('SCHEDULES'); }}>
-                                        <div className="ferry-saved-route">{r}</div>
-                                        <div className="ferry-saved-next">
+                                    <div key={r} className="transporte-saved-item" onClick={() => { setActiveRoute(r); setActiveTab('SCHEDULES'); }}>
+                                        <div className="transporte-saved-route">{r}</div>
+                                        <div className="transporte-saved-next">
                                             {proxima
-                                                ? <><span className="ferry-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
+                                                ? <><span className="transporte-row-restante">{formatHora(proxima.horaSalida)}</span><span style={{ color: '#888', fontSize: '0.8rem', marginLeft: '6px' }}>{formatearRestante(minutosHasta(proxima.horaSalida))}</span></>
                                                 : <span style={{ color: '#555', fontSize: '0.85rem' }}>Sin salidas hoy</span>
                                             }
                                         </div>
-                                        <button className="ferry-saved-remove" onClick={e => { e.stopPropagation(); toggleFerrySaved(r); }}>✕</button>
+                                        <button className="transporte-saved-remove" onClick={e => { e.stopPropagation(); toggleFerrySaved(r); }}>✕</button>
                                     </div>
                                 );
                             })}
@@ -464,7 +464,7 @@ function PaginaFerry() {
             )}
 
             {/* Bottom Tab Bar — Mobile solo */}
-            <nav className="ferry-bottom-nav">
+            <nav className="transporte-bottom-nav">
                 <button
                     className={`nav-item ${activeTab === 'EXPLORE' ? 'active' : ''}`}
                     onClick={() => { setActiveTab('EXPLORE'); navigate('/'); }}
