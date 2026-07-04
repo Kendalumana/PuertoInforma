@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Search, Clock,
     Info, Compass, Bus, Ticket, Bookmark, BookmarkCheck, MapPin,
-    Bell, User, Map, Navigation
+    Bell, User, Map, Navigation, Zap, GitBranch, ArrowRight, X
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Transporte.css';
@@ -222,7 +222,7 @@ function MiniMapaSVG({ ruta }) {
 // ═══════════════════════════════════════════════════════════
 // MAPA DE PUNTITOS (TRACK DE PARADAS)
 // ═══════════════════════════════════════════════════════════
-function RouteStopsTrack({ paradas }) {
+function RouteStopsTrack({ paradas, paradaBuscada }) {
     if (!paradas || paradas.length < 2) return null;
 
     let parsed = [];
@@ -238,20 +238,38 @@ function RouteStopsTrack({ paradas }) {
 
     if (parsed.length <= 2) return null; // Solo mostramos track si hay paradas intermedias
 
+    // Normaliza para comparar sin importar mayúsculas ni acentos
+    const normalizar = (s) => s?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') ?? '';
+    const qBuscada = normalizar(paradaBuscada);
+
     return (
         <div style={{ padding: '0 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#E8621A', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                 <MapPin size={14} />
                 <span>Ruta del Bus</span>
+                {paradaBuscada && (
+                    // Indicador visual de que se está mostrando la parada buscada
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', fontWeight: 600, color: '#aaa' }}>
+                        — marcando <strong style={{ color: '#fff' }}>{paradaBuscada}</strong>
+                    </span>
+                )}
             </div>
             <div className="transporte-stops-track">
-                {parsed.map((p, i) => (
-                    <div key={i} className="transporte-stop-item">
-                        <div className={`transporte-stop-dot ${i === 0 ? 'origin' : i === parsed.length - 1 ? 'dest' : ''}`} />
-                        {i < parsed.length - 1 && <div className="transporte-stop-connector active" />}
-                        <span className="transporte-stop-label">{p}</span>
-                    </div>
-                ))}
+                {parsed.map((p, i) => {
+                    const esMatch = qBuscada && normalizar(p).includes(qBuscada);
+                    const clasesDot = [
+                        'transporte-stop-dot',
+                        i === 0 ? 'origin' : i === parsed.length - 1 ? 'dest' : '',
+                        esMatch ? 'match' : '', // ← resaltado si coincide con la parada buscada
+                    ].filter(Boolean).join(' ');
+                    return (
+                        <div key={i} className="transporte-stop-item">
+                            <div className={clasesDot} />
+                            {i < parsed.length - 1 && <div className="transporte-stop-connector active" />}
+                            <span className={`transporte-stop-label${esMatch ? ' match' : ''}`}>{p}</span>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -399,6 +417,8 @@ function PaginaBuses() {
     const [paradaBuscada, setParadaBuscada] = useState(''); // parada intermedia buscada
     const [filtroServicio, setFiltroServicio] = useState('TODOS'); // 'TODOS', 'DIRECTO', 'REGULAR'
     const [tabDia, setTabDia] = useState('hoy');
+    const [autoFiltroMsg, setAutoFiltroMsg] = useState(null); // mensaje de auto-cambio de filtro
+    const autoFiltroTimer = useRef(null);
     const [busesSaved, setBusesSaved] = useState(() => {
         try { return JSON.parse(localStorage.getItem('busesGuardados') || '[]').map(String); }
         catch { return []; }
@@ -576,7 +596,13 @@ function PaginaBuses() {
         setParadaBuscada(parada);
         if (parada) {
             // Si busca una parada intermedia, el filtro "Directo" pierde sentido. Forzamos a "Con Paradas" (REGULAR)
-            if (filtroServicio === 'DIRECTO') setFiltroServicio('REGULAR');
+            if (filtroServicio === 'DIRECTO') {
+                setFiltroServicio('REGULAR');
+                // Notificar al usuario del auto-cambio
+                clearTimeout(autoFiltroTimer.current);
+                setAutoFiltroMsg('Se cambió a "Con Paradas" porque los buses directos no tienen paradas intermedias.');
+                autoFiltroTimer.current = setTimeout(() => setAutoFiltroMsg(null), 4500);
+            }
 
             // Buscar la primera ruta que pase por esta parada
             const q = parada.trim().toLowerCase();
@@ -601,6 +627,18 @@ function PaginaBuses() {
             .filter(horario => horario.destino === destino && correEnDia(horario, diaNum) && minutosHasta(horario.horaSalida) >= 0)
             .sort((a, b) => horaEnMinutos(a.horaSalida) - horaEnMinutos(b.horaSalida))[0];
     };
+
+    // ── Conteo de horarios por tipo (para badges en los tabs) ──
+    const conteoServicios = useMemo(() => {
+        if (!activeRoute) return { TODOS: 0, DIRECTO: 0, REGULAR: 0 };
+        const diaNum = tabDia === 'hoy' ? ahora.getDay() : (ahora.getDay() + 1) % 7;
+        const deRuta = horarios.filter(h => h.rutaId === activeRoute && correEnDia(h, diaNum));
+        return {
+            TODOS: deRuta.length,
+            DIRECTO: deRuta.filter(h => h.tipo === 'DIRECTO').length,
+            REGULAR: deRuta.filter(h => h.tipo !== 'DIRECTO').length,
+        };
+    }, [horarios, activeRoute, tabDia, ahora]);
 
     // ── Horarios filtrados por ruta activa ─────────────────
     const horariosFiltradosRuta = useMemo(() => {
@@ -692,8 +730,9 @@ function PaginaBuses() {
                     savedRoutes={busesSaved}
                 />
 
-                {/* ── Tabs HOY / MAÑANA y Pestañota de Servicio ── */}
+                {/* ── Tabs HOY / MAÑANA y Filtros de Servicio ── */}
                 {!loading && !error && (
+                    <>
                     <div className="transporte-filtros-row">
                         <TransportDayTabs
                             className="transporte-dia-tabs"
@@ -702,27 +741,104 @@ function PaginaBuses() {
                             style={{ marginBottom: 0 }}
                         />
 
-                        {/* Pestañota UI de tipo de servicio solicitada */}
-                        <div className="transporte-servicio-tabs">
-                            <button 
-                                className={`transporte-servicio-tab ${filtroServicio === 'TODOS' ? 'active' : ''}`}
+                        {/* ── Selector de tipo de servicio mejorado ── */}
+                        <div className="servicio-filter-group" role="group" aria-label="Filtrar por tipo de servicio">
+                            {/* Botón: Todos */}
+                            <button
+                                id="filtro-todos"
+                                className={`servicio-filter-btn todos ${filtroServicio === 'TODOS' ? 'active' : ''}`}
                                 onClick={() => setFiltroServicio('TODOS')}
-                            >Todos</button>
-                            <button 
-                                className={`transporte-servicio-tab ${filtroServicio === 'DIRECTO' ? 'active' : ''}`}
-                                onClick={() => { setFiltroServicio('DIRECTO'); setParadaBuscada(''); }} // Limpiar parada si elige Directo
-                            >Directo</button>
-                            <button 
-                                className={`transporte-servicio-tab ${filtroServicio === 'REGULAR' ? 'active' : ''}`}
+                                title="Mostrar todos los horarios disponibles"
+                                aria-pressed={filtroServicio === 'TODOS'}
+                            >
+                                <span className="sfb-icon">☰</span>
+                                <span className="sfb-label">Todos</span>
+                                {conteoServicios.TODOS > 0 && (
+                                    <span className="sfb-badge">{conteoServicios.TODOS}</span>
+                                )}
+                            </button>
+
+                            {/* Botón: Directo */}
+                            <button
+                                id="filtro-directo"
+                                className={`servicio-filter-btn directo ${filtroServicio === 'DIRECTO' ? 'active' : ''} ${conteoServicios.DIRECTO === 0 ? 'empty' : ''}`}
+                                onClick={() => {
+                                    setFiltroServicio('DIRECTO');
+                                    if (paradaBuscada) {
+                                        setParadaBuscada('');
+                                        clearTimeout(autoFiltroTimer.current);
+                                        setAutoFiltroMsg('Se quitó la parada intermedia. Los buses directos no tienen paradas en ruta.');
+                                        autoFiltroTimer.current = setTimeout(() => setAutoFiltroMsg(null), 4500);
+                                    }
+                                }}
+                                title="Solo buses expresos: viajan de origen a destino sin paradas intermedias. Más rápidos."
+                                aria-pressed={filtroServicio === 'DIRECTO'}
+                                disabled={conteoServicios.DIRECTO === 0}
+                            >
+                                <Zap size={13} className="sfb-icon-svg" />
+                                <span className="sfb-label">Directo</span>
+                                {conteoServicios.DIRECTO > 0 && (
+                                    <span className="sfb-badge directo">{conteoServicios.DIRECTO}</span>
+                                )}
+                            </button>
+
+                            {/* Botón: Con Paradas */}
+                            <button
+                                id="filtro-con-paradas"
+                                className={`servicio-filter-btn paradas ${filtroServicio === 'REGULAR' ? 'active' : ''} ${conteoServicios.REGULAR === 0 ? 'empty' : ''}`}
                                 onClick={() => setFiltroServicio('REGULAR')}
-                            >Con Paradas</button>
+                                title="Buses que recogen y dejan pasajeros en paradas intermedias a lo largo de la ruta."
+                                aria-pressed={filtroServicio === 'REGULAR'}
+                                disabled={conteoServicios.REGULAR === 0}
+                            >
+                                <GitBranch size={13} className="sfb-icon-svg" />
+                                <span className="sfb-label">Con Paradas</span>
+                                {conteoServicios.REGULAR > 0 && (
+                                    <span className="sfb-badge paradas">{conteoServicios.REGULAR}</span>
+                                )}
+                            </button>
                         </div>
                     </div>
+
+                    {/* ── Banner informativo de tipo activo ── */}
+                    {filtroServicio !== 'TODOS' && (
+                        <div className={`servicio-info-banner ${filtroServicio === 'DIRECTO' ? 'directo' : 'paradas'}`}>
+                            {filtroServicio === 'DIRECTO' ? (
+                                <>
+                                    <Zap size={14} />
+                                    <span><strong>Buses Directos:</strong> Sin paradas intermedias, llegan más rápido a destino.</span>
+                                </>
+                            ) : (
+                                <>
+                                    <GitBranch size={14} />
+                                    <span><strong>Con Paradas:</strong> Paran en puntos intermedios. Ideales si subís en ruta.</span>
+                                </>
+                            )}
+                            <button
+                                className="servicio-info-banner-close"
+                                onClick={() => setFiltroServicio('TODOS')}
+                                aria-label="Limpiar filtro"
+                            ><X size={12} /></button>
+                        </div>
+                    )}
+
+                    {/* ── Toast de auto-cambio de filtro ── */}
+                    {autoFiltroMsg && (
+                        <div className="filtro-auto-toast" role="status" aria-live="polite">
+                            <Info size={14} />
+                            <span>{autoFiltroMsg}</span>
+                            <button onClick={() => setAutoFiltroMsg(null)} aria-label="Cerrar"><X size={11} /></button>
+                        </div>
+                    )}
+                    </>
                 )}
 
                 {/* ── Mapa de Puntitos de la ruta actual ── */}
                 {!loading && !error && activeRouteData && (
-                    <RouteStopsTrack paradas={paradasRutaActiva} />
+                    <RouteStopsTrack
+                        paradas={paradasRutaActiva}
+                        paradaBuscada={paradaBuscada}
+                    />
                 )}
 
                 {/* Section Header */}
@@ -779,12 +895,6 @@ function PaginaBuses() {
                                             Pasa por <strong>{paradaBuscada}</strong>
                                         </div>
                                     )}
-                                    {/* Ruta visible como subtítulo arriba */}
-                                    <p style={{ color: '#aaa', fontSize: '0.9rem', margin: '0 0 0.25rem', fontWeight: 600 }}>
-                                        <MapPin size={13} style={{ marginRight: 4, color: '#E8621A' }} />
-                                        {siguiente.rutaCorta}
-                                        <span style={{ marginLeft: 8, color: '#E8621A' }}>{siguiente.rutaCodigo}</span>
-                                    </p>
 
                                     <div className="card-time">{formatHora(siguiente.horaSalida)}</div>
                                     <div className="card-subtitle">
@@ -812,8 +922,6 @@ function PaginaBuses() {
                                             </p>
                                         </div>
                                     </div>
-                                    
-                                    <MiniMapaSVG ruta={siguiente} />
                                     <ReservationLink
                                         className="transporte-btn-outline"
                                         href={siguiente.enlaceReserva}
@@ -850,11 +958,7 @@ function PaginaBuses() {
                                     Sale a las {formatHora(proxima2.horaSalida)}
                                 </p>
 
-                                <h3 className="card-title mt-auto" style={{ fontSize: '1rem' }}>{proxima2.operadorNombre}</h3>
-                                <p className="card-subtitle mb-4" style={{ fontSize: '0.8rem' }}>
-                                    <MapPin size={11} style={{ marginRight: 3 }} />
-                                    {proxima2.rutaCorta} · {proxima2.rutaCodigo}
-                                </p>
+                                <h3 className="card-title mt-auto mb-4" style={{ fontSize: '1rem' }}>{proxima2.operadorNombre}</h3>
                                 <div className="progress-bar-container">
                                     <div
                                         className="progress-bar-fill"

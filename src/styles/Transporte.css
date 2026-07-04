@@ -1009,6 +1009,31 @@
     font-weight: 700;
 }
 
+/* ── Parada que coincide con la búsqueda del combobox ── */
+.transporte-stop-dot.match {
+    background-color: #fff;
+    border-color: var(--naranja);
+    border-width: 3px;
+    width: 20px;
+    height: 20px;
+    box-shadow: 0 0 0 4px rgba(232, 98, 26, 0.3);
+    animation: stopMatchPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes stopMatchPulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(232, 98, 26, 0.4); }
+    50%       { box-shadow: 0 0 0 7px rgba(232, 98, 26, 0.1); }
+}
+
+.transporte-stop-label.match {
+    color: var(--naranja) !important;
+    font-weight: 800;
+    /* Pequeña etiqueta "Aquí" sobre el nombre */
+}
+.transporte-stop-label.match::before {
+    content: '📍 ';
+}
+
 /* ============================================================
    Stop Combobox — "¿A dónde vas?" (dropdown real con todas las paradas del JSON)
    ============================================================ */
@@ -1249,50 +1274,227 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-/* ── Tabs Servicio (Directo/Indirecto) ── */
-.transporte-servicio-tabs {
+/* ═══════════════════════════════════════════════════════════
+   Selector de tipo de servicio — versión premium
+   ═══════════════════════════════════════════════════════════ */
+.servicio-filter-group {
     display: flex;
-    gap: 0.25rem;
-    background: rgba(30, 30, 30, 0.6);
-    padding: 0.35rem;
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 0.4rem;
+    background: rgba(18, 18, 18, 0.7);
+    padding: 0.3rem;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
-.transporte-servicio-tab {
+/* ── Botón base ── */
+.servicio-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     background: transparent;
     border: none;
-    color: #888;
-    padding: 0.4rem 1rem;
-    border-radius: 18px;
-    font-size: 0.8rem;
+    color: #666;
+    padding: 0.42rem 0.9rem;
+    border-radius: 22px;
+    font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.22s ease;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+    position: relative;
 }
-
-.transporte-servicio-tab:hover {
+.servicio-filter-btn:hover:not(:disabled) {
     color: #ccc;
+    background: rgba(255, 255, 255, 0.06);
+}
+.servicio-filter-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
 
-.transporte-servicio-tab.active {
-    background: rgba(255, 255, 255, 0.12);
+/* ── Ícono SVG dentro del botón ── */
+.sfb-icon {
+    font-size: 0.85rem;
+    line-height: 1;
+}
+.sfb-icon-svg {
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+/* ── Badge de conteo ── */
+.sfb-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.1);
+    color: #999;
+    transition: background 0.22s, color 0.22s;
+}
+.sfb-badge.directo {
+    background: rgba(232, 98, 26, 0.15);
+    color: var(--naranja);
+}
+.sfb-badge.paradas {
+    background: rgba(94, 160, 220, 0.15);
+    color: #5ea0dc;
+}
+
+/* ── Variante TODOS — activo ── */
+.servicio-filter-btn.todos.active {
+    background: rgba(255, 255, 255, 0.1);
     color: var(--blanco);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* ── Variante DIRECTO — activo ── */
+.servicio-filter-btn.directo.active {
+    background: linear-gradient(135deg, rgba(232, 98, 26, 0.25), rgba(232, 98, 26, 0.12));
+    color: var(--naranja);
+    box-shadow: 0 2px 14px rgba(232, 98, 26, 0.25);
+    border: 1px solid rgba(232, 98, 26, 0.3);
+}
+.servicio-filter-btn.directo.active .sfb-icon-svg {
+    color: var(--naranja);
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(232,98,26,0.6));
+}
+.servicio-filter-btn.directo.active .sfb-badge.directo {
+    background: rgba(232, 98, 26, 0.3);
+    color: var(--naranja);
+}
+
+/* ── Variante CON PARADAS — activo ── */
+.servicio-filter-btn.paradas.active {
+    background: linear-gradient(135deg, rgba(94, 160, 220, 0.22), rgba(94, 160, 220, 0.1));
+    color: #7ab8e8;
+    box-shadow: 0 2px 14px rgba(94, 160, 220, 0.2);
+    border: 1px solid rgba(94, 160, 220, 0.25);
+}
+.servicio-filter-btn.paradas.active .sfb-icon-svg {
+    color: #7ab8e8;
+    opacity: 1;
+}
+.servicio-filter-btn.paradas.active .sfb-badge.paradas {
+    background: rgba(94, 160, 220, 0.28);
+    color: #7ab8e8;
+}
+
+/* ── Banner informativo contextual ── */
+.servicio-info-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    animation: slideInDown 0.25s ease;
+}
+.servicio-info-banner strong { font-weight: 700; }
+.servicio-info-banner span { flex: 1; }
+
+.servicio-info-banner.directo {
+    background: linear-gradient(135deg, rgba(232,98,26,0.12), rgba(232,98,26,0.05));
+    border: 1px solid rgba(232,98,26,0.2);
+    color: #e8a07e;
+}
+.servicio-info-banner.directo strong { color: var(--naranja); }
+.servicio-info-banner.directo > svg { color: var(--naranja); flex-shrink: 0; }
+
+.servicio-info-banner.paradas {
+    background: linear-gradient(135deg, rgba(94,160,220,0.12), rgba(94,160,220,0.05));
+    border: 1px solid rgba(94,160,220,0.2);
+    color: #9ec5e8;
+}
+.servicio-info-banner.paradas strong { color: #7ab8e8; }
+.servicio-info-banner.paradas > svg { color: #7ab8e8; flex-shrink: 0; }
+
+.servicio-info-banner-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.5;
+    padding: 0.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+.servicio-info-banner-close:hover { opacity: 1; }
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Toast de auto-cambio ── */
+.filtro-auto-toast {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1rem;
+    background: rgba(20, 20, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-left: 3px solid var(--naranja);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: #bbb;
+    margin-bottom: 0.75rem;
+    animation: slideInDown 0.3s ease;
+    backdrop-filter: blur(12px);
+}
+.filtro-auto-toast > svg { color: var(--naranja); flex-shrink: 0; }
+.filtro-auto-toast span { flex: 1; }
+.filtro-auto-toast button {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    padding: 0.15rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+.filtro-auto-toast button:hover { color: var(--naranja); }
+
+/* ── Responsive ── */
 @media (max-width: 600px) {
-    .transporte-servicio-tabs {
+    .servicio-filter-group {
         width: 100%;
         justify-content: space-between;
     }
-    .transporte-servicio-tab {
+    .servicio-filter-btn {
         flex: 1;
-        text-align: center;
-        padding: 0.5rem 0.5rem;
+        justify-content: center;
+        padding: 0.48rem 0.4rem;
+        font-size: 0.72rem;
+    }
+    .sfb-badge {
+        display: none; /* Ocultar badges en mobile para ahorrar espacio */
+    }
+    .servicio-info-banner {
+        font-size: 0.75rem;
     }
 }
+
+/* Mantener compatibilidad con los estilos viejos por si algún ref queda */
+.transporte-servicio-tabs { display: none; }
+
 

@@ -17,10 +17,6 @@ function BusDestinationSelector({
 
     return (
         <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
-                ¿PARA DÓNDE VAS?
-            </p>
-
             {loading ? (
                 <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
                     {[1, 2, 3].map(index => <div key={index} className="buses-chip-skeleton" style={{ width: 140, height: 56, borderRadius: 14 }} />)}

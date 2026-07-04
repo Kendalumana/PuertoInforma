@@ -11,8 +11,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  position: sticky;
+  /* fixed en lugar de sticky: el layout usa overflow-y:auto en un contenedor hijo,
+     lo que rompe sticky. fixed ancla el navbar a la viewport sin importar cuál
+     contenedor haga scroll. El padding-top en .transporte-layout compensa la altura. */
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   z-index: 1000;              /* encima del mapa de Leaflet */
   box-shadow: 0 2px 10px rgba(0,0,0,0.4);
   border-bottom: 2px solid var(--naranja);

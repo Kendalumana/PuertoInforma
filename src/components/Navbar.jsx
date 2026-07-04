@@ -16,7 +16,7 @@ function Navbar({ onOpenAbout }) {
     };
 
     return (
-        <header className="navbar-header immersive-navbar">
+        <header className="navbar-header">
             <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {!esMapa && (
                     <button
