@@ -11,8 +11,29 @@ L.Icon.Default.mergeOptions({
     shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[char]));
+}
+
+function createPopup(title, text) {
+    const wrapper = document.createElement('div');
+    const strong = document.createElement('strong');
+    strong.textContent = title;
+    const lineBreak = document.createElement('br');
+    const content = document.createTextNode(text || '');
+    wrapper.append(strong, lineBreak, content);
+    return wrapper;
+}
+
 // Icono personalizado naranja para origen/destino de la ruta del bus
 function createBusIcon(color = '#E8621A', label = '') {
+    const safeLabel = escapeHtml(label);
     return L.divIcon({
         className: '',
         html: `
@@ -32,7 +53,7 @@ function createBusIcon(color = '#E8621A', label = '') {
                 background:rgba(20,20,30,0.9); color:white; font-size:10px;
                 padding:2px 6px; border-radius:4px; white-space:nowrap;
                 font-family:sans-serif; font-weight:600; letter-spacing:0.3px;
-            ">${label}</div>` : ''}
+            ">${safeLabel}</div>` : ''}
         `,
         iconSize: [36, 36],
         iconAnchor: [18, 36],
@@ -116,8 +137,8 @@ function BusMapModal({ ruta, onClose }) {
         const mOrigen  = L.marker([origenCoords.lat,  origenCoords.lng],  { icon: createBusIcon('#E8621A', ruta.lugarOrigen?.nombre  || 'Origen')  }).addTo(map);
         const mDestino = L.marker([destinoCoords.lat, destinoCoords.lng], { icon: createBusIcon('#22C55E', ruta.lugarDestino?.nombre || 'Destino') }).addTo(map);
 
-        mOrigen.bindPopup(`<b>🚌 Origen</b><br/>${ruta.lugarOrigen?.nombre || ''}`);
-        mDestino.bindPopup(`<b>📍 Destino</b><br/>${ruta.lugarDestino?.nombre || ''}`);
+        mOrigen.bindPopup(createPopup('🚌 Origen', ruta.lugarOrigen?.nombre || ''));
+        mDestino.bindPopup(createPopup('📍 Destino', ruta.lugarDestino?.nombre || ''));
 
         // Intentar obtener ubicación del usuario y trazar ruta desde ahí
         const dibujarRuta = async (userPos) => {

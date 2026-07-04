@@ -321,6 +321,13 @@ function StopCombobox({ paradasUnicas, paradaBuscada, onParadaChange }) {
         setOpen(false);
     };
 
+    const limpiarConTeclado = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            limpiar(e);
+        }
+    };
+
     const isActive = !!paradaBuscada;
 
     return (
@@ -340,12 +347,14 @@ function StopCombobox({ paradasUnicas, paradaBuscada, onParadaChange }) {
                     {paradaBuscada || '¿A dónde vas?'}
                 </span>
                 {isActive ? (
-                    <button
+                    <span
+                        role="button"
+                        tabIndex={0}
                         className="stop-combobox-clear"
                         onClick={limpiar}
+                        onKeyDown={limpiarConTeclado}
                         aria-label="Limpiar selección"
-                        type="button"
-                    >✕</button>
+                    >✕</span>
                 ) : (
                     <span className={`stop-combobox-chevron${open ? ' open' : ''}`}>▾</span>
                 )}
@@ -451,10 +460,14 @@ function PaginaBuses() {
 
     // ── Fetch de rutas ──────────────────────────────────
     useEffect(() => {
-        setLoading(true);
-        setError(null);
+        const controller = new AbortController();
+        queueMicrotask(() => {
+            setLoading(true);
+            setError(null);
+        });
         axiosPrivate.get('/ruta-transporte')
             .then(res => {
+                if (controller.signal.aborted) return;
                 const data = Array.isArray(res.data) ? res.data : [];
                 const flattenedHorarios = data.flatMap(ruta => {
                     const orig = ruta.lugarOrigen?.nombre || 'Origen Desconocido';
@@ -504,6 +517,7 @@ function PaginaBuses() {
                     .filter(Boolean))]);
             })
             .catch(err => {
+                if (controller.signal.aborted) return;
                 console.error('[PaginaBuses] Error cargando horarios:', err);
                 const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
                 setError(esTimeout
@@ -511,7 +525,10 @@ function PaginaBuses() {
                     : 'No se pudieron cargar los horarios. Intenta de nuevo.'
                 );
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false);
+            });
+        return () => controller.abort();
     }, [reintento]);
 
     // ── Destinos únicos disponibles ──

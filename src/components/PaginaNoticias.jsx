@@ -99,13 +99,18 @@ function PaginaNoticias() {
     const [reintento, setReintento] = useState(0);
 
     useEffect(() => {
-        setLoading(true);
-        setError(null);
+        const controller = new AbortController();
+        queueMicrotask(() => {
+            setLoading(true);
+            setError(null);
+        });
         axiosPrivate.get('/noticia')
             .then(res => {
+                if (controller.signal.aborted) return;
                 setNoticias(res.data);
             })
             .catch(err => {
+                if (controller.signal.aborted) return;
                 console.error("Error cargando noticias:", err);
                 const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
                 setError(esTimeout
@@ -114,8 +119,9 @@ function PaginaNoticias() {
                 );
             })
             .finally(() => {
-                setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             });
+        return () => controller.abort();
     }, [reintento]);
 
     const destacada = noticias.find(n => n.destacado);

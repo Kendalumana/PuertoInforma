@@ -237,7 +237,9 @@ function MapaView() {
                     // Estado 'prompt': el browser preguntará cuando llamemos watchPosition.
                     // Si el usuario ya rechazó en nuestro sistema, no volvemos a preguntar.
                     if (consent === 'denied') {
-                        setError("Desactivaste el acceso a tu ubicación. Usa el botón 📍 para reactivarlo.");
+                        queueMicrotask(() => {
+                            setError("Desactivaste el acceso a tu ubicación. Usa el botón 📍 para reactivarlo.");
+                        });
                     } else {
                         // Primera vez O consent='accepted' → llamar watchPosition.
                         // El browser mostrará su diálogo nativo una sola vez.
@@ -258,7 +260,9 @@ function MapaView() {
             // Fallback: sin Permissions API → llamar watchPosition directamente.
             // El browser hará lo suyo. Solo respetamos el 'denied' previo de nuestro localStorage.
             if (consent === 'denied') {
-                setError("Desactivaste el acceso a tu ubicación. Usa el botón 📍 para reactivarlo.");
+                queueMicrotask(() => {
+                    setError("Desactivaste el acceso a tu ubicación. Usa el botón 📍 para reactivarlo.");
+                });
             } else {
                 startWatching();
             }
@@ -387,9 +391,15 @@ function MapaView() {
             {/* [MODIFICACIÓN] Botón de centrar mapa (ahora flotante abajo a la derecha) */}
             <button
                 className="immersive-recenter-btn"
-                onClick={() => map?.setView([CENTER.lat, CENTER.lng], 14)}
-                aria-label="Centrar mapa en Puntarenas"
-                title="Centrar mapa"
+                onClick={() => {
+                    if (localStorage.getItem(LOCATION_CONSENT_KEY) === 'denied') {
+                        setShowLocationModal(true);
+                    } else {
+                        map?.setView([CENTER.lat, CENTER.lng], 14);
+                    }
+                }}
+                aria-label="Centrar mapa o reactivar ubicación"
+                title="Centrar mapa o reactivar ubicación"
             >
                 📍
             </button>

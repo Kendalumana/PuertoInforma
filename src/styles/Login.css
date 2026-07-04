@@ -266,12 +266,15 @@
 }
 
 .login-forgot-link {
+  background: none;
+  border: none;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: color 0.2s ease;
   border-radius: 3px;
   padding: 0 2px;
+  font-family: inherit;
 }
 
 .login-forgot-link:hover {

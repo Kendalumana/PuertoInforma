@@ -1,5 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import './styles/Index.css';
 
 // ── Carga inmediata: Login y Registro son las rutas de entrada ──
@@ -45,7 +46,34 @@ function PantallaCarga() {
 
 function RutaProtegida({ children }) {
     const token = localStorage.getItem('token');
-    if (!token) return <Navigate to="/login" replace />;
+    const [isAllowed, setIsAllowed] = useState(null);
+
+    useEffect(() => {
+        queueMicrotask(() => {
+            if (!token) {
+                setIsAllowed(false);
+                return;
+            }
+
+            try {
+                const { exp } = jwtDecode(token);
+                if (exp && exp * 1000 <= Date.now()) {
+                    localStorage.removeItem('token');
+                    setIsAllowed(false);
+                    return;
+                }
+
+                setIsAllowed(true);
+            } catch {
+                localStorage.removeItem('token');
+                setIsAllowed(false);
+            }
+        });
+    }, [token]);
+
+    if (isAllowed === null) return <PantallaCarga />;
+    if (!isAllowed) return <Navigate to="/login" replace />;
+
     return children;
 }
 

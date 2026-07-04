@@ -148,10 +148,14 @@ function PaginaFerry() {
 
     // ── Fetch de horarios ──────────────────────────────────
     useEffect(() => {
-        setLoading(true);
-        setError(null);
+        const controller = new AbortController();
+        queueMicrotask(() => {
+            setLoading(true);
+            setError(null);
+        });
         axiosPrivate.get('/ferry')
             .then(res => {
+                if (controller.signal.aborted) return;
                 const data = Array.isArray(res.data) ? res.data : [];
                 const normalizados = data.map(normalizarHorario);
                 setHorarios(normalizados);
@@ -166,6 +170,7 @@ function PaginaFerry() {
                 );
             })
             .catch(err => {
+                if (controller.signal.aborted) return;
                 console.error('[PaginaFerry] Error cargando horarios:', err);
                 const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
                 setError(esTimeout
@@ -173,7 +178,10 @@ function PaginaFerry() {
                     : 'No se pudieron cargar los horarios. Intenta de nuevo.'
                 );
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false);
+            });
+        return () => controller.abort();
     }, [reintento]);
 
     // ── Rutas únicas disponibles (dinámicas desde la BD) ──

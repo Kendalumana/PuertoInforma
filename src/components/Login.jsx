@@ -112,7 +112,13 @@ function Login() {
                             <label className="login-label" htmlFor="password">
                                 Contraseña
                             </label>
-                            <span className="login-forgot-link">¿Olvidaste tu clave?</span>
+                            <button
+                                type="button"
+                                className="login-forgot-link"
+                                onClick={() => setError('La recuperación de contraseña aún no está disponible. Contactá al administrador.')}
+                            >
+                                ¿Olvidaste tu clave?
+                            </button>
                         </div>
                         {/* [MODIFICACIÓN] Wrapper para añadir el ícono del ojito */}
                         <div className="input-icon-wrapper">
