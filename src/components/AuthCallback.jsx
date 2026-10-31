@@ -21,20 +21,25 @@ function AuthCallback() {
                     const { email, user_metadata } = session.user;
                     const nombre = user_metadata?.full_name || email.split('@')[0];
                     try {
+                        setMensaje('Sincronizando sesión con el servidor...');
                         const response = await axios.post('/usuario/login-google', {
                             email,
                             nombre,
                             googleId: session.user.id,
                             supabaseToken: session.access_token
-                        });
+                        }, { timeout: 60000 });
                         localStorage.setItem('token', response.data.token);
                         navigate('/');
                     } catch (err) {
                         clearTimeout(timeoutId);
                         setError(true);
                         console.error('Error al autenticar con Google:', err);
-                        const msg = err.response?.data?.message || err.response?.data;
-                        setMensaje(typeof msg === 'string' && msg ? `❌ ${msg}` : '❌ Error al conectar con el servidor.');
+                        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+                            setMensaje('El servidor tardó en responder mientras despertaba. Por favor volvé a intentar.');
+                        } else {
+                            const msg = err.response?.data?.message || err.response?.data;
+                            setMensaje(typeof msg === 'string' && msg ? `❌ ${msg}` : '❌ Error al conectar con el servidor.');
+                        }
                     }
                 } else if (event === 'SIGNED_OUT' || !session) {
                     clearTimeout(timeoutId);

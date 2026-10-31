@@ -10,14 +10,14 @@ const BASE_URL = envUrl.endsWith('/api/v1') ? envUrl : `${envUrl.replace(/\/$/, 
 export default axios.create({
     baseURL: BASE_URL,
     headers: { 'Content-Type': 'application/json' },
-    timeout: 12000, // 12s — evita colgar en cold-start de Render
+    timeout: 60000, // 60s para tolerar arranques de Render
 });
 
 // Instancia privada (con token automático)
 export const axiosPrivate = axios.create({
     baseURL: BASE_URL,
     headers: { 'Content-Type': 'application/json' },
-    timeout: 12000,
+    timeout: 60000,
 });
 
 // ── Función auxiliar: obtiene el token más fresco posible ──
