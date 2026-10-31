@@ -124,9 +124,9 @@ function MapaView() {
         }
 
         const instance = L.map(mapElement, { zoomControl: false }).setView([CENTER.lat, CENTER.lng], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap contributors © CARTO',
-            subdomains: 'abcd',
+        // Use OpenStreetMap free tiles (no API key required)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         }).addTo(instance);
         markersLayer.current.addTo(instance);

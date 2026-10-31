@@ -9,10 +9,10 @@ function AuthCallback() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        // Timeout: si en 5 segundos no hay sesión, redirige a login
+        // Timeout: si en 15 segundos no hay sesión, redirige a login
         const timeoutId = setTimeout(() => {
             navigate('/login');
-        }, 5000);
+        }, 15000);
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
@@ -29,10 +29,12 @@ function AuthCallback() {
                         });
                         localStorage.setItem('token', response.data.token);
                         navigate('/');
-                    } catch {
+                    } catch (err) {
                         clearTimeout(timeoutId);
                         setError(true);
-                        setMensaje('❌ Error al conectar con el servidor.');
+                        console.error('Error al autenticar con Google:', err);
+                        const msg = err.response?.data?.message || err.response?.data;
+                        setMensaje(typeof msg === 'string' && msg ? `❌ ${msg}` : '❌ Error al conectar con el servidor.');
                     }
                 } else if (event === 'SIGNED_OUT' || !session) {
                     clearTimeout(timeoutId);
