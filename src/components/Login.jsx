@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { enviarFormulario } from '../api/enviarFormulario';
 import axios from '../api/axios';          // instancia base con baseURL
 import { supabase } from '../lib/supabase'; // ← agregado para Google OAuth
 import logoIcon from '../Resources/logoFinal.ico';
@@ -21,6 +22,7 @@ function Login() {
     const [cargando, setCargando] = useState(false);    // deshabilita el botón mientras espera
     const [showPassword, setShowPassword] = useState(false); // [MODIFICACIÓN] Estado para mostrar contraseña
 
+    const [estadoConexion, setEstadoConexion] = useState('');
     const navigate = useNavigate(); // hook para redirigir después del login
 
     // ── Función principal al enviar el formulario ──────────
@@ -31,10 +33,10 @@ function Login() {
 
         try {
             // POST al endpoint de login con email y contraseña
-            const response = await axios.post('/usuario/login', {
+            const response = await enviarFormulario(axios, '/usuario/login', {
                 email,
                 password
-            });
+            }, setEstadoConexion);
 
             // Guardamos el token en localStorage para usarlo en requests futuros
             // axiosPrivate lo leerá desde aquí en cada request autenticado
@@ -45,7 +47,9 @@ function Login() {
 
         } catch (err) {
             // Mostramos el mensaje del backend si existe, o un mensaje genérico
-            if (err.response?.status === 401) {
+            if (err.esEsperaServidor) {
+                setError(err.message);
+            } else if (err.response?.status === 401) {
                 setError('Correo o contraseña incorrectos.');
             } else if (err.response?.data?.message) {
                 setError(err.response.data.message);
@@ -141,6 +145,7 @@ function Login() {
                     </div>
 
                     {/* Mensaje de error — solo se muestra si hay un error */}
+                    {cargando && <p className="login-espera" role="status" aria-live="polite">{estadoConexion}</p>}
                     {error && (
                         <div
                             id="login-error-msg"

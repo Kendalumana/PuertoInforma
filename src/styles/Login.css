@@ -432,3 +432,12 @@
     text-transform: uppercase;
   }
 }
+
+.login-espera {
+    padding: 14px;
+    border-radius: 10px;
+    background: #fff3e8;
+    color: #713409;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}

@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { enviarFormulario } from '../api/enviarFormulario';
 import axios from '../api/axios';
 import logoIcon from '../Resources/logoFinal.ico';
 import '../styles/Login.css';
@@ -25,6 +26,7 @@ function Registro() {
     // [MODIFICACIÓN] Estados para mostrar contraseñas
     const [showPassword,  setShowPassword ] = useState(false);
 
+    const [estadoConexion, setEstadoConexion] = useState('');
     const navigate = useNavigate();
 
     const handleRegistro = async (e) => {
@@ -47,18 +49,20 @@ function Registro() {
         setCargando(true);
 
         try {
-            const response = await axios.post('/usuario/registro', {
+            const response = await enviarFormulario(axios, '/usuario/registro', {
                 email,
                 password,
                 nombreUsuario: nombreUsuario.trim(),
                 rol
-            });
+            }, setEstadoConexion);
 
             localStorage.setItem('token', response.data.token);
             navigate('/');
 
         } catch (err) {
-            if (err.response?.status === 400) {
+            if (err.esEsperaServidor) {
+                setError(err.message);
+            } else if (err.response?.status === 400) {
                 setError(err.response.data || 'Datos inválidos. Revisá el formulario.');
             } else if (err.response?.data?.message) {
                 setError(err.response.data.message);
@@ -200,6 +204,7 @@ function Registro() {
                     </div>
 
                     {/* Error */}
+                    {cargando && <p className="login-espera" role="status" aria-live="polite">{estadoConexion}</p>}
                     {error && (
                         <div
                             id="registro-error-msg"
