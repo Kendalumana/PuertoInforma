@@ -5,15 +5,17 @@
 // ============================================================
 
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { enviarFormulario } from '../api/enviarFormulario';
 import axios from '../api/axios';          // instancia base con baseURL
 import { supabase } from '../lib/supabase'; // ← agregado para Google OAuth
 import logoIcon from '../Resources/logoFinal.ico';
 import '../styles/Login.css';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Compass, UserCheck } from 'lucide-react';
 
 function Login() {
+    const [searchParams] = useSearchParams();
+    const vieneDePerfil = searchParams.get('from') === 'perfil';
 
     // ── Estado del formulario ──────────────────────────────
     const [email, setEmail] = useState('');       // valor del campo email
@@ -38,12 +40,27 @@ function Login() {
                 password
             }, setEstadoConexion);
 
-            // Guardamos el token en localStorage para usarlo en requests futuros
-            // axiosPrivate lo leerá desde aquí en cada request autenticado
-            localStorage.setItem('token', response.data.token);
+            // Sincronización robusta del token devuelto por el backend
+            const data = response.data;
+            const tokenRecibido = typeof data === 'string'
+                ? data.trim()
+                : (data?.token || data?.jwt || data?.accessToken || data?.access_token || data?.id_token);
 
-            // Redirigimos al home — el usuario ya está autenticado
-            navigate('/');
+            if (!tokenRecibido) {
+                console.error('[Login] El backend respondió pero no envió un token:', data);
+                setError('El servidor no retornó un token de sesión válido.');
+                return;
+            }
+
+            // Desconectar cualquier sesión residual de Supabase para evitar conflictos de token
+            try {
+                await supabase.auth.signOut();
+            } catch { /* ignorar */ }
+
+            localStorage.setItem('token', tokenRecibido);
+
+            // Redirigimos al home o al perfil según corresponda
+            navigate(vieneDePerfil ? '/perfil' : '/');
 
         } catch (err) {
             // Mostramos el mensaje del backend si existe, o un mensaje genérico
@@ -85,8 +102,19 @@ function Login() {
 
                 {/* Título y subtítulo */}
                 <h1 className="login-titulo">Bienvenido</h1>
-                {/* [MODIFICACIÓN] Subtítulo actualizado según el nuevo diseño */}
-                <p className="login-subtitulo">Accedé a la guía definitiva de la ciudad</p>
+                <p className="login-subtitulo">
+                    {vieneDePerfil
+                        ? 'Iniciá sesión para acceder a tu perfil, nivel y misiones'
+                        : 'Accedé a la guía definitiva de la ciudad'
+                    }
+                </p>
+
+                {vieneDePerfil && (
+                    <div className="login-info-banner" role="status">
+                        <UserCheck size={18} color="#E8621A" />
+                        <span>Para ver tu perfil y rango porteño debés iniciar sesión.</span>
+                    </div>
+                )}
 
                 {/* Formulario — onSubmit llama a handleLogin */}
                 <form className="login-form" onSubmit={handleLogin}>
@@ -186,6 +214,17 @@ function Login() {
                         className="login-google-icon"
                     />
                     Continuar con Google
+                </button>
+
+                {/* Botón Ingresar como Visitante */}
+                <button
+                    type="button"
+                    className="login-btn-visitante"
+                    onClick={() => navigate('/')}
+                    title="Navegar por el mapa, buses, ferry y noticias sin iniciar sesión"
+                >
+                    <Compass size={18} />
+                    Continuar como visitante
                 </button>
 
                 {/* Link para registro */}

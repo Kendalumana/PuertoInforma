@@ -22,9 +22,16 @@ export const axiosPrivate = axios.create({
 
 // ── Función auxiliar: obtiene el token más fresco posible ──
 async function obtenerToken() {
+    // 1. Priorizamos el token del backend guardado en localStorage
+    // (generado tanto por login con usuario/clave como por Google en /usuario/login-google)
+    const tokenLocal = localStorage.getItem('token');
+    if (tokenLocal && tokenLocal !== 'undefined' && tokenLocal !== 'null') {
+        return tokenLocal;
+    }
+
+    // 2. Si no hay token local pero hay sesión de Supabase
     try {
         const { data: { session } } = await supabase.auth.getSession();
-
         if (session?.access_token) {
             // Si el token vence en menos de 60 segundos, refrescarlo proactivamente
             const ahora = Math.floor(Date.now() / 1000);
@@ -38,8 +45,7 @@ async function obtenerToken() {
         console.warn('[axiosPrivate] No se pudo obtener sesión de Supabase:', err?.message);
     }
 
-    // Fallback: token guardado manualmente en localStorage (login clásico)
-    return localStorage.getItem('token');
+    return null;
 }
 
 // ── Interceptor de REQUEST: adjunta el token ──

@@ -52,7 +52,8 @@ function RutaProtegida({ children }) {
 
     useEffect(() => {
         queueMicrotask(() => {
-            if (!token) {
+            if (!token || token === 'undefined' || token === 'null') {
+                localStorage.removeItem('token');
                 setIsAllowed(false);
                 return;
             }
@@ -74,7 +75,7 @@ function RutaProtegida({ children }) {
     }, [token]);
 
     if (isAllowed === null) return <PantallaCarga />;
-    if (!isAllowed) return <Navigate to="/login" replace />;
+    if (!isAllowed) return <Navigate to="/login?from=perfil" replace />;
 
     return children;
 }

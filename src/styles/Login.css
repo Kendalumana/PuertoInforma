@@ -441,3 +441,50 @@
     font-size: 0.95rem;
     line-height: 1.5;
 }
+
+/* ── BOTÓN CONTINUAR COMO VISITANTE ────────────────────────── */
+.login-btn-visitante {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  color: var(--naranja);
+  border: 1px solid rgba(232, 98, 26, 0.45);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.login-btn-visitante:hover {
+  background: rgba(232, 98, 26, 0.12);
+  border-color: var(--naranja);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.login-btn-visitante:active {
+  transform: translateY(0);
+}
+
+/* Banner informativo cuando el usuario es redirigido desde perfil */
+.login-info-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  background: rgba(232, 98, 26, 0.12);
+  border: 1px solid rgba(232, 98, 26, 0.35);
+  border-radius: 10px;
+  color: #ffb380;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { enviarFormulario } from '../api/enviarFormulario';
 import axios from '../api/axios';
+import { supabase } from '../lib/supabase';
 import logoIcon from '../Resources/logoFinal.ico';
 import '../styles/Login.css';
 // [MODIFICACIÓN] Importación de íconos para el formulario y decoración
@@ -56,7 +57,17 @@ function Registro() {
                 rol
             }, setEstadoConexion);
 
-            localStorage.setItem('token', response.data.token);
+            const data = response.data;
+            const tokenRecibido = typeof data === 'string'
+                ? data.trim()
+                : (data?.token || data?.jwt || data?.accessToken || data?.access_token || data?.id_token);
+
+            if (tokenRecibido) {
+                try {
+                    await supabase.auth.signOut();
+                } catch { /* ignorar */ }
+                localStorage.setItem('token', tokenRecibido);
+            }
             navigate('/');
 
         } catch (err) {

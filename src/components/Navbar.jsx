@@ -37,17 +37,15 @@ function Navbar({ onOpenAbout }) {
                     <Link to="/noticias" className="nav-link">Noticias y Eventos</Link>
                     <Link to="/ferry" className="nav-link">Ferry</Link>
                     <Link to="/buses" className="nav-link">Buses</Link>
+                    <Link to="/perfil" className="nav-link">Perfil</Link>
                     {estaAutenticado ? (
-                        <>
-                            <Link to="/perfil" className="nav-link">Perfil</Link>
-                            <button
-                                className="nav-link btn-logout-nav"
-                                onClick={handleLogout}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                            >
-                                Cerrar Sesión
-                            </button>
-                        </>
+                        <button
+                            className="nav-link btn-logout-nav"
+                            onClick={handleLogout}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                        >
+                            Cerrar Sesión
+                        </button>
                     ) : (
                         <Link
                             to="/login"
@@ -82,9 +80,7 @@ function Navbar({ onOpenAbout }) {
 
                     {menuAbierto && (
                         <div className="dropdown-menu dropdown-menu-right" role="menu">
-                            {estaAutenticado ? (
-                                <Link to="/perfil" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
-                            ) : null}
+                            <Link to="/perfil" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
                             <Link to="/buses" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🚌 Buses</Link>
                             <Link to="/noticias" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>📰 Noticias y Eventos</Link>
                             <Link to="/ferry" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>⛵ Ferry</Link>
