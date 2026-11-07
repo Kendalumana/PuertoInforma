@@ -1,0 +1,238 @@
+/* ============================================================
+   MisionDiarias.css — Sección de Misiones Diarias (PuertoInforma)
+   ============================================================ */
+
+.misiones-diarias-section {
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.md-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.md-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.md-fire-icon {
+    font-size: 1.6rem;
+    animation: firePulse 2s ease-in-out infinite;
+}
+
+.md-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.md-subtitle {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0.2rem 0 0 0;
+}
+
+.md-countdown-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(232, 98, 26, 0.12);
+    border: 1px solid rgba(232, 98, 26, 0.3);
+    color: #FF9B6A;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+}
+
+.md-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.md-card {
+    background: #1A1A1A;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.9rem;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.md-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(232, 98, 26, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.md-card.completada {
+    border-color: rgba(76, 175, 80, 0.4);
+    background: linear-gradient(180deg, #1A1A1A 0%, rgba(76, 175, 80, 0.05) 100%);
+}
+
+.md-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.md-card-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.md-card-icon {
+    font-size: 1.4rem;
+    background: rgba(255, 255, 255, 0.05);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.md-card-titulo {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.md-card-instrucciones {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0.3rem 0 0 0;
+    line-height: 1.4;
+}
+
+.md-xp-badge {
+    background: linear-gradient(135deg, rgba(232, 98, 26, 0.2) 0%, rgba(255, 155, 106, 0.15) 100%);
+    border: 1px solid rgba(232, 98, 26, 0.4);
+    color: #FF9B6A;
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.md-card.completada .md-xp-badge {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.4);
+    color: #81c784;
+}
+
+/* Barra de progreso */
+.md-progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.md-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.md-progress-status {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.md-card.completada .md-progress-status {
+    color: #81c784;
+    font-weight: 700;
+}
+
+.md-progress-nums {
+    color: rgba(255, 255, 255, 0.8);
+    font-variant-numeric: tabular-nums;
+}
+
+.md-progress-track {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.md-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #E8621A 0%, #FF9B6A 100%);
+    border-radius: 999px;
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.md-progress-fill.completada {
+    background: linear-gradient(90deg, #4CAF50 0%, #81c784 100%);
+}
+
+/* Skeletons */
+.md-skeleton-card {
+    background: #1A1A1A;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.md-skeleton-line {
+    height: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    animation: mdPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mdPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+@keyframes firePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15) rotate(4deg); }
+}
+
+@media (max-width: 640px) {
+    .misiones-diarias-section {
+        padding: 1.15rem;
+    }
+    .md-grid {
+        grid-template-columns: 1fr;
+    }
+}

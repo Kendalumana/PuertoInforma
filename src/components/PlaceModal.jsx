@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
-import { MapPin, Phone, MessageCircle, Map, Award, ArrowLeft, Heart, Clock, X } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, Map, Award, ArrowLeft, Heart, Clock, X, CheckCircle2, Loader2 } from 'lucide-react';
+import { useCheckin } from '../hooks/useCheckin';
+import { useEventoMision } from '../hooks/useEventoMision';
 
-function PlaceModal({ place, onClose }) {
+function PlaceModal({ place, onClose, onXpGanado }) {
     const [isFavorite, setIsFavorite] = useState(() => {
         try {
             const favorites = JSON.parse(localStorage.getItem('favoritos') || '[]');
@@ -11,6 +13,8 @@ function PlaceModal({ place, onClose }) {
         }
     });
     const [fullscreenImg, setFullscreenImg] = useState(null);
+    const { cargando: checkinCargando, error: checkinError, resultado: checkinResultado, hacerCheckin, resetear: resetCheckin } = useCheckin();
+    const { reportarEvento } = useEventoMision();
 
     // ── Drag refs (refs para evitar closures viejos en touch handlers) ──
     const modalRef = useRef(null);
@@ -78,10 +82,11 @@ function PlaceModal({ place, onClose }) {
                 return false;
             } else {
                 localStorage.setItem('favoritos', JSON.stringify([...favoriteIds, place.id]));
+                reportarEvento('favorito_agregar', String(place.id));
                 return true;
             }
         });
-    }, [place]);
+    }, [place, reportarEvento]);
 
     const callPhone = useCallback((phone) => {
         window.open(`tel:${phone}`);
@@ -264,7 +269,76 @@ function PlaceModal({ place, onClose }) {
                                     />
                                 </button>
                             )}
+                            {/* ── Botón de Check-in ── */}
+                            <button
+                                className="aesthetic-btn-secondary checkin-btn"
+                                aria-label="Hacer check-in en este lugar"
+                                title="Hacer check-in"
+                                disabled={checkinCargando || checkinResultado?.ok}
+                                onClick={() => hacerCheckin(place.id).then(res => {
+                                    if (res?.ok && onXpGanado) onXpGanado(res);
+                                })}
+                                style={{
+                                    color: checkinResultado?.ok
+                                        ? '#4CAF50'
+                                        : checkinError
+                                            ? '#ef5350'
+                                            : 'rgba(255,255,255,0.6)',
+                                    borderColor: checkinResultado?.ok ? '#4CAF50' : checkinError ? '#ef5350' : undefined,
+                                }}
+                            >
+                                {checkinCargando
+                                    ? <Loader2 size={20} className="spin" />
+                                    : checkinResultado?.ok
+                                        ? <CheckCircle2 size={20} />
+                                        : <MapPin size={20} />
+                                }
+                            </button>
                         </div>
+
+                        {/* ── Feedback del check-in ── */}
+                        {checkinError && (
+                            <div style={{
+                                marginTop: '0.5rem',
+                                padding: '0.5rem 0.75rem',
+                                background: 'rgba(239,83,80,0.12)',
+                                border: '1px solid rgba(239,83,80,0.3)',
+                                borderRadius: '10px',
+                                fontSize: '0.78rem',
+                                color: '#ef9090',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                            }}>
+                                <span>⚠️</span>
+                                <span>{checkinError.mensaje}</span>
+                                {checkinError.tipo !== 'YA_HECHO' && (
+                                    <button
+                                        onClick={resetCheckin}
+                                        style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#FF9B6A', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                        {checkinResultado?.ok && (
+                            <div style={{
+                                marginTop: '0.5rem',
+                                padding: '0.5rem 0.75rem',
+                                background: 'rgba(76,175,80,0.12)',
+                                border: '1px solid rgba(76,175,80,0.3)',
+                                borderRadius: '10px',
+                                fontSize: '0.78rem',
+                                color: '#81c784',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                            }}>
+                                <span>✅</span>
+                                <span>¡Check-in registrado! +{checkinResultado.xp_ganado ?? 0} XP</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

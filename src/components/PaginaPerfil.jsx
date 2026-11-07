@@ -5,6 +5,10 @@ import { axiosPrivate } from '../api/axios';
 import Navbar from './Navbar';
 import MissionList from './MissionList';
 import ProfileSidebar from './ProfileSidebar';
+import MisionDiarias from './MisionDiarias';
+import ToastXP from './ToastXP';
+import NivelModal from './NivelModal';
+import { useEventoMision } from '../hooks/useEventoMision';
 import '../styles/Perfil.css';
 
 const AVATARES = [
@@ -39,6 +43,7 @@ function mensajeError(err) {
 
 function PaginaPerfil() {
   const navigate = useNavigate();
+  const { reportarEvento } = useEventoMision();
 
   const [avatarTipo, setAvatarTipo] = useState('prediseñado');
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(1);
@@ -50,10 +55,15 @@ function PaginaPerfil() {
 
   const [perfil, setPerfil] = useState(null);
   const [misiones, setMisiones] = useState([]);
+  const [nivelesMisiones, setNivelesMisiones] = useState(null);
   const [perfilMisiones, setPerfilMisiones] = useState([]);
   const [historial, setHistorial] = useState([]);
   const [rangos, setRangos] = useState([]);
   const [sitiosVisitados, setSitiosVisitados] = useState([]);
+
+  // Notificaciones y Gamificación en vivo
+  const [toastsXP, setToastsXP] = useState([]);
+  const [nivelModal, setNivelModal] = useState(null); // { nivel, xpTotal }
 
   // Estados separados para carga/error del perfil completo vs. solo misiones
   const [cargando, setCargando] = useState(true);
@@ -97,6 +107,9 @@ function PaginaPerfil() {
 
         setUserId(resolvedUserId);
 
+        // Reportar evento silencioso: perfil_ver
+        reportarEvento('perfil_ver');
+
         // Cargar datos del perfil
         try {
           const resPerfil = await axiosPrivate.get(`/perfil/usuario/${resolvedUserId}`);
@@ -132,7 +145,7 @@ function PaginaPerfil() {
     }
 
     cargarPerfil();
-  }, [navigate]);
+  }, [navigate, reportarEvento]);
 
   // ── Carga de misiones — separada del perfil para poder reintentar ──
   const cargarMisiones = useCallback(async (pid) => {
@@ -150,18 +163,23 @@ function PaginaPerfil() {
           axiosPrivate.get(`/mision/visitados/${pid}`),
         ]);
 
-      // Tomamos lo que funcionó, mostramos error si alguno falló
-      const alguno500 = [resMisiones, resRangos, resPerfilMisiones, resHistorial, resVisitados]
-        .some(r => r.status === 'rejected');
-
-      if (resMisiones.status === 'fulfilled') setMisiones(resMisiones.value.data || []);
+      if (resMisiones.status === 'fulfilled') {
+        const dataM = resMisiones.value.data;
+        if (dataM?.niveles) {
+          setNivelesMisiones(dataM.niveles);
+        } else if (Array.isArray(dataM)) {
+          setMisiones(dataM);
+        }
+      }
       if (resRangos.status === 'fulfilled')   setRangos(resRangos.value.data || []);
       if (resPerfilMisiones.status === 'fulfilled') setPerfilMisiones(resPerfilMisiones.value.data || []);
       if (resHistorial.status === 'fulfilled')      setHistorial(resHistorial.value.data || []);
       if (resVisitados.status === 'fulfilled')      setSitiosVisitados(resVisitados.value.data || []);
 
+      const alguno500 = [resMisiones, resRangos, resPerfilMisiones, resHistorial, resVisitados]
+        .some(r => r.status === 'rejected');
+
       if (alguno500) {
-        // Algunos datos sí cargaron, mostramos lo que tenemos pero avisamos
         const primerError = [resMisiones, resRangos, resPerfilMisiones, resHistorial, resVisitados]
           .find(r => r.status === 'rejected')?.reason;
         setErrorMisiones(mensajeError(primerError));
@@ -181,11 +199,11 @@ function PaginaPerfil() {
   }, [perfilId, reintento, cargarMisiones]);
 
   const calcularPorcentajeXP = () => {
-    const xp = perfil?.experienciaXp ?? 0;
+    const xp = perfil?.experienciaXp ?? perfil?.experiencia_xp ?? 0;
     return Math.min(Math.round((xp / XP_SIGUIENTE_NIVEL) * 100), 100);
   };
 
-  const xpActual = perfil?.experienciaXp ?? 0;
+  const xpActual = perfil?.experienciaXp ?? perfil?.experiencia_xp ?? 0;
   const rangoActual = [...rangos]
     .filter(r => xpActual >= r.puntosRequeridos)
     .sort((a, b) => b.puntosRequeridos - a.puntosRequeridos)[0];
@@ -204,6 +222,8 @@ function PaginaPerfil() {
     }
     try {
       await guardarAvatar('emoji', id.toString(), resolvedId);
+      // Reportar evento silencioso: perfil_avatar
+      reportarEvento('perfil_avatar');
     } catch {
       setAvatarError('No se pudo guardar el avatar. Reintentá.');
     } finally {
@@ -216,6 +236,11 @@ function PaginaPerfil() {
     return new Date(isoString).toLocaleDateString('es-CR', {
       day: '2-digit', month: 'short', year: 'numeric'
     });
+  };
+
+  // Manejador de dismissed toasts
+  const handleDismissToast = (id) => {
+    setToastsXP(prev => prev.filter(t => t.id !== id));
   };
 
   // ── Skeleton de carga inicial ──
@@ -298,9 +323,17 @@ function PaginaPerfil() {
         />
 
         <main className="profile-main-content">
-          <div className="main-header">
+          {/* ── SECCIÓN 1: Misiones Diarias (RF-MI-01, RF-MI-07) ── */}
+          <MisionDiarias
+            onXpActualizado={() => {
+              if (perfilId) cargarMisiones(perfilId);
+            }}
+          />
+
+          {/* ── SECCIÓN 2: Misiones por Nivel (RF-MI-02, RF-MI-03) ── */}
+          <div className="main-header" style={{ marginTop: '1rem' }}>
             <div className="main-title">
-              <h2>Misiones Disponibles</h2>
+              <h2>Misiones por Nivel</h2>
               <p>Explora la ciudad, completa desafíos y sube de nivel.</p>
             </div>
             <div className="main-filters">
@@ -351,9 +384,10 @@ function PaginaPerfil() {
             </div>
           )}
 
-          {/* ── Lista de misiones ── */}
+          {/* ── Lista de misiones de nivel ── */}
           {!cargandoMisiones && (
             <MissionList
+              niveles={nivelesMisiones}
               misiones={misiones}
               perfilMisiones={perfilMisiones}
               tabActiva={tabActiva}
@@ -362,6 +396,21 @@ function PaginaPerfil() {
         </main>
 
       </div>
+
+      {/* ── Toast de XP ganado (RF-MI-04) ── */}
+      <ToastXP
+        notificaciones={toastsXP}
+        onDismiss={handleDismissToast}
+      />
+
+      {/* ── Modal de Felicitación al subir de nivel (RF-MI-04) ── */}
+      {nivelModal && (
+        <NivelModal
+          nivel={nivelModal.nivel}
+          xpTotal={nivelModal.xpTotal}
+          onClose={() => setNivelModal(null)}
+        />
+      )}
     </div>
   );
 }

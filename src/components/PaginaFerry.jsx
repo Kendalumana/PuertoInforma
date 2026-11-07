@@ -12,6 +12,7 @@ import ReservationLink from './ReservationLink';
 import TransportDayTabs from './TransportDayTabs';
 import FerryRouteSelector from './FerryRouteSelector';
 import FerryScheduleList from './FerryScheduleList';
+import { useEventoMision } from '../hooks/useEventoMision';
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL
@@ -114,6 +115,7 @@ function FerrySkeletonGrid() {
 // ═══════════════════════════════════════════════════════════
 function PaginaFerry() {
     const navigate = useNavigate();
+    const { reportarEvento } = useEventoMision();
     const [activeTab, setActiveTab] = useState('SCHEDULES');
     const [activeRoute, setActiveRoute] = useState('');
     const [tabDia, setTabDia] = useState('hoy');           // A-I3: 'hoy' | 'manana'
@@ -165,9 +167,12 @@ function PaginaFerry() {
                         .filter(h => h.origen && h.destino)
                         .map(h => `${h.origen} → ${h.destino}`)
                 )];
-                setActiveRoute(rutaActual =>
-                    rutasDisponibles.includes(rutaActual) ? rutaActual : (rutasDisponibles[0] || '')
-                );
+                const rutaInicial = rutasDisponibles[0] || '';
+                setActiveRoute(rutaActual => {
+                    const finalRuta = rutasDisponibles.includes(rutaActual) ? rutaActual : rutaInicial;
+                    if (finalRuta) reportarEvento('ferry_ver_horarios', finalRuta);
+                    return finalRuta;
+                });
             })
             .catch(err => {
                 if (controller.signal.aborted) return;

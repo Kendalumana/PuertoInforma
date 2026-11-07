@@ -223,3 +223,17 @@
 .modal-overlay.about-overlay {
     display: flex !important;
 }
+
+/* ── Check-in button spinner ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Checkin btn estado deshabilitado ── */
+.checkin-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}

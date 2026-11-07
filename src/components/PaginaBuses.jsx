@@ -11,6 +11,8 @@ import Navbar from './Navbar';
 import BusDestinationSelector from './BusDestinationSelector';
 import ReservationLink from './ReservationLink';
 import TransportDayTabs from './TransportDayTabs';
+import BusMapModal from './BusMapModal';
+import { useEventoMision } from '../hooks/useEventoMision';
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL Y FECHAS
@@ -420,6 +422,8 @@ function StopCombobox({ paradasUnicas, paradaBuscada, onParadaChange }) {
 
 function PaginaBuses() {
     const navigate = useNavigate();
+    const { reportarEvento } = useEventoMision();
+    const [rutaParaMapa, setRutaParaMapa] = useState(null);
     const [activeTab, setActiveTab] = useState('SCHEDULES');
     const [activeRoute, setActiveRoute] = useState('');
     const [destinoSeleccionado, setDestinoSeleccionado] = useState(''); // destino elegido por el usuario
@@ -604,6 +608,7 @@ function PaginaBuses() {
 
     const handleDestinoChange = (destino) => {
         setDestinoSeleccionado(destino);
+        reportarEvento('bus_consultar', destino);
         const route = routes.find(item => item.destino === destino);
         if (route) setActiveRoute(route.id);
     };
@@ -869,9 +874,35 @@ function PaginaBuses() {
                             }
                         </p>
                     </div>
-                    <div className="live-status">
-                        <span className={tabDia === 'manana' ? '' : 'pulse-dot'}></span>
-                        {tabDia === 'manana' ? '📅 MAÑANA' : '🟢 EN VIVO'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {activeRouteData && (
+                            <button
+                                onClick={() => {
+                                    reportarEvento('bus_ver_mapa', activeRouteData.nombre || activeRouteData.destino);
+                                    setRutaParaMapa(activeRouteData);
+                                }}
+                                style={{
+                                    background: 'rgba(232, 98, 26, 0.15)',
+                                    border: '1px solid rgba(232, 98, 26, 0.4)',
+                                    color: '#FF9B6A',
+                                    borderRadius: '8px',
+                                    padding: '0.4rem 0.8rem',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem'
+                                }}
+                                title="Ver mapa de paradas de esta ruta"
+                            >
+                                <Map size={14} /> Ver Mapa
+                            </button>
+                        )}
+                        <div className="live-status">
+                            <span className={tabDia === 'manana' ? '' : 'pulse-dot'}></span>
+                            {tabDia === 'manana' ? '📅 MAÑANA' : '🟢 EN VIVO'}
+                        </div>
                     </div>
                 </div>
 
@@ -1147,6 +1178,14 @@ function PaginaBuses() {
                     <span>FAVORITOS</span>
                 </button>
             </nav>
+
+            {/* Modal de Mapa de Paradas de la Ruta */}
+            {rutaParaMapa && (
+                <BusMapModal
+                    ruta={rutaParaMapa}
+                    onClose={() => setRutaParaMapa(null)}
+                />
+            )}
         </div>
     );
 }

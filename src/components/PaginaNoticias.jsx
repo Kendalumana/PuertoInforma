@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import '../styles/Noticias.css';
 import Navbar from './Navbar';
+import { useEventoMision } from '../hooks/useEventoMision';
 
 // ── Fetch desde backend ──
 import { axiosPrivate } from '../api/axios';
@@ -33,9 +34,13 @@ function formatearFecha(isoStr) {
 }
 
 // ── Card grande (destacada) ──────────────────────────────
-function NoticiasHeroCard({ noticia }) {
+function NoticiasHeroCard({ noticia, onClick }) {
     return (
-        <div className="noticias-hero-card" style={{ '--card-color': noticia.color }}>
+        <div
+            className="noticias-hero-card"
+            style={{ '--card-color': noticia.color, cursor: 'pointer' }}
+            onClick={onClick}
+        >
             <div className="nhc-emoji">{noticia.icono}</div>
             <div className="nhc-body">
                 <span className="nhc-categoria">{noticia.categoria}</span>
@@ -55,9 +60,13 @@ function NoticiasHeroCard({ noticia }) {
 }
 
 // ── Card normal ──────────────────────────────────────────
-function NoticiaCard({ noticia }) {
+function NoticiaCard({ noticia, onClick }) {
     return (
-        <div className="noticia-card" style={{ '--card-color': noticia.color }}>
+        <div
+            className="noticia-card"
+            style={{ '--card-color': noticia.color, cursor: 'pointer' }}
+            onClick={onClick}
+        >
             <div className="nc-icono">{noticia.icono}</div>
             <div className="nc-body">
                 <div className="nc-header">
@@ -91,6 +100,7 @@ function NoticiaSkeleton() {
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════
 function PaginaNoticias() {
+    const { reportarEvento } = useEventoMision();
     const [categoriaActiva, setCategoriaActiva] = useState('Todas');
     const [busqueda, setBusqueda] = useState('');
     const [noticias, setNoticias] = useState([]);
@@ -152,7 +162,13 @@ function PaginaNoticias() {
                     className="noticias-search-input"
                     placeholder="Buscar noticias o eventos..."
                     value={busqueda}
-                    onChange={e => setBusqueda(e.target.value)}
+                    onChange={e => {
+                        const val = e.target.value;
+                        setBusqueda(val);
+                        if (val.trim().length >= 2) {
+                            reportarEvento('noticias_buscar', val.trim());
+                        }
+                    }}
                 />
                 {busqueda && (
                     <button
@@ -168,7 +184,12 @@ function PaginaNoticias() {
                     <button
                         key={cat}
                         className={`noticias-cat-btn ${categoriaActiva === cat ? 'active' : ''}`}
-                        onClick={() => setCategoriaActiva(cat)}
+                        onClick={() => {
+                            setCategoriaActiva(cat);
+                            if (cat !== 'Todas') {
+                                reportarEvento('noticias_filtro_categoria', cat);
+                            }
+                        }}
                     >
                         {cat !== 'Todas' && CATEGORIA_ICONOS[cat]}
                         {cat}
@@ -215,7 +236,10 @@ function PaginaNoticias() {
                         </div>
                     </div>
                 ) : destacada && (categoriaActiva === 'Todas' || categoriaActiva === destacada.categoria) && !busqueda ? (
-                    <NoticiasHeroCard noticia={destacada} />
+                    <NoticiasHeroCard
+                        noticia={destacada}
+                        onClick={() => reportarEvento('noticia_abrir', destacada.titulo || String(destacada.id))}
+                    />
                 ) : null)}
 
                 {/* Lista de noticias */}
@@ -230,7 +254,11 @@ function PaginaNoticias() {
                             </div>
                         ) : (
                             noticiasFiltradas.map(n => (
-                                <NoticiaCard key={n.id} noticia={n} />
+                                <NoticiaCard
+                                    key={n.id}
+                                    noticia={n}
+                                    onClick={() => reportarEvento('noticia_abrir', n.titulo || String(n.id))}
+                                />
                             ))
                         )}
                     </div>

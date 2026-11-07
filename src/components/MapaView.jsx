@@ -11,6 +11,7 @@ import PlaceModal from './PlaceModal';
 import LocationPermissionModal from './LocationPermissionModal';
 import MapSearchPanel from './MapSearchPanel';
 import AboutModal from './AboutModal';
+import { useEventoMision } from '../hooks/useEventoMision';
 
 const CENTER = { lat: 9.976, lng: -84.833 };
 
@@ -50,6 +51,7 @@ const categoryColors = {
 
 function MapaView() {
     const location = useLocation();
+    const { reportarEvento } = useEventoMision();
     const [map, setMap] = useState(null);
     const [allPlaces, setAllPlaces] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -321,6 +323,7 @@ function MapaView() {
         if (map) map.flyTo([p.latitud, p.longitud], 16);
         setPreviewPlace(null);
         setSelectedPlace(p);
+        if (p?.id) reportarEvento('lugar_ver_detalle', String(p.id));
     };
 
     const handleClearFilters = () => {
@@ -333,18 +336,29 @@ function MapaView() {
     const handleSearchChange = (value) => {
         setSearchQuery(value);
         setResultadosVisibles(20);
+        if (value.trim().length >= 2) {
+            reportarEvento('lugar_buscar', value.trim());
+        }
     };
 
     const handleSuggestionClick = (suggestion) => handleSearchChange(suggestion);
 
     const handleCategoryToggle = (categoryId) => {
-        setActiveChip(activeChip === categoryId ? "" : categoryId);
+        const nuevoChip = activeChip === categoryId ? "" : categoryId;
+        setActiveChip(nuevoChip);
         setResultadosVisibles(20);
+        if (nuevoChip) {
+            reportarEvento('mapa_filtro_categoria', String(categoryId));
+        }
     };
 
     const handleFavoritesToggle = () => {
-        setShowFavorites(!showFavorites);
+        const nuevoEstado = !showFavorites;
+        setShowFavorites(nuevoEstado);
         setResultadosVisibles(20);
+        if (nuevoEstado) {
+            reportarEvento('favoritos_filtrar');
+        }
     };
 
     const toggleFavorite = (placeId, e) => {
@@ -392,6 +406,7 @@ function MapaView() {
             <button
                 className="immersive-recenter-btn"
                 onClick={() => {
+                    reportarEvento('mapa_recentrar');
                     if (localStorage.getItem(LOCATION_CONSENT_KEY) === 'denied') {
                         setShowLocationModal(true);
                     } else {
@@ -408,6 +423,7 @@ function MapaView() {
             <MiniCard
                 place={previewPlace}
                 onVerMas={() => {
+                    if (previewPlace?.id) reportarEvento('lugar_ver_detalle', String(previewPlace.id));
                     setSelectedPlace(previewPlace);
                     setPreviewPlace(null);
                 }}
