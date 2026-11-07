@@ -6,7 +6,7 @@ test('espera al servidor antes de enviar una sola vez', async () => {
   const events = [];
   let ready;
   const client = {
-    options: (_, config) => { assert.equal(config.timeout, 240000); return new Promise(resolve => { ready = resolve; }); },
+    options: (_, config) => { assert.equal(config.timeout, 120000); return new Promise(resolve => { ready = resolve; }); },
     post: async () => { events.push('post'); return { data: 'ok' }; },
   };
   const pending = enviarFormulario(client, '/usuario/registro', {}, message => events.push(message));

@@ -8,6 +8,7 @@ function Navbar({ onOpenAbout }) {
     const navigate = useNavigate();
     const location = useLocation();
     const esMapa = location.pathname === '/';
+    const estaAutenticado = Boolean(localStorage.getItem('token'));
 
     const handleLogout = async () => {
         try { await supabase.auth.signOut(); } catch { /* ignorar */ }
@@ -36,14 +37,33 @@ function Navbar({ onOpenAbout }) {
                     <Link to="/noticias" className="nav-link">Noticias y Eventos</Link>
                     <Link to="/ferry" className="nav-link">Ferry</Link>
                     <Link to="/buses" className="nav-link">Buses</Link>
-                    <Link to="/perfil" className="nav-link">Perfil</Link>
-                    <button
-                        className="nav-link btn-logout-nav"
-                        onClick={handleLogout}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                        Cerrar Sesión
-                    </button>
+                    {estaAutenticado ? (
+                        <>
+                            <Link to="/perfil" className="nav-link">Perfil</Link>
+                            <button
+                                className="nav-link btn-logout-nav"
+                                onClick={handleLogout}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                            >
+                                Cerrar Sesión
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            to="/login"
+                            className="nav-link"
+                            style={{
+                                color: '#E8621A',
+                                fontWeight: 700,
+                                background: 'rgba(232, 98, 26, 0.12)',
+                                padding: '0.4rem 0.9rem',
+                                borderRadius: '20px',
+                                border: '1px solid rgba(232, 98, 26, 0.4)'
+                            }}
+                        >
+                            Iniciar Sesión
+                        </Link>
+                    )}
                 </nav>
             </div>
 
@@ -62,7 +82,9 @@ function Navbar({ onOpenAbout }) {
 
                     {menuAbierto && (
                         <div className="dropdown-menu dropdown-menu-right" role="menu">
-                            <Link to="/perfil" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
+                            {estaAutenticado ? (
+                                <Link to="/perfil" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🧑‍✈️ Perfil</Link>
+                            ) : null}
                             <Link to="/buses" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>🚌 Buses</Link>
                             <Link to="/noticias" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>📰 Noticias y Eventos</Link>
                             <Link to="/ferry" className="dropdown-item" role="menuitem" onClick={() => setMenuAbierto(false)}>⛵ Ferry</Link>
@@ -74,13 +96,25 @@ function Navbar({ onOpenAbout }) {
                                 📰 Acerca de
                             </button>
                             <div className="dropdown-divider"></div>
-                            <button
-                                className="dropdown-item dropdown-logout"
-                                role="menuitem"
-                                onClick={() => { setMenuAbierto(false); handleLogout(); }}
-                            >
-                                🚪 Cerrar Sesión
-                            </button>
+                            {estaAutenticado ? (
+                                <button
+                                    className="dropdown-item dropdown-logout"
+                                    role="menuitem"
+                                    onClick={() => { setMenuAbierto(false); handleLogout(); }}
+                                >
+                                    🚪 Cerrar Sesión
+                                </button>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="dropdown-item"
+                                    style={{ color: '#E8621A', fontWeight: 700 }}
+                                    role="menuitem"
+                                    onClick={() => setMenuAbierto(false)}
+                                >
+                                    🔑 Iniciar Sesión
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>

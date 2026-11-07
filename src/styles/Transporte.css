@@ -94,6 +94,84 @@
     letter-spacing: -1px;
 }
 
+/* Ferry Top Actions & Precios */
+.ferry-top-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.ferry-top-bar .transporte-route-chips {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.ferry-actions-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ferry-precios-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(232, 98, 26, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border: 1px solid rgba(232, 98, 26, 0.55);
+    color: var(--blanco);
+    padding: 0.7rem 1.3rem;
+    border-radius: 30px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+}
+
+.ferry-precios-btn:hover {
+    background: linear-gradient(135deg, rgba(232, 98, 26, 0.35) 0%, rgba(50, 50, 50, 1) 100%);
+    border-color: var(--naranja);
+    color: var(--blanco);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(232, 98, 26, 0.3);
+}
+
+.big-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.transporte-prices-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    text-decoration: none;
+    border: 1px solid rgba(232, 98, 26, 0.45);
+    background: rgba(232, 98, 26, 0.1);
+    color: #FF9B6A;
+    white-space: nowrap;
+    padding: 0.85rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.transporte-prices-link:hover {
+    background: rgba(232, 98, 26, 0.22);
+    color: var(--blanco);
+    border-color: var(--naranja);
+    transform: translateY(-1px);
+}
+
 /* Route Chips */
 .transporte-route-chips {
     display: flex;

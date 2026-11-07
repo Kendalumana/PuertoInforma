@@ -90,14 +90,16 @@ function App() {
                 <Route path="/recuperar-clave" element={<ForgotPassword />} />
                 <Route path="/restablecer-clave" element={<ResetPassword />} />
 
-                {/* Rutas protegidas — lazy: se descargan al navegar por primera vez */}
-                <Route path="/"         element={<RutaProtegida><MapaView /></RutaProtegida>} />
-                <Route path="/perfil"   element={<RutaProtegida><PaginaPerfil /></RutaProtegida>} />
-                <Route path="/buses"    element={<RutaProtegida><PaginaBuses /></RutaProtegida>} />
-                <Route path="/ferry"    element={<RutaProtegida><PaginaFerry /></RutaProtegida>} />
-                <Route path="/noticias" element={<RutaProtegida><PaginaNoticias /></RutaProtegida>} />
+                {/* Rutas de consulta pública — abiertas para visitantes y turistas */}
+                <Route path="/"         element={<MapaView />} />
+                <Route path="/buses"    element={<PaginaBuses />} />
+                <Route path="/ferry"    element={<PaginaFerry />} />
+                <Route path="/noticias" element={<PaginaNoticias />} />
 
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                {/* Rutas protegidas — requieren sesión obligatoria */}
+                <Route path="/perfil"   element={<RutaProtegida><PaginaPerfil /></RutaProtegida>} />
+
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Suspense>
     );

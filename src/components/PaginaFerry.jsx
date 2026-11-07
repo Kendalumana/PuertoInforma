@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Search, Clock,
     Info, Compass, Ship, Ticket, Bookmark, BookmarkCheck,
-    Bell, User, Map
+    Bell, User, Map, ExternalLink
 } from 'lucide-react';
 import { axiosPrivate } from '../api/axios';
 import '../styles/Transporte.css';
@@ -12,6 +12,62 @@ import ReservationLink from './ReservationLink';
 import TransportDayTabs from './TransportDayTabs';
 import FerryRouteSelector from './FerryRouteSelector';
 import FerryScheduleList from './FerryScheduleList';
+
+// ═══════════════════════════════════════════════════════════
+// URLS DE RESERVAS Y TARIFAS
+// ═══════════════════════════════════════════════════════════
+const URL_QUICKPAY_PAQUERA = 'https://www.quickpaycr.com/default.aspx';
+const URL_QUICKPAY_PRECIOS = 'https://www.quickpaycr.com/precios.aspx';
+
+function normalizarTexto(txt) {
+    return (txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function esRutaPaqueraPuntarenas(origen, destino) {
+    const o = normalizarTexto(origen);
+    const d = normalizarTexto(destino);
+    return (o.includes('paquera') && d.includes('puntarenas')) ||
+           (o.includes('puntarenas') && d.includes('paquera'));
+}
+
+function resolverEnlaceReservaFerry(origen, destino, enlaceActual) {
+    if (esRutaPaqueraPuntarenas(origen, destino)) {
+        return URL_QUICKPAY_PAQUERA;
+    }
+    const o = normalizarTexto(origen);
+    const d = normalizarTexto(destino);
+    if (o.includes('naranjo') || d.includes('naranjo')) {
+        return enlaceActual || 'https://www.coonatramar.com/';
+    }
+    return enlaceActual || '';
+}
+
+// Horarios de respaldo oficiales (evitan pantalla en blanco si el servidor de Render está dormido)
+const FALLBACK_FERRY_HORARIOS = [
+    { id: 'f-p-pq-1', origen: 'Puntarenas', destino: 'Paquera', horaSalida: '05:30:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Puntarenas' },
+    { id: 'f-p-pq-2', origen: 'Puntarenas', destino: 'Paquera', horaSalida: '09:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Puntarenas' },
+    { id: 'f-p-pq-3', origen: 'Puntarenas', destino: 'Paquera', horaSalida: '12:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Puntarenas' },
+    { id: 'f-p-pq-4', origen: 'Puntarenas', destino: 'Paquera', horaSalida: '15:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Puntarenas' },
+    { id: 'f-p-pq-5', origen: 'Puntarenas', destino: 'Paquera', horaSalida: '18:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Puntarenas' },
+    { id: 'f-p-pq-6', origen: 'Puntarenas', destino: 'Paquera', horaSalida: '20:30:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Puntarenas', esNocturno: true },
+
+    { id: 'f-pq-p-1', origen: 'Paquera', destino: 'Puntarenas', horaSalida: '05:30:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Paquera' },
+    { id: 'f-pq-p-2', origen: 'Paquera', destino: 'Puntarenas', horaSalida: '09:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Paquera' },
+    { id: 'f-pq-p-3', origen: 'Paquera', destino: 'Puntarenas', horaSalida: '12:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Paquera' },
+    { id: 'f-pq-p-4', origen: 'Paquera', destino: 'Puntarenas', horaSalida: '15:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Paquera' },
+    { id: 'f-pq-p-5', origen: 'Paquera', destino: 'Puntarenas', horaSalida: '18:00:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Paquera' },
+    { id: 'f-pq-p-6', origen: 'Paquera', destino: 'Puntarenas', horaSalida: '20:30:00', embarcacionNombre: 'Naviera Tambor', embarcacionTipo: 'Ferry Convencional', enlaceReserva: URL_QUICKPAY_PAQUERA, terminalNombre: 'Terminal Paquera', esNocturno: true },
+
+    { id: 'f-p-pn-1', origen: 'Puntarenas', destino: 'Playa Naranjo', horaSalida: '06:30:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Coonatramar' },
+    { id: 'f-p-pn-2', origen: 'Puntarenas', destino: 'Playa Naranjo', horaSalida: '10:00:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Coonatramar' },
+    { id: 'f-p-pn-3', origen: 'Puntarenas', destino: 'Playa Naranjo', horaSalida: '14:30:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Coonatramar' },
+    { id: 'f-p-pn-4', origen: 'Puntarenas', destino: 'Playa Naranjo', horaSalida: '19:30:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Coonatramar', esNocturno: true },
+
+    { id: 'f-pn-p-1', origen: 'Playa Naranjo', destino: 'Puntarenas', horaSalida: '08:00:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Playa Naranjo' },
+    { id: 'f-pn-p-2', origen: 'Playa Naranjo', destino: 'Puntarenas', horaSalida: '12:30:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Playa Naranjo' },
+    { id: 'f-pn-p-3', origen: 'Playa Naranjo', destino: 'Puntarenas', horaSalida: '17:00:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Playa Naranjo' },
+    { id: 'f-pn-p-4', origen: 'Playa Naranjo', destino: 'Puntarenas', horaSalida: '21:00:00', embarcacionNombre: 'Coonatramar', embarcacionTipo: 'Ferry', enlaceReserva: 'https://www.coonatramar.com/', terminalNombre: 'Terminal Playa Naranjo', esNocturno: true }
+];
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS DE TIEMPO REAL
@@ -49,18 +105,20 @@ function formatearRestante(min) {
 
 /**
  * Normaliza un objeto de horario de ferry.
- * El backend Spring Boot usa camelCase (horaSalida, embarcacionNombre, etc.)
- * Pero si por alguna razón llega en snake_case, también lo soportamos.
  */
 function normalizarHorario(h) {
+    const origen = h.origen || '';
+    const destino = h.destino || '';
+    const enlaceOriginal = h.enlaceReserva || h.enlace_reserva || '';
+
     return {
         id: h.id,
         horaSalida: h.horaSalida || h.hora_salida || '',
-        origen: h.origen || '',
-        destino: h.destino || '',
+        origen,
+        destino,
         embarcacionNombre: h.embarcacionNombre || h.embarcacion_nombre || '',
         embarcacionTipo: h.embarcacionTipo || h.embarcacion_tipo || '',
-        enlaceReserva: h.enlaceReserva || h.enlace_reserva || '',
+        enlaceReserva: resolverEnlaceReservaFerry(origen, destino, enlaceOriginal),
         esNocturno: h.esNocturno ?? h.es_nocturno ?? false,
         estado: h.estado || 'ACTIVO',
         terminalNombre: h.terminalNombre || h.terminal_nombre || '',
@@ -171,12 +229,20 @@ function PaginaFerry() {
             })
             .catch(err => {
                 if (controller.signal.aborted) return;
-                console.error('[PaginaFerry] Error cargando horarios:', err);
-                const esTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
-                setError(esTimeout
-                    ? 'El servidor tardó en responder. Puede estar iniciando, reintentá en unos segundos.'
-                    : 'No se pudieron cargar los horarios. Intenta de nuevo.'
+                console.warn('[PaginaFerry] Backend en reposo o no disponible. Cargando horarios oficiales de respaldo:', err);
+                // Si el servidor falla o duerme, mostramos los horarios oficiales de respaldo
+                const normalizados = FALLBACK_FERRY_HORARIOS.map(normalizarHorario);
+                setHorarios(normalizados);
+
+                const rutasDisponibles = [...new Set(
+                    normalizados
+                        .filter(h => h.origen && h.destino)
+                        .map(h => `${h.origen} → ${h.destino}`)
+                )];
+                setActiveRoute(rutaActual =>
+                    rutasDisponibles.includes(rutaActual) ? rutaActual : (rutasDisponibles[0] || '')
                 );
+                setError(null);
             })
             .finally(() => {
                 if (!controller.signal.aborted) setLoading(false);
@@ -246,14 +312,31 @@ function PaginaFerry() {
                     Horarios de <span className="text-orange">Ferry</span>
                 </h1>
 
-                <FerryRouteSelector
-                    activeRoute={activeRoute}
-                    loading={loading}
-                    onRouteChange={setActiveRoute}
-                    onToggleSaved={toggleFerrySaved}
-                    routes={routesFiltradas}
-                    savedRoutes={ferrySaved}
-                />
+                {/* Route Selector y Botón de Precios */}
+                <div className="ferry-top-bar">
+                    <FerryRouteSelector
+                        activeRoute={activeRoute}
+                        loading={loading}
+                        onRouteChange={setActiveRoute}
+                        onToggleSaved={toggleFerrySaved}
+                        routes={routesFiltradas}
+                        savedRoutes={ferrySaved}
+                    />
+
+                    <div className="ferry-actions-container">
+                        <a
+                            href={URL_QUICKPAY_PRECIOS}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ferry-precios-btn"
+                            title="Consultar lista oficial de tarifas y precios de QuickPay"
+                        >
+                            <Ticket size={16} className="text-orange" />
+                            <span>Ver Tarifas y Precios</span>
+                            <ExternalLink size={13} style={{ opacity: 0.8 }} />
+                        </a>
+                    </div>
+                </div>
 
                 {/* ── Tabs HOY / MAÑANA — A-I3 ── */}
                 {!loading && !error && (
@@ -336,6 +419,25 @@ function PaginaFerry() {
                                                             : 'Sin información'}
                                             </p>
                                         </div>
+                                    </div>
+
+                                    {/* Acciones directas para la siguiente salida */}
+                                    <div className="big-card-actions">
+                                        {siguiente.enlaceReserva && (
+                                            <ReservationLink
+                                                className="transporte-btn-outline transporte-reserve-link"
+                                                href={siguiente.enlaceReserva}
+                                                label={esRutaPaqueraPuntarenas(siguiente.origen, siguiente.destino) ? "Reservar en QuickPay" : "Reservar espacio"}
+                                            />
+                                        )}
+                                        <a
+                                            href={URL_QUICKPAY_PRECIOS}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="transporte-btn-outline transporte-prices-link"
+                                        >
+                                            <Ticket size={15} /> Ver Precios
+                                        </a>
                                     </div>
                                 </>
                             ) : (

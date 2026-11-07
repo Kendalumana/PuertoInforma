@@ -79,9 +79,16 @@ axiosPrivate.interceptors.response.use(
                 console.warn('[axiosPrivate] No se pudo refrescar el token:', refreshErr?.message);
             }
 
-            // Si el refresh falló → mandar al login
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            // Si el refresh falló → mandar al login solo si tenía un token previo
+            // y no está en una pantalla de consulta pública
+            const tokenGuardado = localStorage.getItem('token');
+            if (tokenGuardado) {
+                localStorage.removeItem('token');
+                const rutasPublicas = ['/', '/buses', '/ferry', '/noticias', '/login', '/registro', '/recuperar-clave', '/restablecer-clave'];
+                if (!rutasPublicas.includes(window.location.pathname)) {
+                    window.location.href = '/login';
+                }
+            }
         }
 
         // Si es 403 (autenticado pero sin permisos)
