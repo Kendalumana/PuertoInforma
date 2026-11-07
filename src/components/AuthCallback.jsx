@@ -28,7 +28,19 @@ function AuthCallback() {
                             googleId: session.user.id,
                             supabaseToken: session.access_token
                         }, { timeout: 60000 });
-                        localStorage.setItem('token', response.data.token);
+
+                        const backendToken = response.data?.token || response.data;
+                        const tokenStr = typeof backendToken === 'string' ? backendToken : backendToken?.token;
+                        if (tokenStr) {
+                            localStorage.setItem('token', tokenStr);
+                            try {
+                                const payload = JSON.parse(atob(tokenStr.split('.')[1]));
+                                const numId = response.data?.id || response.data?.usuarioId || response.data?.userId || response.data?.usuario?.id || payload.id || payload.usuarioId || payload.userId;
+                                if (numId) {
+                                    localStorage.setItem('usuarioId', String(numId));
+                                }
+                            } catch { /* ignorar */ }
+                        }
                         navigate('/');
                     } catch (err) {
                         clearTimeout(timeoutId);

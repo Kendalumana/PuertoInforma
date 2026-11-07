@@ -67,6 +67,13 @@ function Registro() {
                     await supabase.auth.signOut();
                 } catch { /* ignorar */ }
                 localStorage.setItem('token', tokenRecibido);
+                try {
+                    const payload = JSON.parse(atob(tokenRecibido.split('.')[1]));
+                    const numId = data?.id || data?.usuarioId || data?.userId || data?.usuario?.id || payload?.id || payload?.usuarioId || payload?.userId;
+                    if (numId) {
+                        localStorage.setItem('usuarioId', String(numId));
+                    }
+                } catch { /* ignorar */ }
             }
             navigate('/');
 

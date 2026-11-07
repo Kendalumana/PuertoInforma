@@ -74,20 +74,40 @@ function PaginaPerfil() {
       setError(null);
       try {
         const { data: { session: s } } = await supabase.auth.getSession();
+        if (s) {
+          setSession(s);
+        }
+
         const localToken = localStorage.getItem('token');
+        const localUserId = localStorage.getItem('usuarioId');
 
         let resolvedUserId = null;
 
-        if (s) {
-          resolvedUserId = s.user.id;
-          setSession(s);
-        } else if (localToken) {
+        // 1. Priorizamos el ID numérico del backend guardado en localStorage
+        if (localUserId && !isNaN(Number(localUserId))) {
+          resolvedUserId = Number(localUserId);
+        }
+
+        // 2. Si no, extraemos el ID numérico de los claims del token JWT del backend
+        if (!resolvedUserId && localToken && localToken !== 'undefined' && localToken !== 'null') {
           try {
             const payload = JSON.parse(atob(localToken.split('.')[1]));
-            resolvedUserId = payload.id || payload.sub || payload.usuarioId || payload.userId;
+            const possibleId = payload.id ?? payload.usuarioId ?? payload.userId ?? payload.idUsuario;
+            if (possibleId !== undefined && possibleId !== null && !isNaN(Number(possibleId))) {
+              resolvedUserId = Number(possibleId);
+            } else if (payload.sub && !isNaN(Number(payload.sub))) {
+              resolvedUserId = Number(payload.sub);
+            } else if (possibleId) {
+              resolvedUserId = possibleId;
+            }
           } catch (e) {
             console.error('Error decodificando token local', e);
           }
+        }
+
+        // 3. Solo si no hay token ni ID del backend, usar el de Supabase como fallback
+        if (!resolvedUserId && s?.user?.id) {
+          resolvedUserId = s.user.id;
         }
 
         if (!resolvedUserId) {
