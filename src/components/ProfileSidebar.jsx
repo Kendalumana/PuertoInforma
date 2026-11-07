@@ -1,3 +1,5 @@
+import { ObtenerLogoRango } from './AnimalLogos';
+
 function ProfileSidebar({
     avatarError,
     avatarImage,
@@ -20,12 +22,19 @@ function ProfileSidebar({
     xpPorcentaje,
 }) {
     const nombreUsuario = perfil?.nombreUsuario
+        ?? perfil?.nombre
         ?? localStorage.getItem('nombreUsuario')
         ?? session?.user?.user_metadata?.full_name
         ?? session?.user?.user_metadata?.name
         ?? localStorage.getItem('email')?.split('@')[0]
         ?? session?.user?.email?.split('@')[0]
-        ?? 'Usuario';
+        ?? 'Kendall CR';
+
+    const nombreRangoBadge = rangoActual?.nombre
+        ? (rangoActual.nombre.includes('(')
+            ? rangoActual.nombre.toUpperCase()
+            : `${rangoActual.nombre.toUpperCase()} (${(rangoActual.animal || 'CANGREJO').toUpperCase()})`)
+        : 'RECIEN LLEGADO (CANGREJO)';
 
     return (
         <aside className="profile-sidebar">
@@ -70,19 +79,25 @@ function ProfileSidebar({
                 </div>
 
                 <h2 className="profile-name">{nombreUsuario}</h2>
-                <div className="profile-rank-badge">{rangoActual?.nombre?.toUpperCase() ?? 'RECIÉN LLEGADO'}</div>
+                <div className="profile-rank-badge">
+                    {nombreRangoBadge}
+                </div>
 
                 <div className="profile-stats-grid">
                     <div className="stat-box">
                         <span className="stat-label">PUNTOS</span>
-                        <span className="stat-value">{perfil?.puntosTotales ?? 0}</span>
+                        <span className="stat-value">{perfil?.puntosTotales ?? perfil?.puntos ?? experiencia ?? 0}</span>
                     </div>
                     <div className="stat-box rango-box">
                         <span className="stat-label">RANGO</span>
-                        {rangoActual?.urlIcono
-                            ? <img src={rangoActual.urlIcono} alt={rangoActual.nombre} className="rango-stat-icon" />
-                            : <span className="stat-value light">🏅</span>}
-                        <span className="rango-stat-name">{rangoActual?.nombre?.split('(')[0]?.trim() ?? 'Nivel 1'}</span>
+                        {rangoActual?.urlIcono ? (
+                            <img src={rangoActual.urlIcono} alt={rangoActual.nombre} className="rango-stat-icon" />
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <ObtenerLogoRango animal={rangoActual?.animal || rangoActual?.nombre || 'cangrejo'} size={28} />
+                            </div>
+                        )}
+                        <span className="rango-stat-name">{rangoActual?.nombre?.split('(')[0]?.trim() ?? 'Recien Llegado'}</span>
                     </div>
                 </div>
 
@@ -106,9 +121,13 @@ function ProfileSidebar({
                             <div
                                 key={rango.id}
                                 className={`badge-icon ${desbloqueado ? 'unlocked' : 'locked'}`}
-                                title={`${rango.nombre} (${rango.puntosRequeridos} XP)`}
+                                title={`${rango.nombre} (${rango.animal || ''}) — ${rango.puntosRequeridos} XP`}
                             >
-                                {rango.urlIcono ? <img src={rango.urlIcono} alt={rango.nombre} /> : '🏅'}
+                                {rango.urlIcono ? (
+                                    <img src={rango.urlIcono} alt={rango.nombre} />
+                                ) : (
+                                    <ObtenerLogoRango animal={rango.animal || rango.nombre} size={30} />
+                                )}
                             </div>
                         );
                     })}
