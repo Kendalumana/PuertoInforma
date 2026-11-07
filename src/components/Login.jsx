@@ -58,6 +58,7 @@ function Login() {
             } catch { /* ignorar */ }
 
             localStorage.setItem('token', tokenRecibido);
+            localStorage.setItem('email', email);
             try {
                 const payload = JSON.parse(atob(tokenRecibido.split('.')[1]));
                 const numId = data?.id || data?.usuarioId || data?.userId || data?.usuario?.id || payload?.id || payload?.usuarioId || payload?.userId;

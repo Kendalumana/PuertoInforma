@@ -20,8 +20,10 @@ function ProfileSidebar({
     xpPorcentaje,
 }) {
     const nombreUsuario = perfil?.nombreUsuario
+        ?? localStorage.getItem('nombreUsuario')
         ?? session?.user?.user_metadata?.full_name
         ?? session?.user?.user_metadata?.name
+        ?? localStorage.getItem('email')?.split('@')[0]
         ?? session?.user?.email?.split('@')[0]
         ?? 'Usuario';
 

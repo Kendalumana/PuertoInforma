@@ -85,13 +85,24 @@ axiosPrivate.interceptors.response.use(
                 console.warn('[axiosPrivate] No se pudo refrescar el token:', refreshErr?.message);
             }
 
-            // Si el refresh falló → mandar al login solo si tenía un token previo
-            // y no está en una pantalla de consulta pública
+            // Si el refresh falló → verificar si el token realmente venció antes de expulsar al usuario
             const tokenGuardado = localStorage.getItem('token');
             if (tokenGuardado) {
-                localStorage.removeItem('token');
-                const rutasPublicas = ['/', '/buses', '/ferry', '/noticias', '/login', '/registro', '/recuperar-clave', '/restablecer-clave'];
-                if (!rutasPublicas.includes(window.location.pathname)) {
+                try {
+                    // Decodificamos para ver si expiró de verdad
+                    const payload = JSON.parse(atob(tokenGuardado.split('.')[1]));
+                    if (payload?.exp && payload.exp * 1000 <= Date.now()) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('usuarioId');
+                        const rutasPublicas = ['/', '/buses', '/ferry', '/noticias', '/login', '/registro', '/recuperar-clave', '/restablecer-clave'];
+                        if (!rutasPublicas.includes(window.location.pathname)) {
+                            window.location.href = '/login?from=perfil';
+                        }
+                    } else {
+                        console.warn('[axiosPrivate] Petición devolvió 401 pero el token local sigue vigente. No se cerrará la sesión:', originalRequest.url);
+                    }
+                } catch {
+                    localStorage.removeItem('token');
                     window.location.href = '/login';
                 }
             }
