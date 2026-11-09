@@ -260,32 +260,44 @@
 }
 
 .badge-icon {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: #2D2D2D;
+  background: #1c1c1c;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #E8621A;
-  font-size: 1.5rem;
-  transition: transform 0.2s;
-  border: 2px solid transparent;
+  font-size: 1.6rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  cursor: pointer;
 }
 
 .badge-icon.unlocked {
-  background: rgba(232, 98, 26, 0.15);
+  background: radial-gradient(circle, rgba(232, 98, 26, 0.2) 0%, #1c1c1c 80%);
   border-color: #E8621A;
-  box-shadow: 0 0 10px rgba(232, 98, 26, 0.3);
+  box-shadow: 0 0 16px rgba(232, 98, 26, 0.5), inset 0 0 10px rgba(232, 98, 26, 0.25);
+  opacity: 1;
+  filter: none;
 }
 
 .badge-icon.locked {
-  opacity: 0.3;
-  filter: grayscale(1);
+  opacity: 0.25;
+  filter: grayscale(1) contrast(0.7);
+  background: #181818;
+  border-color: rgba(255, 255, 255, 0.04);
 }
 
 .badge-icon:hover {
-  transform: scale(1.1);
+  transform: translateY(-2px) scale(1.08);
+}
+
+.badge-animal-glyph {
+  font-size: 1.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .badge-icon img {
@@ -607,15 +619,38 @@
   }
 
   .badge-icon {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     font-size: 1.2rem;
+  }
+
+  .badge-icon img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .badges-grid {
+    gap: 0.75rem;
+    justify-content: space-evenly;
   }
 
   .btn-back {
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
     margin-bottom: 1rem;
+  }
+
+  /* Avatar selector — fixed on mobile so it stays on screen */
+  .avatar-selector {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 2rem);
+    max-width: 320px;
+    z-index: 9999;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 
   /* Misiones */
@@ -645,10 +680,29 @@
     padding: 0.4rem 0.85rem;
     font-size: 0.8rem;
     flex-shrink: 0;
+    min-height: 36px;
   }
 
+  /* Force single column on mobile */
   .missions-grid {
+    grid-template-columns: 1fr !important;
     gap: 1rem;
+  }
+
+  /* Full-width cards revert to normal column on mobile */
+  .mission-card.full-width {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .mission-card.full-width .mission-img {
+    position: relative;
+    height: 110px;
+    width: 100%;
+    opacity: 1;
+  }
+  .mission-card.full-width .mission-content {
+    padding: 1rem;
+    background: rgba(28,28,28,0.9);
   }
 
   .mission-card {
@@ -675,6 +729,87 @@
   .xp-pill {
     font-size: 0.7rem;
     padding: 0.25rem 0.6rem;
+  }
+
+  /* Error banner — stack on mobile */
+  .misiones-error-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  .misiones-retry-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Historial & Sitios — single col */
+  .perfil-sitios-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── SMALL PHONES (≤ 480px) ────────────────────────────── */
+@media (max-width: 480px) {
+  .profile-layout {
+    padding: 0.75rem 0.5rem;
+    gap: 1rem;
+  }
+
+  .profile-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .profile-name {
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .stat-box {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .badge-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .badge-icon img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mission-img {
+    height: 80px;
+  }
+
+  .mission-title {
+    font-size: 0.95rem;
+  }
+
+  .mission-desc {
+    font-size: 0.75rem;
+  }
+
+  .badges-title {
+    font-size: 0.95rem;
+  }
+
+  .xp-header {
+    font-size: 0.78rem;
+  }
+
+  .rango-stat-icon {
+    width: 32px;
+    height: 32px;
   }
 }
 
